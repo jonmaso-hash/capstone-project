@@ -1,0 +1,12 @@
+#!/bin/sh
+# Usage: chunk.sh <name> <IDs...> -- one foreground chunk; refuses if the pre-run hashes differ or free RAM < 0.9 GB.
+O=/c/Users/jonathan/AppData/Local/Temp/claude/C--Users-jonathan-Desktop-KCV-of903/76db1fe6-5688-4619-abfd-5bc2b6bec113/scratchpad/r18
+n=$1; shift
+cd /c/Users/jonathan/Desktop/KCV-of1102 || exit 1
+sha256sum -c --quiet $O/pre_hashes.txt || { echo "STOP: hashes differ before $n"; exit 4; }
+f=$(powershell -NoProfile -Command "[math]::Round((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory/1MB,2)")
+echo "$n free=$f head=$(git rev-parse --short HEAD)" | tee -a $O/mutation_ram.txt
+awk -v f="$f" 'BEGIN{exit !(f>=0.9)}' || { echo "STOP: free=$f"; exit 3; }
+/c/Users/jonathan/Desktop/KCV/venv/Scripts/python.exe $O/mutate_l.py /c/Users/jonathan/Desktop/KCV-of1102 "$@" > $O/mut_$n.txt 2>&1
+grep -aE "^[JKL][0-9]+ |^final" $O/mut_$n.txt | cut -c1-120
+sha256sum -c --quiet $O/pre_hashes.txt && echo "post-ok $n"

@@ -1,0 +1,6 @@
+from zelda_api.tests_output_fidelity import replay, items_from, notes_from, memo103_payload
+p = memo103_payload(); items, notes = items_from(p), notes_from(p)
+base = "If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide"
+for tail in (" — on the footing that this holds.", " — in which case the note applies differently.", " — the messages included."):
+    out, ch = replay({'s': base + tail}, items, notes)
+    print(repr(tail), 'NOTE' if ch.get('s') else 'kept', ch.get('s'))

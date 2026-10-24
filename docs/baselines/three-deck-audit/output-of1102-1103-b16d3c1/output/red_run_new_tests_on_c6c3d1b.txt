@@ -1,0 +1,352 @@
+2026-10-23 17:36:21,383 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-23 17:37:18,319 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-23 17:37:18,365 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-23 17:37:18,369 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-23 17:37:18,375 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-23 17:37:18,380 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-23 17:37:18,508 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+F.F....FFFF..FFFFFFFFFFFFFFFF...
+======================================================================
+FAIL: test_the_stored_memo_carries_the_repairs (zelda_api.tests_output_fidelity.PipelineMemo103Tests.test_the_stored_memo_carries_the_repairs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4166, in test_the_stored_memo_carries_the_repairs
+    self.assertEqual(memo.base_scenario, stored['base_scenario'].replace(BASE_103_BEFORE, BASE_103_AFTER))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Taki[79 chars]1, S2, S3], the company had deployed a meaning[281 chars]nce." != "Taki[79 chars]1, S2], the company had deployed a meaningful [471 chars]nce."
+Diff is 1588 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_citations_change_only_where_corrected (zelda_api.tests_output_fidelity.Memo103ReplayTests.test_citations_change_only_where_corrected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4091, in test_citations_change_only_where_corrected
+    self.assertEqual(refs(value), expected, key)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['S1', 'S3'] != ['S1', 'S3', 'S1', 'S3']
+
+Second list contains 2 additional elements.
+First extra element 2:
+'S1'
+
+- ['S1', 'S3']
++ ['S1', 'S3', 'S1', 'S3'] : upside_scenario
+
+======================================================================
+FAIL: test_of1102_keeps_the_verification_qualifier_and_the_funding_clause (zelda_api.tests_output_fidelity.Memo103ReplayTests.test_of1102_keeps_the_verification_qualifier_and_the_funding_clause)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4064, in test_of1102_keeps_the_verification_qualifier_and_the_funding_clause
+    self.assertIn('at face value without independent verification [S1, S2]', self.out['base_scenario'])
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'at face value without independent verification [S1, S2]' not found in "Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4]. Without revenue, burn, or team data, the trajectory from traction to sustainable business cannot be assessed from the extracted evidence."
+
+======================================================================
+FAIL: test_of1102_page_12_is_not_dated_by_page_10_s_heading (zelda_api.tests_output_fidelity.Memo103ReplayTests.test_of1102_page_12_is_not_dated_by_page_10_s_heading)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4061, in test_of1102_page_12_is_not_dated_by_page_10_s_heading
+    self.assertEqual(self.out['base_scenario'], self.stored['base_scenario'].replace(BASE_103_BEFORE, BASE_103_AFTER))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Taki[79 chars]1, S2, S3], the company had deployed a meaning[281 chars]nce." != "Taki[79 chars]1, S2], the company had deployed a meaningful [471 chars]nce."
+Diff is 1588 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_of1103_the_consequence_does_not_date_page_12 (zelda_api.tests_output_fidelity.Memo103ReplayTests.test_of1103_the_consequence_does_not_date_page_12)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4068, in test_of1103_the_consequence_does_not_date_page_12
+    self.assertEqual(self.out['upside_scenario'],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     self.stored['upside_scenario'].replace(UPSIDE_103_BEFORE, UPSIDE_103_AFTER))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "If t[240 chars]lide — consistent with a network-effect-driven[221 chars]age." != "If t[240 chars]lide ('Traction by Apr-16' heads page 10, whic[366 chars]age."
+Diff is 1579 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_only_the_expected_rules_fired (zelda_api.tests_output_fidelity.Memo103ReplayTests.test_only_the_expected_rules_fired)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4110, in test_only_the_expected_rules_fired
+    self.assertEqual(self.changes, {
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+        'base_scenario': ['basis_source_context'],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        'questions_for_management': ['attribution:Pitch Deck Hunt'],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    })
+    ^^
+AssertionError: {'business_model_analysis': ['profile_undate[184 chars]nt']} != {'base_scenario': ['basis_source_context'], [277 chars]nt']}
++ {'base_scenario': ['basis_source_context'],
+- {'business_model_analysis': ['profile_undated'],
+? ^
+
++  'business_model_analysis': ['profile_undated'],
+? ^
+
+   'information_readiness': ['attribution:Pitch Deck Hunt'],
+   'questions_for_management': ['attribution:Pitch Deck Hunt'],
++  'upside_scenario': ['basis_consequence_context'],
+   'what_would_change_the_picture': ['attribution:Pitch Deck Hunt']}
+
+======================================================================
+FAIL: test_the_stored_sections_get_the_same_repairs (zelda_api.tests_output_fidelity.Memo103StoredSectionsTests.test_the_stored_sections_get_the_same_repairs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4140, in test_the_stored_sections_get_the_same_repairs
+    self.assertIn(BASE_103_AFTER, out['base_scenario'])
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Taking the self-reported traction at face value without independent verification [S1, S2], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4]; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on)." not found in "Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4]. Without revenue, burn, or team data, the trajectory from traction to sustainable business cannot be assessed from the extracted evidence."
+
+======================================================================
+FAIL: test_a_condition_s_consequence_does_not_date_page_12 (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_a_condition_s_consequence_does_not_date_page_12) (text="If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide — consistent with a business approaching scale.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4305, in test_a_condition_s_consequence_does_not_date_page_12
+    self.assertEqual(self.full(before), (after, ['basis_consequence_context']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("If [241 chars]lide — consistent with a business approaching scale.", []) != ("If [241 chars]lide ('Traction by Apr-16' heads page 10, whic[179 chars]xt'])
+
+First differing element 0:
+"If t[240 chars]lide — consistent with a business approaching scale."
+"If t[240 chars]lide ('Traction by Apr-16' heads page 10, whic[147 chars]ale."
+
+  ("If the company's self-reported 140,000+ bots [S1] and 500M messages/month "
+   '[S3] are accurate and the per-month figure is the correct basis, ManyChat '
+   'would represent a platform with significant throughput at the time of the '
+-  "'Traction by Apr-16' slide — consistent with a business approaching scale.",
+-  [])
++  "'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states "
++  '140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, '
++  'with no date context) — consistent with a business approaching scale.',
++  ['basis_consequence_context'])
+
+======================================================================
+FAIL: test_a_condition_s_consequence_does_not_date_page_12 (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_a_condition_s_consequence_does_not_date_page_12) (text="Assuming the 140,000+ bots [S1] and 500M messages/month [S3] are accurate, ManyChat would have had significant scale as of the 'Traction by Apr-16' slide.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4305, in test_a_condition_s_consequence_does_not_date_page_12
+    self.assertEqual(self.full(before), (after, ['basis_consequence_context']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Ass[145 chars]slide.", []) != ("Ass[145 chars]slide ('Traction by Apr-16' heads page 10, whi[133 chars]xt'])
+
+First differing element 0:
+"Assu[144 chars]slide."
+"Assu[144 chars]slide ('Traction by Apr-16' heads page 10, whi[101 chars]xt)."
+
+  ('Assuming the 140,000+ bots [S1] and 500M messages/month [S3] are accurate, '
+   "ManyChat would have had significant scale as of the 'Traction by Apr-16' "
+-  'slide.',
+-  [])
++  "slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; "
++  'the deck states 500M messages/month [S3] on page 12, with no date context).',
++  ['basis_consequence_context'])
+
+======================================================================
+FAIL: test_a_condition_s_consequence_does_not_date_page_12 (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_a_condition_s_consequence_does_not_date_page_12) (text="If the self-reported figures [S1, S3] are accurate without independent verification, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4305, in test_a_condition_s_consequence_does_not_date_page_12
+    self.assertEqual(self.full(before), (after, ['basis_consequence_context']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("If [164 chars]slide.", []) != ("If [164 chars]slide ('Traction by Apr-16' heads page 10, whi[133 chars]xt'])
+
+First differing element 0:
+"If t[163 chars]slide."
+"If t[163 chars]slide ('Traction by Apr-16' heads page 10, whi[101 chars]xt)."
+
+  ('If the self-reported figures [S1, S3] are accurate without independent '
+   'verification, ManyChat would represent a large platform at the time of the '
+-  "'Traction by Apr-16' slide.",
+-  [])
++  "'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states "
++  '140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, '
++  'with no date context).',
++  ['basis_consequence_context'])
+
+======================================================================
+FAIL: test_a_condition_s_consequence_does_not_date_page_12 (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_a_condition_s_consequence_does_not_date_page_12) (text="If the traction figures [S1, S3] are taken at face value, ManyChat would have built a sizeable platform by the period referenced in the 'Traction by Apr-16' slide context.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4305, in test_a_condition_s_consequence_does_not_date_page_12
+    self.assertEqual(self.full(before), (after, ['basis_consequence_context']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("If [162 chars]ntext.", []) != ("If [162 chars]ntext ('Traction by Apr-16' heads page 10, whi[133 chars]xt'])
+
+First differing element 0:
+"If t[161 chars]ntext."
+"If t[161 chars]ntext ('Traction by Apr-16' heads page 10, whi[101 chars]xt)."
+
+  ('If the traction figures [S1, S3] are taken at face value, ManyChat would '
+   "have built a sizeable platform by the period referenced in the 'Traction by "
+-  "Apr-16' slide context.",
+-  [])
++  "Apr-16' slide context ('Traction by Apr-16' heads page 10, which states 140 "
++  '000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no '
++  'date context).',
++  ['basis_consequence_context'])
+
+======================================================================
+FAIL: test_a_condition_s_consequence_does_not_date_page_12 (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_a_condition_s_consequence_does_not_date_page_12) (text="If 500M messages/month [S3] is accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4305, in test_a_condition_s_consequence_does_not_date_page_12
+    self.assertEqual(self.full(before), (after, ['basis_consequence_context']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("If [120 chars]slide.", []) != ("If [120 chars]slide ('Traction by Apr-16' heads page 10; the[100 chars]xt'])
+
+First differing element 0:
+"If 5[119 chars]slide."
+"If 5[119 chars]slide ('Traction by Apr-16' heads page 10; the[68 chars]xt)."
+
+  ('If 500M messages/month [S3] is accurate, ManyChat would represent a large '
+-  "platform at the time of the 'Traction by Apr-16' slide.",
+?                                                         ^ -
+
++  "platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' "
+?                                                         ^^^^^^^^^^^^^^^^^^^^^^^
+
+-  [])
++  'heads page 10; the deck states 500M messages/month [S3] on page 12, with no '
++  'date context).',
++  ['basis_consequence_context'])
+
+======================================================================
+FAIL: test_an_asserted_date_transfer_is_corrected (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_an_asserted_date_transfer_is_corrected) (text="Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4299, in test_an_asserted_date_transfer_is_corrected
+    self.assertEqual(self.full(before)[0], after)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Taki[79 chars]1, S2, S3], the company had deployed a meaning[143 chars]S4]." != "Taki[79 chars]1, S2], the company had deployed a meaningful [333 chars]on)."
+Diff is 749 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_an_asserted_date_transfer_is_corrected (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_an_asserted_date_transfer_is_corrected) (text="Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4299, in test_an_asserted_date_transfer_is_corrected
+    self.assertEqual(self.full(before)[0], after)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Taki[79 chars]1, S2, S3], the company had deployed a meaning[80 chars]ext." != "Taki[79 chars]1, S2], the company had deployed a meaningful [270 chars]on)."
+- Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context.
++ Taking the self-reported traction at face value without independent verification [S1, S2], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).
+
+
+======================================================================
+FAIL: test_an_asserted_date_transfer_is_corrected (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_an_asserted_date_transfer_is_corrected) (text="Taking the self-reported traction at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4299, in test_an_asserted_date_transfer_is_corrected
+    self.assertEqual(self.full(before)[0], after)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Taki[46 chars]1, S2, S3], the company had deployed a meaning[143 chars]S4]." != "Taki[46 chars]1, S2], the company had deployed a meaningful [333 chars]on)."
+Diff is 683 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_an_asserted_date_transfer_is_corrected (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_an_asserted_date_transfer_is_corrected) (text="Taking the self-reported traction at face value without external verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4299, in test_an_asserted_date_transfer_is_corrected
+    self.assertEqual(self.full(before)[0], after)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Taki[76 chars]1, S2, S3], the company had deployed a meaning[80 chars]ext." != "Taki[76 chars]1, S2], the company had deployed a meaningful [270 chars]on)."
+- Taking the self-reported traction at face value without external verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context.
++ Taking the self-reported traction at face value without external verification [S1, S2], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).
+
+
+======================================================================
+FAIL: test_an_asserted_date_transfer_is_corrected (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_an_asserted_date_transfer_is_corrected) (text="Taking the self-reported traction, not independently verified, at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4299, in test_an_asserted_date_transfer_is_corrected
+    self.assertEqual(self.full(before)[0], after)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Taki[75 chars]1, S2, S3], the company had deployed a meaning[80 chars]ext." != "Taki[75 chars]1, S2], the company had deployed a meaningful [270 chars]on)."
+- Taking the self-reported traction, not independently verified, at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context.
++ Taking the self-reported traction, not independently verified, at face value [S1, S2], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).
+
+
+======================================================================
+FAIL: test_an_asserted_date_transfer_is_corrected (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_an_asserted_date_transfer_is_corrected) (text="Taking the unverified, self-reported traction at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4299, in test_an_asserted_date_transfer_is_corrected
+    self.assertEqual(self.full(before)[0], after)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Taki[58 chars]1, S2, S3], the company had deployed a meaning[80 chars]ext." != "Taki[58 chars]1, S2], the company had deployed a meaningful [270 chars]on)."
+- Taking the unverified, self-reported traction at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context.
++ Taking the unverified, self-reported traction at face value [S1, S2], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).
+
+
+======================================================================
+FAIL: test_an_asserted_date_transfer_is_corrected (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_an_asserted_date_transfer_is_corrected) (text="Taking the self-reported traction at face value [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, alongside Pitch Deck Hunt's listing of $23.1M raised [C1, S4].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4299, in test_an_asserted_date_transfer_is_corrected
+    self.assertEqual(self.full(before)[0], after)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Taki[46 chars]1, S2, S3], the company had deployed a meaning[143 chars]S4]." != "Taki[46 chars]1, S2], the company had deployed a meaningful [333 chars]on)."
+Diff is 683 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_an_asserted_date_transfer_is_corrected (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_an_asserted_date_transfer_is_corrected) (text="Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform as of the 'Traction by Apr-16' slide.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4299, in test_an_asserted_date_transfer_is_corrected
+    self.assertEqual(self.full(before)[0], after)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Taki[79 chars]1, S2, S3], the company had deployed a meaning[50 chars]ide." != "Taki[79 chars]1, S2], the company had deployed a meaningful [240 chars]on)."
+- Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform as of the 'Traction by Apr-16' slide.
++ Taking the self-reported traction at face value without independent verification [S1, S2], the company had deployed a meaningful bot platform as of the 'Traction by Apr-16' slide; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).
+
+
+======================================================================
+FAIL: test_another_pair_alike (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_another_pair_alike) (text="Taking the self-reported usage at face value without independent verification [S7, S8], the platform was sizeable by the period referenced in the 'Growth by Q3-19' slide context, with 40 staff [S9].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4358, in test_another_pair_alike
+    self.assertEqual(guard_basis_wording(before, facts), (after, rule))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("Tak[73 chars]n [S7, S8], the platform was sizeable by the p[77 chars], []) != ("Tak[73 chars]n [S7], the platform was sizeable by the perio[280 chars]xt'])
+
+First differing element 0:
+"Taki[72 chars]n [S7, S8], the platform was sizeable by the p[72 chars]S9]."
+"Taki[72 chars]n [S7], the platform was sizeable by the perio[253 chars]on)."
+
+Diff is 850 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_another_pair_alike (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_another_pair_alike) (text="If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time of the 'Growth by Q3-19' slide.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4358, in test_another_pair_alike
+    self.assertEqual(guard_basis_wording(before, facts), (after, rule))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("If [118 chars]slide.", []) != ("If [118 chars]slide ('Growth by Q3-19' heads page 7, which s[141 chars]xt'])
+
+First differing element 0:
+"If t[117 chars]slide."
+"If t[117 chars]slide ('Growth by Q3-19' heads page 7, which s[109 chars]xt)."
+
+  ('If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would '
+-  "be large at the time of the 'Growth by Q3-19' slide.",
+?                                                      ^ -
+
++  "be large at the time of the 'Growth by Q3-19' slide ('Growth by Q3-19' heads "
+?                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+-  [])
++  'page 7, which states 3M bots with no explicit interval [S7]; the deck states '
++  '3M bots/week [S8] on page 8, with no date context).',
++  ['basis_consequence_context'])
+
+----------------------------------------------------------------------
+Ran 20 tests in 1.330s
+
+FAILED (failures=22)
+Destroying test database for alias 'default'...
+Found 20 test(s).
+System check identified no issues (0 silenced).

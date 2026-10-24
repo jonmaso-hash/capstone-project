@@ -1,0 +1,61 @@
+
+reviewer 1a: trailing attribution (keep)
+  input: If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide, according to an analyst.
+   c8a0336: ['basis_consequence_context'] -> If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context), according to an analyst.
+   c49cb4d: kept unchanged
+   eee2bc3: kept unchanged
+reviewer 1b: trailing date hypothesis (keep)
+  input: If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide, only if the monthly figure dates from that period.
+   c8a0336: ['basis_consequence_context'] -> If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context), only if the monthly figure dates from that period.
+   c49cb4d: kept unchanged
+   eee2bc3: kept unchanged
+reviewer 1c: consequence citation (keep)
+  input: If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide [S1, S3].
+   c8a0336: ['basis_consequence_context'] -> If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) [S1, S3].
+   c49cb4d: kept unchanged
+   eee2bc3: kept unchanged
+reviewer 2: unrelated consequence (keep)
+  input: If the figures [S1, S3] are accurate, revenue would be $10M at the time of the 'Traction by Apr-16' slide.
+   c8a0336: ['basis_consequence_context'] -> If the figures [S1, S3] are accurate, revenue would be $10M at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context).
+   c49cb4d: kept unchanged
+   eee2bc3: kept unchanged
+reviewer 2 as written (typographic quotes; keep)
+  input: If the figures [S1, S3] are accurate, revenue would be $10M at the time of the ‘Traction by Apr-16’ slide.
+   c8a0336: kept unchanged
+   c49cb4d: kept unchanged
+   eee2bc3: kept unchanged
+review c49cb4d 1a: subject to (keep)
+  input: If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — subject to the monthly figure referring to that period.
+   c8a0336: ['basis_consequence_context'] -> If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — subject to the monthly figure referring to that period.
+   c49cb4d: ['basis_consequence_context'] -> If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — subject to the monthly figure referring to that period.
+   eee2bc3: kept unchanged
+review c49cb4d 1b: contingent on (keep)
+  input: If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — contingent on the monthly figure referring to that period.
+   c8a0336: ['basis_consequence_context'] -> If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — contingent on the monthly figure referring to that period.
+   c49cb4d: ['basis_consequence_context'] -> If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — contingent on the monthly figure referring to that period.
+   eee2bc3: kept unchanged
+review c49cb4d 1c: only when (keep)
+  input: If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — only when the monthly figure refers to that period.
+   c8a0336: ['basis_consequence_context'] -> If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — only when the monthly figure refers to that period.
+   c49cb4d: ['basis_consequence_context'] -> If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — only when the monthly figure refers to that period.
+   eee2bc3: kept unchanged
+review c49cb4d 2a: No platform (keep)
+  input: If the figures [S1, S3] are accurate, No platform would have significant throughput at the time of the 'Traction by Apr-16' slide.
+   c8a0336: kept unchanged
+   c49cb4d: ['basis_consequence_context'] -> If the figures [S1, S3] are accurate, No platform would have significant throughput at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context).
+   eee2bc3: kept unchanged
+review c49cb4d 2b: Neither platform (keep)
+  input: If the figures [S1, S3] are accurate, Neither platform would have significant throughput at the time of the 'Traction by Apr-16' slide.
+   c8a0336: kept unchanged
+   c49cb4d: ['basis_consequence_context'] -> If the figures [S1, S3] are accurate, Neither platform would have significant throughput at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context).
+   eee2bc3: kept unchanged
+memo 103 base (OF-1102, repair)
+  input: Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4].
+   c8a0336: ['basis_source_context'] -> Taking the self-reported traction at face value without independent verification [S1, S2], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4]; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).
+   c49cb4d: ['basis_source_context'] -> Taking the self-reported traction at face value without independent verification [S1, S2], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4]; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).
+   eee2bc3: ['basis_source_context'] -> Taking the self-reported traction at face value without independent verification [S1, S2], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4]; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).
+memo 103 upside (OF-1103, repair)
+  input: If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide — consistent with a business approaching scale.
+   c8a0336: ['basis_consequence_context'] -> If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — consistent with a business approaching scale.
+   c49cb4d: ['basis_consequence_context'] -> If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — consistent with a business approaching scale.
+   eee2bc3: ['basis_consequence_context'] -> If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — consistent with a business approaching scale.

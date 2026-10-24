@@ -1,0 +1,11 @@
+Memo 103 (document 3145): every field that differs between the replay at c6c3d1b (= stored) and at b16d3c1.
+Memos 96-102: no field differs.
+
+== upside_scenario ['basis_consequence_context']
+- If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide — consistent with a network-effect-driven software business approaching scale.
++ If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — consistent with a network-effect-driven software business approaching scale.
+
+== base_scenario ['basis_source_context']
+- Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4].
++ Taking the self-reported traction at face value without independent verification [S1, S2], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4]; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).
+

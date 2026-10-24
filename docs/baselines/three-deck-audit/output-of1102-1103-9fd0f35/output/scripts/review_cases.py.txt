@@ -1,0 +1,61 @@
+"""Reviews of c8a0336, c49cb4d and eee2bc3: the reviewer's examples and both memo-103 repairs through the full time -> funding -> basis
+sequence on memo 103's payload, with the basis guard from git at c8a0336, c49cb4d and eee2bc3 and from the working tree (HEAD).
+No model call, no database. Prints one line per case and version."""
+import importlib.util, subprocess, sys
+import zelda_api
+from zelda_api import basis_fidelity as current
+from zelda_api.tests_output_fidelity import (replay, items_from, notes_from, memo103_payload, BASE_103_BEFORE,
+                                             CONSEQUENCE_FIXED)
+
+p = memo103_payload(); items, notes = items_from(p), notes_from(p)
+
+
+def load(rev):
+    src = subprocess.run(['git', 'show', f'{rev}:zelda_api/basis_fidelity.py'], capture_output=True, text=True,
+                         encoding='utf-8', check=True).stdout
+    mod = importlib.util.module_from_spec(importlib.util.spec_from_loader('zelda_api.basis_fidelity', loader=None))
+    mod.__package__ = 'zelda_api'
+    exec(compile(src, rev, 'exec'), mod.__dict__)
+    return mod
+
+
+head = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True).stdout.strip()
+dirty = subprocess.run(['git', 'diff', '--quiet', 'HEAD', '--', 'zelda_api/basis_fidelity.py']).returncode
+versions = [('c8a0336', load('c8a0336')), ('c49cb4d', load('c49cb4d')), ('eee2bc3', load('eee2bc3')), (head + (' DIRTY' if dirty else ''), current)]
+IF, AT = "If the figures [S1, S3] are accurate, ManyChat would represent a large platform", \
+    "at the time of the 'Traction by Apr-16' slide"
+cases = [
+    ('reviewer 1a: trailing attribution (keep)', f"{IF} {AT}, according to an analyst."),
+    ('reviewer 1b: trailing date hypothesis (keep)', f"{IF} {AT}, only if the monthly figure dates from that period."),
+    ('reviewer 1c: consequence citation (keep)', f"{IF} {AT} [S1, S3]."),
+    ('reviewer 2: unrelated consequence (keep)',
+     "If the figures [S1, S3] are accurate, revenue would be $10M at the time of the 'Traction by Apr-16' slide."),
+    ('reviewer 2 as written (typographic quotes; keep)',
+     "If the figures [S1, S3] are accurate, revenue would be $10M at the time of the ‘Traction by Apr-16’ slide."),
+    ('review c49cb4d 1a: subject to (keep)', f"{IF} {AT} — subject to the monthly figure referring to that period."),
+    ('review c49cb4d 1b: contingent on (keep)', f"{IF} {AT} — contingent on the monthly figure referring to that period."),
+    ('review c49cb4d 1c: only when (keep)', f"{IF} {AT} — only when the monthly figure refers to that period."),
+    ('review c49cb4d 2a: No platform (keep)', "If the figures [S1, S3] are accurate, No platform would have significant throughput " + AT + "."),
+    ('review c49cb4d 2b: Neither platform (keep)', "If the figures [S1, S3] are accurate, Neither platform would have significant throughput " + AT + "."),
+    ('review eee2bc3 1: on the footing (keep)', f"{IF} {AT} — on the footing that this holds."),
+    ('review eee2bc3 2: premised on (keep)', f"{IF} {AT} — premised on this holding."),
+    ('memo 103 base (OF-1102, repair)', BASE_103_BEFORE),
+    ('memo 103 upside (OF-1103, repair)', CONSEQUENCE_FIXED[0][0]),
+]
+
+
+def run(mod, text):
+    sys.modules['zelda_api.basis_fidelity'] = zelda_api.basis_fidelity = mod
+    out, ch = replay({'s': text}, items, notes)
+    return out['s'], ch.get('s', [])
+
+
+try:
+    for label, text in cases:
+        print(label)
+        print('  input: ' + text)
+        for name, mod in versions:
+            out, ch = run(mod, text)
+            print(f'  {name:>8}: ' + ('kept unchanged' if out == text else f'{ch} -> {out}'))
+finally:
+    sys.modules['zelda_api.basis_fidelity'] = zelda_api.basis_fidelity = current

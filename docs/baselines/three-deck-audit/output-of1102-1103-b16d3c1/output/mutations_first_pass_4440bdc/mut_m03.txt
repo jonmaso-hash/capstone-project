@@ -1,0 +1,29 @@
+K2 CAUGHT Ran 403 tests in 15.169s FAILED (failures=3) restored=True | OF-1103 returns: a citation group's comma ends the antecedent ("[S1, S3]")
+    assertion failures in: test_a_condition_s_consequence_does_not_date_page_12
+    errors in: -
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat had a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the self-reported figures [S1, S3] are accurate without independent verification, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the traction figures [S1, S3] are taken at face value, ManyChat would have built a sizeable platform by the period referenced in the 'Traction by Apr-16' slide context."
+K3 CAUGHT Ran 403 tests in 15.178s FAILED (failures=7) restored=True | OF-1103 returns: a thousands comma ends the antecedent ("140,000+")
+    assertion failures in: test_a_condition_s_consequence_does_not_date_page_12, test_citations_change_only_where_corrected, test_of1103_the_consequence_does_not_date_page_12, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_same_repairs
+    errors in: -
+    failing sub-case: text="Assuming the 140,000+ bots [S1] and 500M messages/month [S3] are accurate, ManyChat would have had significant scale as of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time
+K4 CAUGHT Ran 403 tests in 15.356s FAILED (failures=10) restored=True | overcorrection: any antecedent accepts (explicit date hypotheses get the note)
+    assertion failures in: test_another_pair_alike, test_citations_are_preserved_in_order, test_earlier_memos_get_no_consequence_rule, test_every_other_field_is_exactly_as_stored, test_hypotheses_denials_questions_and_other_speakers_are_kept, test_only_the_expected_rules_fired, test_the_stored_memo_carries_the_corrections
+    errors in: -
+    failing sub-case: memo=98
+    failing sub-case: text="If revenue and the figures [S1, S3] are accurate, ManyChat would be large at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the 3M bots/week [S8] figure dates from the 'Growth by Q3-19' slide, the platform would be large at the time of the 'Growth by Q3-19' slide."
+    failing sub-case: text="If the 500M messages/month [S3] figure dates from the 'Traction by Apr-16' slide, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the 500M messages/month [S3] is accurate as of April 2016, ManyChat would have been large at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the figures [S1, S3] are accurate, and if they date from the 'Traction by Apr-16' slide, ManyChat would be large at the time of the 'Traction by Apr-16' slide."
+K5 CAUGHT Ran 403 tests in 15.095s FAILED (failures=1) restored=True | overcorrection: a further condition's comma ends the antecedent (", and if they date from ...")
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the figures [S1, S3] are accurate, and if they date from the 'Traction by Apr-16' slide, ManyChat would be large at the time of the 'Traction by Apr-16' slide."
+K6 CAUGHT Ran 403 tests in 15.147s FAILED (failures=1) restored=True | overcorrection: a denied consequence gets the note
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would not have been large at the time of the 'Traction by Apr-16' slide."
+final sha matches pre-run: True 22312953aec3922f66ad77ac257ecc413e6ce065003507d24db56cc889bd4727

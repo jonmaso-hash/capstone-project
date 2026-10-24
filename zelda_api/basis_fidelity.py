@@ -243,8 +243,21 @@ _CONTEXT_ASIDE = re.compile(r"\(\s*(?:in\s+|on\s+)?(?:an?\s+|the\s+)?(?:slide|pa
 _CONTEXT_PHRASE = re.compile(r"\b(?:in|on|within|under)\s+(?:an?\s+|the\s+)?(?:(?:slide|page)(?:\s+context)?\s*"
                              r"(?:headed|titled|:)\s*'(?P<ctx>[^']+)'|'(?P<ctx2>[^']+)'\s+(?:slide\s+)?"
                              r"(?:context|heading|framing))", re.I)
+# The same heading named as a time (memo 103, OF-1102/1103): "at the time of the 'X' slide", "as of the 'X' slide
+# context", "by the time of the 'X' page".
+_TIME_CONTEXT = re.compile(r"\b(?:at\s+the\s+time\s+of|as\s+of|by\s+the\s+time\s+of)\s+(?:the\s+)?'(?P<ctx>[^']+)'\s+"
+                           r"(?:slide|page)(?:\s+(?:context|heading))?\b", re.I)
 # Where a context phrase may be followed by a separately placed fact: the end of its clause.
 _CLAUSE_END = re.compile(r'\s*(?:[.!]?["”’)]*\s*$|;|,\s*(?:while|whereas|and|but)\s)', re.I)
+# A closing "with ..." clause after the context phrase (memo 103, OF-1102: ", with Pitch Deck Hunt listing $23.1M in
+# prior funding [C1, S4]"): the moved fact follows it, so it keeps its own subject. _trailing_clause decides.
+_TRAILING_WITH = re.compile(r',\s+(?:with|alongside)\s+(?P<body>[^;:()—–]*?)(?P<end>[.!]?["”’)]*\s*)$', re.I)
+# A qualification of the figures' VERIFICATION, not of their date, place or truth (memo 103, OF-1102): "without
+# independent verification", "not independently verified", "unverified". An allowlist: any other "without" or "not"
+# still denies, and a hedge before it ("possibly without ...") still hedges.
+_VERIFICATION_QUALIFIER = re.compile(
+    r"\b(?:without\s+(?:any\s+)?(?:independent|external|third[-\s]party)\s+(?:verification|confirmation|corroboration)"
+    r"|not\s+(?:yet\s+)?(?:been\s+)?independently\s+(?:verified|confirmed)|(?:as\s+yet\s+)?unverified)\b", re.I)
 # The company's own subject ending right before its reporting verb: "the company states", "... only that the deck
 # lists". A narrator ("Pitch Deck Hunt lists") or anything between ("the company does not state", "may state")
 # does not match (review of 1801ec5).
@@ -958,10 +971,13 @@ def _context_aside(sentence, facts, changes):
     found = [(m.start(), m.end(), m.group('ctx'), True) for m in _CONTEXT_ASIDE.finditer(sentence)]
     found += [(m.start(), m.end(), m.group('ctx') or m.group('ctx2'), False) for m in _CONTEXT_PHRASE.finditer(sentence)
               if sentence[:m.start()].count('(') == sentence[:m.start()].count(')')]   # an aside's own words: above
+    found += [(m.start(), m.end(), m.group('ctx'), False) for m in _TIME_CONTEXT.finditer(sentence)
+              if sentence[:m.start()].count('(') == sentence[:m.start()].count(')')]
     for at, end, claimed, aside in sorted(found):
         if _conditional(sentence, at):
             continue
-        if not _CLAUSE_END.match(sentence, end):
+        clause_end = bool(_CLAUSE_END.match(sentence, end))
+        if not clause_end and not _TRAILING_WITH.match(sentence, end):
             continue                           # mid-clause ("... is the headline figure"): no place for the fact
         start = _place_clause_start(sentence, at)
         groups = list(_REF.finditer(sentence, start, at))
@@ -975,6 +991,9 @@ def _context_aside(sentence, facts, changes):
         pair = next((p for p in facts.pairs if len(p.sides) == 2 and set(outside) <= p.members), None)
         if pair is None:
             continue
+        tail = None if clause_end else _trailing_clause(sentence, end, pair, facts)
+        if not clause_end and tail is None:
+            continue                           # a closing clause the rule does not know: no place for the fact
         # Each moved ref shares its citation group with a ref of the same pair under the claimed context: one
         # figure cited for both sides. (A side's refs share one page and context, so that ref is the other side.)
         merged = all(any(ref in inside and ref in pair.members for ref in _split_refs(group.group(1)))
@@ -985,7 +1004,8 @@ def _context_aside(sentence, facts, changes):
         # must have the company as its subject (review of 1801ec5); no narrator named in the clause, and no denial
         # or hedge in it.
         first = min(group.start() for group in groups if set(_split_refs(group.group(1))) & set(outside))
-        head = sentence[start:first]
+        head = _VERIFICATION_QUALIFIER.sub(' ', sentence[start:first])   # a verification qualifier is no denial
+        clause_words = _VERIFICATION_QUALIFIER.sub(' ', sentence[start:at])
         verbs = [verb for verb in _REPORTING.finditer(head) if head[:verb.start()].count('(') == head[:verb.start()].count(')')
                  and head[verb.start() - 1:verb.start()] != '-']     # "self-reported" is an adjective, not a verb
         if verbs and not _OWN_SUBJECT_END.search(head[:verbs[-1].start()]):
@@ -999,7 +1019,7 @@ def _context_aside(sentence, facts, changes):
             continue                           # no reporting verb and no own source named: whose statement is unknown
         if not verbs and not _own_head(head, cited, facts):
             continue                           # someone else's words before the figures (review of 7fb484b)
-        words = re.findall(r"[\w']+", _REF.sub(' ', clause).lower())
+        words = re.findall(r"[\w']+", _REF.sub(' ', clause_words).lower())
         if set(words) & _DENIAL or _UNCERTAIN.search(' '.join(words)):
             continue
         out, pos = sentence[:start], start
@@ -1016,16 +1036,36 @@ def _context_aside(sentence, facts, changes):
                 runs.append((places[ref][:2], [ref]))
         facts_text = [' and '.join(f'{places[ref][2]} [{ref}]' for ref in refs) + f' on page {page}'
                       + (f", under '{context}'" if context else '') for (page, context), refs in runs]
-        if aside or verbs:                     # the company's verb carries on: "..., and separately X on page 12"
+        if (aside or verbs) and tail is None:  # the company's verb carries on: "..., and separately X on page 12"
             body = ''.join(', and separately ' + text for text in facts_text)
-        else:                                  # no reporting verb to carry on: a clause of its own
+        else:                                  # no verb to carry on, or after another clause: a clause of its own
             body = '; the deck separately states ' + ', and separately '.join(facts_text)
         clarification = pair.clarification[0].lower() + pair.clarification[1:]
         if clarification not in sentence:
             body += f' ({clarification})'
         changes.append('basis_source_context')
+        if tail is not None:                   # after the closing "with ..." clause, which keeps its own subject
+            return out + sentence[end:tail] + body + sentence[tail:]
         return out + body + sentence[end:]
     return sentence
+
+
+def _trailing_clause(sentence, end, pair, facts):
+    """Where the moved fact goes when the context phrase is followed by a closing "with ..." clause: before the
+    sentence's final punctuation (memo 103, OF-1102). Only a clause about something else: no ref of any pair, no
+    condition, no page, slide or other heading, and none of this pair's figures, noun or bases (", with 500M
+    messages/month stated separately" is about the figures). None otherwise: the sentence is kept."""
+    match = _TRAILING_WITH.match(sentence, end)
+    if match is None:
+        return None
+    body = match.group('body')
+    members = set().union(*(p.members for p in facts.pairs))
+    words = _REF.sub(' ', body)
+    if (set(_cited(body)) & members or _CONDITION.search(words) or _CONTEXT_PHRASE.search(words)
+            or _TIME_CONTEXT.search(words) or re.search(r"\b(?:pages?|slides?|headings?)\b|'[^']+'", words, re.I)
+            or _names_pair(words, pair) or any(hit.group(0).strip().lower() in pair.figures for hit in _FIGURE.finditer(words))):
+        return None
+    return match.start('end')
 
 
 # A condition that accepts the cited figures rather than supposing anything about their date or basis (memo 102,
@@ -1098,6 +1138,164 @@ def _condition_context(sentence, facts, changes):
         changes.append('basis_condition_context')
         return out[:final.start()] + body + out[final.start():]
     return sentence
+
+
+# A condition opening the sentence (memo 103, OF-1103). One elsewhere ("X would be large if ...", "According to an
+# analyst, if ...") is not read.
+_LEADING_CONDITION = re.compile(r'^\s*(?:[-•*·–]\s*)?(?:if|assuming|supposing|suppose)\b', re.I)
+# A comma that continues the antecedent with a further condition (", and if they date from ...") rather than ending it.
+_FURTHER_CONDITION = re.compile(r'\s*(?:(?:and|or)\s+)?(?:if|assuming|supposing|suppose|whether|unless)\b', re.I)
+# What a condition may suppose about the cited figures without supposing their date: that they are accurate,
+# correct, reliable or valid, taken or accepted as stated, or that one basis is the correct one ("the per-month figure
+# is the correct basis"). An allowlist: any other word ("dates", "reflects", "as of", "April", a heading) is a
+# hypothesis the condition makes itself, and the sentence is kept.
+_ACCEPTING_WORDS = frozenset({'is', 'are', 'were', 'was', 'be', 'accurate', 'correct', 'reliable', 'valid', 'true',
+                              'right', 'taken', 'accepted', 'read', 'treated', 'at', 'face', 'value', 'as', 'stated',
+                              'reported', 'presented', 'given', 'basis', 'per'})
+
+
+def _accepting_antecedent(text, cited, facts, pair):
+    """Every word of the condition is the company's own source, a placing or accepting word, a word or figure of the
+    cited statements, the pair's category or one of its bases: it supposes nothing about the figures' date."""
+    statements = [_DIGIT_GROUP.sub('', fact.lower()) for ref, *_, fact in facts.places if ref in cited]
+    vocabulary = (_PLACING_WORDS | _OWN_HEAD_WORDS | _ACCEPTING_WORDS | pair.topics | set(pair.intervals)
+                  | {_RATE_ADJECTIVE.get(interval, interval) for interval in pair.intervals}
+                  | {word for fact in statements for word in re.findall(r'[a-z]+', fact)}
+                  | {form for fact in statements for form in _stated_forms(fact)})
+    text = re.sub(r'\bself-reported\b', 'selfreported', _VERIFICATION_QUALIFIER.sub(' ', text), flags=re.I)
+    text = re.sub(r'(?<=[a-z])[-/](?=[a-z])', ' ', text, flags=re.I)    # "per-month", "messages/month"
+    return _plain_words(text, vocabulary)
+
+
+# The consequence's subject: the company named ("ManyChat"), "the company", "the platform" or "it". Its own words
+# are not read; the predicate after it must describe the cited figures (review of c8a0336).
+_CONSEQUENCE_SUBJECT = re.compile(r"\s*(?:the\s+(?:company|platform|business)|it|[A-Z][\w&'.-]*(?:\s+[A-Z][\w&'.-]*){0,2})"
+                                  r"(?=\s)")
+# What a consequence may say about the cited figures besides their own words, figures and the pair's categories: the
+# scale they describe ("would represent a platform with significant throughput", "had a large platform"). An
+# allowlist: another metric ("revenue would be $10M"), a denial, a speaker or an unknown word keeps the sentence.
+_CONSEQUENCE_WORDS = frozenset({'would', 'could', 'might', 'may', 'will', 'have', 'has', 'had', 'been', 'be', 'is',
+                                'was', 'represent', 'represents', 'represented', 'built', 'reached', 'achieved',
+                                'operated', 'run', 'with', 'its', 'by', 'period', 'referenced', 'already',
+                                'significant', 'sizeable', 'sizable', 'large', 'meaningful', 'substantial',
+                                'considerable', 'high', 'volume', 'bot', 'messaging', 'user', 'base'})
+# At least one of these, the pair's categories or the cited statements' words must be in the predicate: it is the
+# figures' scale the heading dates, not something else ("revenue would be significant" names none).
+_SCALE_NOUNS = frozenset({'platform', 'scale', 'throughput', 'adoption', 'footprint', 'reach', 'volume'})
+# The heading phrase must close the consequence's clause: the sentence ends, or a dash, ";" or ":" follows. Anything
+# else after it (", according to an analyst", ", only if ...", "[S1, S3]") is part of the consequence, and kept.
+_CONSEQUENCE_CLOSE = re.compile(r'\s*(?:[.!]?["”’)]*\s*$|[—–;:]|-(?=\s))')
+# What may follow the consequence's clause (after a dash, ";" or ":"): nothing, or a recognised harmless continuation
+# ("— consistent with a network-effect-driven software business approaching scale", memo 103). An allowlist: any other
+# clause, a condition in words no list holds included ("— on the footing that this holds", "— premised on this
+# holding"), keeps the sentence (review of eee2bc3).
+_HARMLESS_CONTINUATION = re.compile(r'\s*consistent\s+with\s+(?P<body>[a-z][a-z\s-]*?)\s*[.!]?["”’)]*\s*', re.I)
+_CONTINUATION_WORDS = frozenset({'a', 'an', 'network', 'effect', 'driven', 'software', 'technology', 'messaging',
+                                 'business', 'company', 'platform', 'approaching', 'nearing', 'reaching', 'scale'})
+# Words that deny or all but deny a consequence wherever they stand, its subject included ("No platform would ...",
+# "Neither platform ...", "Few would ...") (review of c49cb4d).
+_CONSEQUENCE_DENIAL = _DENIAL | frozenset({'few', 'hardly', 'barely', 'scarcely', 'nobody', 'nowhere'})
+
+
+def _harmless_continuation(rest):
+    """What follows the consequence's clause is nothing, or "consistent with" and allowlisted words only."""
+    if not rest.strip():
+        return True                            # the sentence ended with the heading phrase
+    continuation = _HARMLESS_CONTINUATION.fullmatch(rest)
+    return bool(continuation) and set(re.findall(r'[a-z]+', continuation.group('body').lower())) <= _CONTINUATION_WORDS
+
+
+def _figures_consequence(consequence, cited, facts, pair):
+    """The consequence before the heading phrase is a subject and a predicate about the cited figures' scale, in
+    allowlisted words, naming that scale (a scale noun, the pair's category or a word of the cited statements)."""
+    subject = _CONSEQUENCE_SUBJECT.match(consequence)
+    if subject is None:
+        return False
+    if set(re.findall(r"[a-z']+", consequence.lower())) & _CONSEQUENCE_DENIAL:
+        return False                           # a denial, the subject's too ("No platform", "Neither platform"), or
+                                               # one borrowed from a statement ("3M bots with no explicit interval");
+                                               # a "-n't" word is no predicate word, so the allowlist below refuses it
+    statements = [_DIGIT_GROUP.sub('', fact.lower()) for ref, *_, fact in facts.places if ref in cited]
+    nouns = {form[3] for form in map(_statement_form, statements) if form and form[3]} | pair.topics   # "bots"
+    vocabulary = (_PLACING_WORDS | _CONSEQUENCE_WORDS | _SCALE_NOUNS | nouns
+                  | {word for fact in statements for word in re.findall(r'[a-z]+', fact)}
+                  | {form for fact in statements for form in _stated_forms(fact)})
+    predicate = re.sub(r'(?<=[a-z])[-/](?=[a-z])', ' ', consequence[subject.end():], flags=re.I)  # "high-volume"
+    words = set(re.findall(r"[a-z']+", re.sub(r'(?<=[a-z])[-/](?=[a-z])', ' ', consequence.lower())))
+    return _plain_words(predicate, vocabulary) and bool(words & (_SCALE_NOUNS | nouns))   # "the platform would be large"
+
+
+def _consequence_context(sentence, facts, changes):
+    """A condition that only accepts the cited figures (or their basis), whose CONSEQUENCE places them at page 10's
+    heading ("..., ManyChat would represent a platform ... at the time of the 'Traction by Apr-16' slide"): the
+    heading is carried onto page 12's figure, which the condition never supposed (OF-1103). The condition and its
+    consequence are kept whole; right after the phrase, a parenthesis places the heading on its own page and page
+    12's figure on its page, with no date context. Conditions that suppose the date themselves are kept, and so is
+    a consequence about anything but the cited figures' scale, one the heading does not close (", according to an
+    analyst", ", only if ...", a citation), and one followed by anything but a recognised harmless continuation
+    (reviews of c8a0336 and eee2bc3)."""
+    if _asks(sentence) or not facts.pairs:
+        return sentence
+    condition = _LEADING_CONDITION.match(sentence)
+    if condition is None:
+        return sentence
+    depth, split = 0, None                     # the antecedent ends at the first comma that does not add a condition
+    for i in range(condition.end(), len(sentence)):      # (never one inside a parenthesis or a citation group)
+        if sentence[i] in '([':
+            depth += 1
+        elif sentence[i] in ')]':
+            depth = max(0, depth - 1)
+        elif (sentence[i] == ',' and depth == 0 and not _FURTHER_CONDITION.match(sentence, i + 1)
+              and not (sentence[i - 1:i].isdigit() and sentence[i + 1:i + 2].isdigit())):   # not "140,000+"
+            split = i
+            break
+    if split is None:
+        return sentence
+    found = sorted([(m.start(), m.end(), m.group('ctx') or m.group('ctx2')) for m in _CONTEXT_PHRASE.finditer(sentence, split)]
+                   + [(m.start(), m.end(), m.group('ctx')) for m in _TIME_CONTEXT.finditer(sentence, split)])
+    found = [hit for hit in found if sentence[:hit[0]].count('(') == sentence[:hit[0]].count(')')]
+    if not found:
+        return sentence
+    at, end, claimed = found[0]
+    if sentence.startswith(f" ('{claimed}' heads page", end):
+        return sentence                        # already placed
+    places = {ref: (page, context, fact) for ref, page, context, fact in facts.places}
+    antecedent = sentence[condition.end():split]
+    cited = [ref for group in _REF.finditer(antecedent) for ref in _split_refs(group.group(1))]
+    if not cited or any(ref not in places for ref in cited) or set(cited) & facts.narrated:
+        return sentence
+    inside = list(dict.fromkeys(ref for ref in cited if places[ref][1] == claimed))
+    outside = list(dict.fromkeys(ref for ref in cited if places[ref][1] != claimed))
+    pair = next((p for p in facts.pairs if len(p.sides) == 2 and outside and set(outside) <= p.members), None)
+    if pair is None or any(places[ref][1] for ref in outside):
+        return sentence                        # no pair side carried, or it has a heading of its own
+    pages = {page for _, page, context, _ in facts.places if context == claimed}
+    if len(pages) != 1:
+        return sentence                        # the heading is no single page's
+    consequence = sentence[split + 1:at]
+    close = _CONSEQUENCE_CLOSE.match(sentence, end)
+    if close is None:
+        return sentence                        # the consequence goes on past the heading: its words are not read
+    rest = sentence[close.end():]              # after a dash, ";" or ":"; empty at the sentence's end
+    if (_REF.search(consequence) or not _harmless_continuation(rest)
+            or any(name.lower() in sentence.lower() for name in facts.narrators)
+            or not _figures_consequence(consequence, cited, facts, pair)
+            or not _accepting_antecedent(antecedent, cited, facts, pair)):
+        return sentence                        # a cited consequence or one about something else, a later condition,
+                                               # speaker, citation or denial, or a hypothesis of the condition's own
+    runs = []                                  # adjacent refs on one page share a run
+    for ref in outside:
+        if runs and runs[-1][0] == places[ref][0]:
+            runs[-1][1].append(ref)
+        else:
+            runs.append((places[ref][0], [ref]))
+    moved = ', and '.join(' and '.join(f'{places[ref][2]} [{ref}]' for ref in refs) + f' on page {page}'
+                          for page, refs in runs)
+    held = ' and '.join(f'{places[ref][2]} [{ref}]' for ref in inside)
+    note = (f" ('{claimed}' heads page {next(iter(pages))}" + (f', which states {held}' if held else '')
+            + f'; the deck states {moved}, with no date context)')
+    changes.append('basis_consequence_context')
+    return sentence[:end] + note + sentence[end:]
 
 
 # A citation group written straight after one figure ("states '500M messages/month' [C3, S3]"): the figure, any
@@ -1416,6 +1614,7 @@ def guard_basis_wording(text, facts):
         sentence = _location(sentence, facts, changes)
         sentence = _context_aside(sentence, facts, changes)
         sentence = _condition_context(sentence, facts, changes)
+        sentence = _consequence_context(sentence, facts, changes)
         sentence = _condition_attribution(sentence, before, facts, changes)
         pair = _resolve(sentence, facts, previous)
         if pair is not None:

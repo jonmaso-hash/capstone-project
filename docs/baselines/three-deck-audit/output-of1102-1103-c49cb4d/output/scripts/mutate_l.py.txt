@@ -1,0 +1,127 @@
+"""Targeted mutations for OF-1102 / OF-1103 (memo 103): each removes a repaired behaviour (the memo-103 defect
+returns) or a protection of the new code (harmful overcorrection). Same harness as the earlier rounds' runners: one
+mutant at a time on the worktree's zelda_api/basis_fidelity.py, the three affected modules run against it, the original
+bytes restored and SHA-256 checked before the next. A mutant counts as CAUGHT only by assertion failures; errors alone
+are CRASH-ONLY; no test run is NO-RUN. Usage: python mutate_l.py <worktree> [ID ...]"""
+import hashlib, os, re, subprocess, sys
+
+WT = sys.argv[1]
+ONLY = set(sys.argv[2:])
+BF = os.path.join(WT, 'zelda_api', 'basis_fidelity.py')
+T = os.path.join(os.path.dirname(os.path.abspath(__file__)), 't.sh')
+LABELS = ['zelda_api.tests_output_fidelity', 'zelda_api.tests_usage_basis', 'zelda_api.tests_funding_fidelity']
+M = [
+    # --- OF-1102: the source-context rule reads the qualifier, the trailing clause and the time phrase
+    ('J1', 'OF-1102 returns: the verification qualifier stays in the head (own-head check refuses)',
+     "        head = _VERIFICATION_QUALIFIER.sub(' ', sentence[start:first])", "        head = sentence[start:first]"),
+    ('J2', 'OF-1102 returns: the verification qualifier counts as a denial ("without")',
+     "        clause_words = _VERIFICATION_QUALIFIER.sub(' ', sentence[start:at])", "        clause_words = sentence[start:at]"),
+    ('J3', 'OF-1102 returns: a closing "with ..." clause blocks the rule',
+     "        tail = None if clause_end else _trailing_clause(sentence, end, pair, facts)", "        tail = None"),
+    ('J4', 'wrong placement: the moved fact is put before the closing clause, which then reads as page 12\'s',
+     "            return out + sentence[end:tail] + body + sentence[tail:]", "            return out + body + sentence[end:]"),
+    ('J5', 'overcorrection: a closing clause naming the pair\'s figures, noun or bases is moved past',
+     "            or _names_pair(words, pair) or any(hit.group(0).strip().lower() in pair.figures for hit in _FIGURE.finditer(words))):",
+     "            ):"),
+    ('J6', 'overcorrection: a closing clause holding a condition is moved past',
+     "    if (set(_cited(body)) & members or _CONDITION.search(words) or _CONTEXT_PHRASE.search(words)",
+     "    if (set(_cited(body)) & members or _CONTEXT_PHRASE.search(words)"),
+    ('J7', 'overcorrection: a closing clause naming a page, slide or heading is moved past',
+     r'''or re.search(r"\b(?:pages?|slides?|headings?)\b|'[^']+'", words, re.I)''', "or False"),
+    ('J8', 'overcorrection: any "without" is a verification qualifier (no allowlist)',
+     r'''    r"\b(?:without\s+(?:any\s+)?(?:independent|external|third[-\s]party)\s+(?:verification|confirmation|corroboration)"''',
+     r'''    r"\b(?:without"'''),
+    ('J9', 'OF-1102 variant returns: "as of / at the time of the \'X\' slide" is not read as the heading',
+     "    found += [(m.start(), m.end(), m.group('ctx'), False) for m in _TIME_CONTEXT.finditer(sentence)\n"
+     "              if sentence[:m.start()].count('(') == sentence[:m.start()].count(')')]\n", ""),
+    # --- OF-1103: the consequence rule
+    ('K1', 'OF-1103 returns: the consequence rule is not applied',
+     "        sentence = _consequence_context(sentence, facts, changes)\n", ""),
+    ('K2', 'OF-1103 returns: a citation group\'s comma ends the antecedent ("[S1, S3]")',
+     "        if sentence[i] in '([':", "        if sentence[i] == '(':"),
+    ('K3', 'OF-1103 returns: a thousands comma ends the antecedent ("140,000+")',
+     "\n              and not (sentence[i - 1:i].isdigit() and sentence[i + 1:i + 2].isdigit())):", "):"),
+    ('K4', 'overcorrection: any antecedent accepts (explicit date hypotheses get the note)',
+     "            or not _accepting_antecedent(antecedent, cited, facts, pair)):", "            ):"),
+    ('K5', 'overcorrection: a further condition\'s comma ends the antecedent (", and if they date from ...")',
+     "not _FURTHER_CONDITION.match(sentence, i + 1)", "True"),
+    ('K7', 'overcorrection: a consequence with its own citation gets the note',
+     "    if (_REF.search(consequence) or _REF.search(rest)", "    if (False or _REF.search(rest)"),
+    ('K8', 'not idempotent: the placed note is added again on a second pass',
+     "    if sentence.startswith(f\" ('{claimed}' heads page\", end):\n        return sentence",
+     "    if False:\n        return sentence"),
+    ('K9', 'overcorrection: a condition later in the sentence is read ("According to an analyst, if ...")',
+     "    condition = _LEADING_CONDITION.match(sentence)",
+     r"    condition = re.search(r'\b(?:if|assuming|supposing|suppose)\b', sentence, re.I)"),
+    ('K10', 'false note: a side under a heading of its own is said to have no date context',
+     "    if pair is None or any(places[ref][1] for ref in outside):", "    if pair is None:"),
+    ('K11', 'overcorrection: a narrated side is restated as the deck\'s',
+     "    if not cited or any(ref not in places for ref in cited) or set(cited) & facts.narrated:\n        return sentence\n"
+     "    inside",
+     "    if not cited or any(ref not in places for ref in cited):\n        return sentence\n    inside"),
+    # --- Review of c8a0336: the whole consequence, and that it concerns the cited figures
+    ('L1', 'review defect returns: the heading need not close the consequence (", according to ...", "[S1, S3]" unread)',
+     "    close = _CONSEQUENCE_CLOSE.match(sentence, end)", "    close = re.compile(r'[^.]*').match(sentence, end)"),
+    ('L2', 'overcorrection: a citation after the consequence\'s clause ("; growth would follow [S2]") is ignored',
+     "    if (_REF.search(consequence) or _REF.search(rest) or", "    if (_REF.search(consequence) or"),
+    ('L3', 'review defect returns: a later condition or date hypothesis ("— if the monthly figure dates ...") is ignored',
+     " or _LATER_HYPOTHESIS.search(rest) or", " or"),
+    ('L4', 'review defect returns: a later speaker ("— according to an analyst") is ignored',
+     " or _ATTRIBUTION.search(rest)\n", "\n"),
+    ('L5', 'overcorrection: a later denial ("— not the monthly figure\'s period") is ignored',
+     r'''            or set(re.findall(r"[\w']+", rest.lower().translate(_APOSTROPHES))) & _DENIAL''',
+     "            or False"),
+    ('L6', 'overcorrection: a narrator named after the heading only is not seen',
+     "            or any(name.lower() in sentence.lower() for name in facts.narrators)\n            or not _figures",
+     "            or any(name.lower() in sentence[:end].lower() for name in facts.narrators)\n            or not _figures"),
+    ('L7', 'review defect returns: an unrelated consequence ("revenue would be $10M") gets the note',
+     "            or not _figures_consequence(consequence, cited, facts, pair)\n", "\n"),
+    ('L8', 'overcorrection: a consequence naming no scale ("ManyChat would be large") gets the note',
+     "    return _plain_words(predicate, vocabulary) and bool(words & (_SCALE_NOUNS | nouns))",
+     "    return _plain_words(predicate, vocabulary)"),
+    ('L9', 'overcorrection: any lower-case words may be the skipped subject ("the analyst would ...")',
+     r"""[A-Z][\w&'.-]*(?:\s+[A-Z][\w&'.-]*){0,2})""", r"""[A-Za-z][\w&'.-]*(?:\s+[A-Za-z][\w&'.-]*){0,2})"""),
+    ('L10', 'overcorrection: a denial borrowed from a statement\'s words ("no") is allowed in the consequence',
+     "                   | {word for fact in statements for word in re.findall(r'[a-z]+', fact)}) - _DENIAL",
+     "                   | {word for fact in statements for word in re.findall(r'[a-z]+', fact)})"),
+]
+
+
+def sha(path):
+    return hashlib.sha256(open(path, 'rb').read()).hexdigest()
+
+
+original = open(BF, 'rb').read()
+before = sha(BF)
+for mid, desc, old, new in M:
+    if ONLY and mid not in ONLY:
+        continue
+    text = original.decode('utf-8')
+    if '\r\n' in text:                         # the working copy's line endings (core.autocrlf)
+        old, new = old.replace('\n', '\r\n'), new.replace('\n', '\r\n')
+    count = text.count(old)
+    if count != 1:
+        print(f'{mid} NOT-APPLIED anchor count {count} | {desc}', flush=True)
+        continue
+    open(BF, 'wb').write(text.replace(old, new).encode('utf-8'))
+    try:
+        run = subprocess.run(['sh', T, WT] + LABELS, capture_output=True, text=True, encoding='utf-8', errors='replace')
+        out = run.stdout + run.stderr
+    finally:
+        open(BF, 'wb').write(original)
+    restored = sha(BF) == before
+    summary = (re.findall(r'^(?:OK.*|FAILED \(.*\))$', out, re.M) or ['?'])[-1]
+    ran = (re.findall(r'^Ran \d+ tests.*$', out, re.M) or ['?'])[-1]
+    fails = sorted({m for m in re.findall(r'^FAIL: (\w+)', out, re.M)})
+    errors = sorted({m for m in re.findall(r'^ERROR: (\w+)', out, re.M)})
+    verdict = 'CAUGHT' if fails else ('CRASH-ONLY' if errors else 'SURVIVED')
+    if ran == '?':
+        verdict = 'NO-RUN'
+    print(f'{mid} {verdict} {ran} {summary} restored={restored} | {desc}', flush=True)
+    print(f'    assertion failures in: {", ".join(fails) or "-"}', flush=True)
+    print(f'    errors in: {", ".join(errors) or "-"}', flush=True)
+    for case in sorted(set(re.findall(r'^FAIL: \w+ \([^)]*\) \((.*)\)$', out, re.M))):
+        print(f'    failing sub-case: {case[:220]}', flush=True)
+    if not restored:
+        sys.exit('STOP: restore hash mismatch after ' + mid)
+print('final sha matches pre-run:', sha(BF) == before, sha(BF))

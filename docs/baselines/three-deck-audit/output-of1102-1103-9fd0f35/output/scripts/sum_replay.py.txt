@@ -1,0 +1,9 @@
+import json, sys
+d = json.load(open(sys.argv[1], encoding='utf-8'))
+print('head', d['head'], 'dirty', d['working_tree_basis_fidelity_differs_from_head'], 'base', d['base'][:7])
+for k, v in d.items():
+    if not k.startswith('memo'): continue
+    print(k, 'fields', v['fields'], 'differ', sorted(v['fields_differing_from_base_replay']), 'rev', v['reversed_items_same_output_and_changes'],
+          'again', v['second_pass_unchanged'], 'refs_ok', v['every_ref_supplied'],
+          'differ_vs_previous', v['fields_differing_from_previous_replay'], 'rules_eq_previous', v['rule_changes_previous_equal_fix'], 'base==stored', None if v['base_replay_equals_stored'] is None else all(v['base_replay_equals_stored'].values()),
+          'refs_same_order_other', all(x for kk, x in v['refs_in_order_same_as_base_replay'].items() if kk not in v['fields_differing_from_base_replay']))

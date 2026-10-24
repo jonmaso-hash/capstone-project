@@ -1,0 +1,322 @@
+2026-10-24 00:45:31,510 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+...FFFF.FFFFFFFFFFFFFFFFFF..............
+======================================================================
+FAIL: test_another_pair_alike (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_another_pair_alike) (text="If the 3M bots [S7] and 3M bots/week [S8] are accurate, revenue would be $4M at the time of the 'Growth by Q3-19' slide.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4429, in test_another_pair_alike
+    self.assertEqual(guard_basis_wording(kept, facts), (kept, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("If [111 chars]slide ('Growth by Q3-19' heads page 7, which s[141 chars]xt']) != ("If [111 chars]slide.", [])
+
+First differing element 0:
+"If t[110 chars]slide ('Growth by Q3-19' heads page 7, which s[109 chars]xt)."
+"If t[110 chars]slide."
+
+  ('If the 3M bots [S7] and 3M bots/week [S8] are accurate, revenue would be $4M '
++  "at the time of the 'Growth by Q3-19' slide.",
++  [])
+-  "at the time of the 'Growth by Q3-19' slide ('Growth by Q3-19' heads page 7, "
+-  'which states 3M bots with no explicit interval [S7]; the deck states 3M '
+-  'bots/week [S8] on page 8, with no date context).',
+-  ['basis_consequence_context'])
+
+======================================================================
+FAIL: test_another_pair_alike (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_another_pair_alike) (text="If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time of the 'Growth by Q3-19' slide, according to an analyst.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4429, in test_another_pair_alike
+    self.assertEqual(guard_basis_wording(kept, facts), (kept, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("If [118 chars]slide ('Growth by Q3-19' heads page 7, which s[166 chars]xt']) != ("If [118 chars]slide, according to an analyst.", [])
+
+First differing element 0:
+"If t[117 chars]slide ('Growth by Q3-19' heads page 7, which s[134 chars]yst."
+"If t[117 chars]slide, according to an analyst."
+
+  ('If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would '
+-  "be large at the time of the 'Growth by Q3-19' slide ('Growth by Q3-19' heads "
+?                                                      ^^^^  ^^^^^^^^^^^^^^^^ ^^
+
++  "be large at the time of the 'Growth by Q3-19' slide, according to an "
+?                                                      ^^^^^^ ++++++ ^ ^
+
++  'analyst.',
++  [])
+-  'page 7, which states 3M bots with no explicit interval [S7]; the deck states '
+-  '3M bots/week [S8] on page 8, with no date context), according to an analyst.',
+-  ['basis_consequence_context'])
+
+======================================================================
+FAIL: test_another_pair_alike (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_another_pair_alike) (text="If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time of the 'Growth by Q3-19' slide — if the weekly figure dates from then.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4429, in test_another_pair_alike
+    self.assertEqual(guard_basis_wording(kept, facts), (kept, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("If [119 chars]lide ('Growth by Q3-19' heads page 7, which st[179 chars]xt']) != ("If [119 chars]lide — if the weekly figure dates from then.", [])
+
+First differing element 0:
+"If t[118 chars]lide ('Growth by Q3-19' heads page 7, which st[147 chars]hen."
+"If t[118 chars]lide — if the weekly figure dates from then."
+
+  ('If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would '
+-  "be large at the time of the 'Growth by Q3-19' slide ('Growth by Q3-19' heads "
+?                                                       ^^^^^^  ^^  ^^^^^^^^ ---
+
++  "be large at the time of the 'Growth by Q3-19' slide — if the weekly figure "
+?                                                       ^^^^^  ^^^^^^^  ^^^^^
+
+-  'page 7, which states 3M bots with no explicit interval [S7]; the deck states '
+-  '3M bots/week [S8] on page 8, with no date context) — if the weekly figure '
+   'dates from then.',
+-  ['basis_consequence_context'])
++  [])
+
+======================================================================
+FAIL: test_another_pair_alike (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_another_pair_alike) (text="If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time of the 'Growth by Q3-19' slide [S7, S8].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4429, in test_another_pair_alike
+    self.assertEqual(guard_basis_wording(kept, facts), (kept, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("If [119 chars]lide ('Growth by Q3-19' heads page 7, which st[149 chars]xt']) != ("If [119 chars]lide [S7, S8].", [])
+
+First differing element 0:
+"If t[118 chars]lide ('Growth by Q3-19' heads page 7, which st[117 chars]S8]."
+"If t[118 chars]lide [S7, S8]."
+
+  ('If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would '
+-  "be large at the time of the 'Growth by Q3-19' slide ('Growth by Q3-19' heads "
+?                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
++  "be large at the time of the 'Growth by Q3-19' slide [S7, S8].",
+?                                                       ^^^^^^^^^ +
+
++  [])
+-  'page 7, which states 3M bots with no explicit interval [S7]; the deck states '
+-  '3M bots/week [S8] on page 8, with no date context) [S7, S8].',
+-  ['basis_consequence_context'])
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide, according to an analyst.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4362, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[116 chars]slide ('Traction by Apr-16' heads page 10, whi[126 chars]yst." != "If t[116 chars]slide, according to an analyst."
+- If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context), according to an analyst.
++ If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide, according to an analyst.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide, only if the monthly figure dates from that period.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4362, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[116 chars]slide ('Traction by Apr-16' heads page 10, whi[152 chars]iod." != "If t[116 chars]slide, only if the monthly figure dates from that period."
+- If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context), only if the monthly figure dates from that period.
++ If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide, only if the monthly figure dates from that period.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide [S1, S3].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4362, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[117 chars]lide ('Traction by Apr-16' heads page 10, whic[109 chars]S3]." != "If t[117 chars]lide [S1, S3]."
+- If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) [S1, S3].
++ If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide [S1, S3].
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide [S3].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4362, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[117 chars]lide ('Traction by Apr-16' heads page 10, whic[105 chars]S3]." != "If t[117 chars]lide [S3]."
+- If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) [S3].
++ If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide [S3].
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide, provided the monthly figure dates from then.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4362, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[116 chars]slide ('Traction by Apr-16' heads page 10, whi[146 chars]hen." != "If t[116 chars]slide, provided the monthly figure dates from then."
+- If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context), provided the monthly figure dates from then.
++ If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide, provided the monthly figure dates from then.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide, when page 12 was written.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4362, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[116 chars]slide ('Traction by Apr-16' heads page 10, whi[127 chars]ten." != "If t[116 chars]slide, when page 12 was written."
+- If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context), when page 12 was written.
++ If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide, when page 12 was written.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — according to an analyst.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4362, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[117 chars]lide ('Traction by Apr-16' heads page 10, whic[126 chars]yst." != "If t[117 chars]lide — according to an analyst."
+- If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — according to an analyst.
++ If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — according to an analyst.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — if the monthly figure dates from that period.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4362, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[117 chars]lide ('Traction by Apr-16' heads page 10, whic[147 chars]iod." != "If t[117 chars]lide — if the monthly figure dates from that period."
+- If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — if the monthly figure dates from that period.
++ If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — if the monthly figure dates from that period.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — which presumes the monthly figure dates from then.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4362, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[117 chars]lide ('Traction by Apr-16' heads page 10, whic[152 chars]hen." != "If t[117 chars]lide — which presumes the monthly figure dates from then."
+- If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — which presumes the monthly figure dates from then.
++ If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — which presumes the monthly figure dates from then.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide; Pitch Deck Hunt lists $23.1M in prior funding [C1, S4].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4362, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[116 chars]slide ('Traction by Apr-16' heads page 10, whi[157 chars]S4]." != "If t[116 chars]slide; Pitch Deck Hunt lists $23.1M in prior funding [C1, S4]."
+- If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context); Pitch Deck Hunt lists $23.1M in prior funding [C1, S4].
++ If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide; Pitch Deck Hunt lists $23.1M in prior funding [C1, S4].
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — not the monthly figure's period.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4362, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[117 chars]lide ('Traction by Apr-16' heads page 10, whic[134 chars]iod." != "If t[117 chars]lide — not the monthly figure's period."
+- If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — not the monthly figure's period.
++ If the figures [S1, S3] are accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide — not the monthly figure's period.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, revenue would be $10M at the time of the 'Traction by Apr-16' slide.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4362, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[96 chars]slide ('Traction by Apr-16' heads page 10, whi[101 chars]xt)." != "If t[96 chars]slide."
+- If the figures [S1, S3] are accurate, revenue would be $10M at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context).
++ If the figures [S1, S3] are accurate, revenue would be $10M at the time of the 'Traction by Apr-16' slide.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, revenue would be significant at the time of the 'Traction by Apr-16' slide.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4362, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[103 chars]slide ('Traction by Apr-16' heads page 10, whi[101 chars]xt)." != "If t[103 chars]slide."
+- If the figures [S1, S3] are accurate, revenue would be significant at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context).
++ If the figures [S1, S3] are accurate, revenue would be significant at the time of the 'Traction by Apr-16' slide.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would have had 40 staff at the time of the 'Traction by Apr-16' slide.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4362, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[107 chars]slide ('Traction by Apr-16' heads page 10, whi[101 chars]xt)." != "If t[107 chars]slide."
+- If the figures [S1, S3] are accurate, ManyChat would have had 40 staff at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context).
++ If the figures [S1, S3] are accurate, ManyChat would have had 40 staff at the time of the 'Traction by Apr-16' slide.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, the company's margins would be large at the time of the 'Traction by Apr-16' slide.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4362, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[111 chars]slide ('Traction by Apr-16' heads page 10, whi[101 chars]xt)." != "If t[111 chars]slide."
+- If the figures [S1, S3] are accurate, the company's margins would be large at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context).
++ If the figures [S1, S3] are accurate, the company's margins would be large at the time of the 'Traction by Apr-16' slide.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would be large at the time of the 'Traction by Apr-16' slide.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4362, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[98 chars]slide ('Traction by Apr-16' heads page 10, whi[101 chars]xt)." != "If t[98 chars]slide."
+- If the figures [S1, S3] are accurate, ManyChat would be large at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context).
++ If the figures [S1, S3] are accurate, ManyChat would be large at the time of the 'Traction by Apr-16' slide.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, ManyChat would have 250M messages/month at the time of the 'Traction by Apr-16' slide.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4362, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[114 chars]slide ('Traction by Apr-16' heads page 10, whi[101 chars]xt)." != "If t[114 chars]slide."
+- If the figures [S1, S3] are accurate, ManyChat would have 250M messages/month at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context).
++ If the figures [S1, S3] are accurate, ManyChat would have 250M messages/month at the time of the 'Traction by Apr-16' slide.
+
+
+======================================================================
+FAIL: test_hypotheses_denials_questions_and_other_speakers_are_kept (zelda_api.tests_output_fidelity.Of1102Of1103DateTransferTests.test_hypotheses_denials_questions_and_other_speakers_are_kept) (text="If the figures [S1, S3] are accurate, the analyst would represent a large platform at the time of the 'Traction by Apr-16' slide.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-of1102\zelda_api\tests_output_fidelity.py", line 4362, in test_hypotheses_denials_questions_and_other_speakers_are_kept
+    self.assertEqual(out, text)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: "If t[119 chars]slide ('Traction by Apr-16' heads page 10, whi[101 chars]xt)." != "If t[119 chars]slide."
+- If the figures [S1, S3] are accurate, the analyst would represent a large platform at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context).
++ If the figures [S1, S3] are accurate, the analyst would represent a large platform at the time of the 'Traction by Apr-16' slide.
+
+
+----------------------------------------------------------------------
+Ran 20 tests in 1.320s
+
+FAILED (failures=22)
+Found 20 test(s).
+System check identified no issues (0 silenced).

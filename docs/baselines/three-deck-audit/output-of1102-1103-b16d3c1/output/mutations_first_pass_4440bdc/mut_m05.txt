@@ -1,0 +1,5 @@
+K12 CAUGHT Ran 403 tests in 15.094s FAILED (failures=1) restored=True | overcorrection: an attributed consequence gets the note
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the figures [S1, S3] are accurate, an analyst says ManyChat was large at the time of the 'Traction by Apr-16' slide."
+final sha matches pre-run: True 22312953aec3922f66ad77ac257ecc413e6ce065003507d24db56cc889bd4727

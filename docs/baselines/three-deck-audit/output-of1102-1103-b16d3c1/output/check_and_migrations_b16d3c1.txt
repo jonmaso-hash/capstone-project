@@ -1,0 +1,5 @@
+head=b16d3c1
+System check identified no issues (0 silenced).
+check exit=0
+No changes detected
+makemigrations --check --dry-run exit=0

@@ -1,0 +1,16 @@
+"""Check that every mutant's anchor in mutate_j.py matches the worktree's basis_fidelity.py exactly once."""
+import os
+HERE = os.path.dirname(os.path.abspath(__file__))
+src = open(os.path.join(HERE, 'mutate_j.py'), encoding='utf-8').read()
+ns = {'__file__': os.path.join(HERE, 'mutate_j.py')}
+exec(src.split('\n\ndef sha(path):')[0].replace('WT = sys.argv[1]', "WT = 'C:/Users/jonathan/Desktop/KCV-of1102'")
+     .replace('ONLY = set(sys.argv[2:])', 'ONLY = set()'), ns)
+text = open(ns['BF'], encoding='utf-8', newline='').read()
+bad = 0
+for mid, desc, old, new in ns['M']:
+    o = old.replace('\n', '\r\n') if '\r\n' in text else old
+    count = text.count(o)
+    if count != 1:
+        bad += 1
+        print(mid, 'count', count)
+print(len(ns['M']), 'mutants;', bad, 'anchors not matching once')

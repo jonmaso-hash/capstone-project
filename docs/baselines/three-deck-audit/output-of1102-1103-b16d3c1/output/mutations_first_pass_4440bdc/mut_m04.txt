@@ -1,0 +1,27 @@
+K7 CAUGHT Ran 403 tests in 15.240s FAILED (failures=1) restored=True | overcorrection: a consequence with its own citation gets the note
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat would have 140,000+ bots [S1] at the time of the 'Traction by Apr-16' slide."
+K8 CAUGHT Ran 403 tests in 15.273s FAILED (failures=8) restored=True | not idempotent: the placed note is added again on a second pass
+    assertion failures in: test_a_second_pass_changes_nothing, test_another_pair_alike, test_stable_idempotent_and_every_citation_owned
+    errors in: -
+    failing sub-case: text="Assuming the 140,000+ bots [S1] and 500M messages/month [S3] are accurate, ManyChat would have had significant scale as of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If 500M messages/month [S3] is accurate, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the 3M bots [S7] and 3M bots/week [S8] are accurate, the platform would be large at the time of the 'Growth by Q3-19' slide."
+    failing sub-case: text="If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time
+    failing sub-case: text="If the figures [S1, S3] are accurate, ManyChat had a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the self-reported figures [S1, S3] are accurate without independent verification, ManyChat would represent a large platform at the time of the 'Traction by Apr-16' slide."
+    failing sub-case: text="If the traction figures [S1, S3] are taken at face value, ManyChat would have built a sizeable platform by the period referenced in the 'Traction by Apr-16' slide context."
+K9 CAUGHT Ran 403 tests in 15.319s FAILED (failures=1) restored=True | overcorrection: a condition later in the sentence is read ("According to an analyst, if ...")
+    assertion failures in: test_hypotheses_denials_questions_and_other_speakers_are_kept
+    errors in: -
+    failing sub-case: text="According to an analyst, if the figures [S1, S3] are accurate, ManyChat would be large at the time of the 'Traction by Apr-16' slide."
+K10 CAUGHT Ran 403 tests in 15.227s FAILED (failures=1) restored=True | false note: a side under a heading of its own is said to have no date context
+    assertion failures in: test_a_side_with_its_own_heading_or_narrator_is_not_restated
+    errors in: -
+    failing sub-case: items=[('S8', 'Weekly view', '')]
+K11 CAUGHT Ran 403 tests in 15.096s FAILED (failures=1) restored=True | overcorrection: a narrated side is restated as the deck's
+    assertion failures in: test_a_side_with_its_own_heading_or_narrator_is_not_restated
+    errors in: -
+    failing sub-case: items=[('S8', '', 'An Analyst')]
+final sha matches pre-run: True 22312953aec3922f66ad77ac257ecc413e6ce065003507d24db56cc889bd4727
