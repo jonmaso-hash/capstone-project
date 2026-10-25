@@ -1,0 +1,9 @@
+#!/bin/sh
+# Usage: py.sh <worktree> <script.py> [args] -- run a script under Django (CI env, no .env, no DB queries), refusing below 0.9 GB free.
+cd "$1" && shift
+f=$(powershell -NoProfile -Command "[math]::Round((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory/1MB,2)")
+awk -v f="$f" 'BEGIN{exit !(f>=0.9)}' || { echo "STOP: free=$f"; exit 3; }
+SECRET_KEY=ci-only-placeholder-key-not-for-production-use DEBUG=True ALLOWED_HOSTS=localhost,127.0.0.1 \
+EMAIL_HOST_USER=ci@example.invalid CELERY_TASK_ALWAYS_EAGER=True CELERY_BROKER_URL=memory:// \
+CELERY_RESULT_BACKEND=cache+memory:// PYTHONIOENCODING=utf-8 PYTHONDONTWRITEBYTECODE=1 DJANGO_SETTINGS_MODULE=config.settings \
+/c/Users/jonathan/Desktop/KCV/venv/Scripts/python.exe -c "import django,sys; django.setup(); p=sys.argv[1]; sys.argv=sys.argv[1:]; exec(compile(open(p,encoding='utf-8').read(),p,'exec'),{'__name__':'__main__'})" "$@" 2>&1
