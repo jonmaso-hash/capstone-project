@@ -1,0 +1,6 @@
+ zelda_api/basis_fidelity.py                        |  99 ++++++
+ zelda_api/data/funding_fidelity/memo104.json       |  24 ++
+ .../data/funding_fidelity/memo104_payload.json     | 191 +++++++++++
+ zelda_api/funding_fidelity.py                      |   5 +-
+ zelda_api/tests_output_fidelity.py                 | 361 +++++++++++++++++++++
+ 5 files changed, 678 insertions(+), 2 deletions(-)

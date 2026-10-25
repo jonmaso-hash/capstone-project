@@ -1,0 +1,12 @@
+import json, re
+from zelda_api import basis_fidelity as b
+from zelda_api.tests_output_fidelity import items_from, notes_from
+p = json.load(open('zelda_api/data/funding_fidelity/memo104_payload.json', encoding='utf-8'))['payload']
+facts = b.basis_facts(items_from(p), notes_from(p))
+print('places', facts.places)
+cited = ['S1', 'S2', 'S3']
+st = [b._DIGIT_GROUP.sub('', fact.lower()) for ref, *_, fact in facts.places if ref in cited]
+voc = b._PLACING_WORDS | {w for f in st for w in re.findall(r'[a-z]+', f)} | {x for f in st for x in b._stated_forms(f)}
+for span in (" 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] ",
+             " 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] "):
+    print(repr(span), b._placing_words(span, voc, True), b._TOKEN.findall(b._REF.sub(' ', span).lower()))

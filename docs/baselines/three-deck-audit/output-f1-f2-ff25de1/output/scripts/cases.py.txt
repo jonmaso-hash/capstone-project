@@ -1,0 +1,71 @@
+"""Candidate F-1 / F-2 cases through the full guard order with memo 104's context (working tree). Prints each output
+and its rules so the expected strings can be checked by eye before they are frozen in tests. No DB, no model call."""
+import json, re
+from zelda_api import funding_fidelity as ff
+from zelda_api.tests_output_fidelity import items_from, notes_from, replay, OTHER_PAIR_ITEMS, OTHER_PAIR_NOTE
+from zelda_api.basis_fidelity import basis_facts, guard_basis_wording
+p = json.load(open('zelda_api/data/funding_fidelity/memo104_payload.json', encoding='utf-8'))['payload']
+items, notes = items_from(p), notes_from(p)
+
+
+def full(text, its=None):
+    out, ch = replay({'s': text}, its or items, notes)
+    return out['s'], ch.get('s', [])
+
+
+Q = "- What is the composition of the $23.1M {} [S4] — how many rounds, at what valuations, and from which investors?"
+print('=== F-1 tails')
+for word in ('reportedly raised', 'raised', 'in funding', 'funding figure', 'total', 'listed', 'reported',
+             'reported raised', 'figures', 'totalling', 'fundings', 'listedness', 'raisedness', 'reporters'):
+    out, ch = full(Q.format(word))
+    print(repr(word), '->', out[33:110], ch)
+for s in ('$23.1M fundings', '$23.1M raisedness', '$23.1M figures', '$23.1M totalling', '$23.1M listedness',
+          '$23.1M reportedly', '$23.1M reporters', '$23.1M in fundingwise', '$23.1M funding figure total'):
+    print('TAIL', repr(s), repr(ff._FIGURE_TAIL.match(s, 6).group(0)))
+
+L = "The company's self-reported traction figures — "
+H = " — contextualised under a slide heading 'Traction by Apr-16'"
+LIST = "140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3]"
+print('=== F-2 candidates')
+for text in (
+    L + "140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3]" + H + ", but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+    L + LIST + H + ".",
+    L + LIST + H + ", and they have not been independently verified [C2, C3, C4].",
+    "The company states " + LIST + ", contextualised under a slide heading 'Traction by Apr-16'.",
+    L + LIST + " — presented under the 'Traction by Apr-16' slide heading.",
+    L + LIST + " — shown on a slide headed 'Traction by Apr-16'.",
+    L + "140,000+ bots [C4] and 500M messages or 500M messages/month [C3, C2]" + H + ".",
+    L + "500M messages/month [S3] and 140,000+ bots and 500M messages [S1, S2]" + H + ".",
+    # kept
+    L + "140,000+ bots [S1] and 500M messages [S2]" + H + ", but page 12 states 500M messages/month [S3].",
+    "The deck states 500M messages/month [S3] on page 12, apart from the slide heading 'Traction by Apr-16' that covers 140,000+ bots [S1] and 500M messages [S2].",
+    L + LIST + " — not all contextualised under a slide heading 'Traction by Apr-16'.",
+    L + "140,000+ bots [S1] and not 500M messages/month [S2, S3]" + H + ".",
+    "If the figures — " + LIST + H + ", and the basis is monthly, ManyChat would be large.",
+    L + "140,000+ bots [S1], revenue of $10M and 500M messages or 500M messages/month [S2, S3]" + H + ".",
+    L + "possibly 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3]" + H + ".",
+    L + LIST + H + " that dates them.",
+    L + "140,000+ bots [S1] and 250M messages/month [S2, S3]" + H + ".",
+    L + "140,000+ bots [S1] and 500M messages/day [S2, S3]" + H + ".",
+    "Were " + LIST + H + "?",
+    "Pitch Deck Hunt's traction figures — " + LIST + H + ".",
+    L + "140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3, S4]" + H + ".",
+    L + LIST + H + ", while Pitch Deck Hunt lists $23.1M raised [C1, S4].",
+    L + "140,000+ bots [S1] and 500M messages or 500M messages/month (unaudited) [S2, S3]" + H + ".",
+    "The company states " + LIST + ", contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "Pitch Deck Hunt states " + LIST + ", contextualised under a slide heading 'Traction by Apr-16'.",
+    "The company does not state " + LIST + ", contextualised under a slide heading 'Traction by Apr-16'.",
+    "According to an analyst, the company's self-reported traction figures — " + LIST + H + ".",
+    "The company's self-reported traction figures may be — " + LIST + H + ".",
+    "The figures — " + LIST + H + ".",
+    "The company's unverified traction figures — " + LIST + H + ".",
+):
+    out, ch = full(text)
+    rev, rch = full(text, list(reversed(items)))
+    again, ach = full(out)
+    print('IN ', text); print('OUT', out if out != text else '(unchanged)', ch, 'rev_same', (rev, rch) == (out, ch), 'idem', (again, ach) == (out, []))
+print('=== other pair')
+facts = basis_facts(OTHER_PAIR_ITEMS(), (OTHER_PAIR_NOTE,))
+for text in ("The self-reported usage figures — 3M bots or 3M bots/week [S7, S8] — contextualised under a slide heading 'Growth by Q3-19', but neither is verified.",
+             "The self-reported usage figures — 3M bots or 3M bots/week [S7, S8] — contextualised under a slide heading 'Traction by Apr-16'."):
+    print('IN ', text); print('OUT', guard_basis_wording(text, facts))

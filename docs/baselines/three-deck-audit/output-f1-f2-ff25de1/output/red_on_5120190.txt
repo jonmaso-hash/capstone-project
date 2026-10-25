@@ -1,0 +1,433 @@
+2026-10-24 21:42:50,065 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-24 21:43:42,716 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 21:43:42,747 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 21:43:42,922 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+F.....FFFF..FFFFFFFFFFFFFFFF...FFFFFFFFF
+======================================================================
+FAIL: test_the_stored_memo_carries_the_repairs (zelda_api.tests_output_fidelity.PipelineMemo104Tests.test_the_stored_memo_carries_the_repairs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4654, in test_the_stored_memo_carries_the_repairs
+    self.assertEqual(memo.questions_for_management,
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     stored['questions_for_management'].replace(Q5_104_STORED, Q5_104_AFTER))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "- Is[546 chars]3.1M reported (per Pitch Deck Hunt)ly raised [[733 chars]rms?" != "- Is[546 chars]3.1M (per Pitch Deck Hunt) reportedly raised [[733 chars]rms?"
+Diff is 1635 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_f1_the_attribution_keeps_reportedly_whole (zelda_api.tests_output_fidelity.Memo104ReplayTests.test_f1_the_attribution_keeps_reportedly_whole)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4554, in test_f1_the_attribution_keeps_reportedly_whole
+    self.assertEqual(self.out['questions_for_management'],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     self.stored['questions_for_management'].replace(Q5_104_STORED, Q5_104_AFTER))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "- Is[546 chars]3.1M reported (per Pitch Deck Hunt)ly raised [[733 chars]rms?" != "- Is[546 chars]3.1M (per Pitch Deck Hunt) reportedly raised [[733 chars]rms?"
+Diff is 1635 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_f2_keeps_the_qualifier_the_intervals_and_no_date (zelda_api.tests_output_fidelity.Memo104ReplayTests.test_f2_keeps_the_qualifier_the_intervals_and_no_date)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4566, in test_f2_keeps_the_qualifier_the_intervals_and_no_date
+    self.assertIn('500M messages with no explicit interval [S2] on page 10', out)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '500M messages with no explicit interval [S2] on page 10' not found in "Insufficient disclosed data to describe the business model. No revenue model, pricing structure, customer type, or growth mechanism was extracted from the document. The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4]. How the company monetises these users, what drives bot creation, and what the expansion strategy is are not found in the extracted evidence."
+
+======================================================================
+FAIL: test_f2_page_10_s_heading_covers_only_page_10_s_figures (zelda_api.tests_output_fidelity.Memo104ReplayTests.test_f2_page_10_s_heading_covers_only_page_10_s_figures)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4559, in test_f2_page_10_s_heading_covers_only_page_10_s_figures
+    self.assertEqual(self.out['business_model_analysis'],
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     self.stored['business_model_analysis'].replace(BM_104_BEFORE, BM_104_AFTER))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Insu[253 chars]— 140,000+ bots [S1] and 500M messages or 500M[346 chars]nce." != "Insu[253 chars]— 140 000+ bots [S1] and 500M messages with no[377 chars]nce."
+Diff is 2303 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_only_the_expected_rules_fired (zelda_api.tests_output_fidelity.Memo104ReplayTests.test_only_the_expected_rules_fired)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4602, in test_only_the_expected_rules_fired
+    self.assertEqual(self.changes, {
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+        'business_model_analysis': ['basis_heading_scope'],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        'questions_for_management': ['attribution:Pitch Deck Hunt'],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    })
+    ^^
+AssertionError: {'questions_for_management': ['attribution:[13 chars]nt']} != {'business_model_analysis': ['basis_heading[65 chars]nt']}
++ {'business_model_analysis': ['basis_heading_scope'],
+- {'questions_for_management': ['attribution:Pitch Deck Hunt']}
+? ^
+
++  'questions_for_management': ['attribution:Pitch Deck Hunt']}
+? ^
+
+
+======================================================================
+FAIL: test_the_stored_sections_get_the_heading_repair (zelda_api.tests_output_fidelity.Memo104StoredSectionsTests.test_the_stored_sections_get_the_heading_repair)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4629, in test_the_stored_sections_get_the_heading_repair
+    self.assertIn(BM_104_AFTER, out['business_model_analysis'])
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "The only indicators of commercial activity are the company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (see consistency note below) — but these figures are undated as counts and have not been independently verified [C2, C3, C4]." not found in "Insufficient disclosed data to describe the business model. No revenue model, pricing structure, customer type, or growth mechanism was extracted from the document. The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4]. How the company monetises these users, what drives bot creation, and what the expansion strategy is are not found in the extracted evidence."
+
+======================================================================
+FAIL: test_complete_word_tails_and_longer_words (zelda_api.tests_output_fidelity.F1FigureTailWholeWordTests.test_complete_word_tails_and_longer_words) (words='reportedly raised')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4712, in test_complete_word_tails_and_longer_words
+    self.assertEqual(out, _Q.format(words).replace(f'$23.1M {words} [S4]', phrase))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '- Wh[31 chars]3.1M reported (per Pitch Deck Hunt)ly raised [[64 chars]ors?' != '- Wh[31 chars]3.1M (per Pitch Deck Hunt) reportedly raised [[64 chars]ors?'
+- - What is the composition of the $23.1M reported (per Pitch Deck Hunt)ly raised [S4] — how many rounds, at what valuations, and from which investors?
+?                                                 ----------------------
++ - What is the composition of the $23.1M (per Pitch Deck Hunt) reportedly raised [S4] — how many rounds, at what valuations, and from which investors?
+?                                        ++++++++++++++++++++++
+
+
+======================================================================
+FAIL: test_complete_word_tails_and_longer_words (zelda_api.tests_output_fidelity.F1FigureTailWholeWordTests.test_complete_word_tails_and_longer_words) (words='figures')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4712, in test_complete_word_tails_and_longer_words
+    self.assertEqual(out, _Q.format(words).replace(f'$23.1M {words} [S4]', phrase))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '- Wh[31 chars]3.1M figure (per Pitch Deck Hunt)s [S4] — how [54 chars]ors?' != '- Wh[31 chars]3.1M (per Pitch Deck Hunt) figures [S4] — how [54 chars]ors?'
+- - What is the composition of the $23.1M figure (per Pitch Deck Hunt)s [S4] — how many rounds, at what valuations, and from which investors?
+?                                               ----------------------
++ - What is the composition of the $23.1M (per Pitch Deck Hunt) figures [S4] — how many rounds, at what valuations, and from which investors?
+?                                         ++++++++++++++++++++++
+
+
+======================================================================
+FAIL: test_complete_word_tails_and_longer_words (zelda_api.tests_output_fidelity.F1FigureTailWholeWordTests.test_complete_word_tails_and_longer_words) (words='totalling')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4712, in test_complete_word_tails_and_longer_words
+    self.assertEqual(out, _Q.format(words).replace(f'$23.1M {words} [S4]', phrase))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '- Wh[31 chars]3.1M total (per Pitch Deck Hunt)ling [S4] — ho[56 chars]ors?' != '- Wh[31 chars]3.1M (per Pitch Deck Hunt) totalling [S4] — ho[56 chars]ors?'
+- - What is the composition of the $23.1M total (per Pitch Deck Hunt)ling [S4] — how many rounds, at what valuations, and from which investors?
+?                                              ----------------------
++ - What is the composition of the $23.1M (per Pitch Deck Hunt) totalling [S4] — how many rounds, at what valuations, and from which investors?
+?                                         ++++++++++++++++++++++
+
+
+======================================================================
+FAIL: test_complete_word_tails_and_longer_words (zelda_api.tests_output_fidelity.F1FigureTailWholeWordTests.test_complete_word_tails_and_longer_words) (words='fundings')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4712, in test_complete_word_tails_and_longer_words
+    self.assertEqual(out, _Q.format(words).replace(f'$23.1M {words} [S4]', phrase))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '- Wh[31 chars]3.1M funding (per Pitch Deck Hunt)s [S4] — how[55 chars]ors?' != '- Wh[31 chars]3.1M (per Pitch Deck Hunt) fundings [S4] — how[55 chars]ors?'
+- - What is the composition of the $23.1M funding (per Pitch Deck Hunt)s [S4] — how many rounds, at what valuations, and from which investors?
+?                                                ----------------------
++ - What is the composition of the $23.1M (per Pitch Deck Hunt) fundings [S4] — how many rounds, at what valuations, and from which investors?
+?                                        ++++++++++++++++++++++
+
+
+======================================================================
+FAIL: test_complete_word_tails_and_longer_words (zelda_api.tests_output_fidelity.F1FigureTailWholeWordTests.test_complete_word_tails_and_longer_words) (words='listedness')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4712, in test_complete_word_tails_and_longer_words
+    self.assertEqual(out, _Q.format(words).replace(f'$23.1M {words} [S4]', phrase))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '- Wh[31 chars]3.1M listed (per Pitch Deck Hunt)ness [S4] — h[57 chars]ors?' != '- Wh[31 chars]3.1M (per Pitch Deck Hunt) listedness [S4] — h[57 chars]ors?'
+- - What is the composition of the $23.1M listed (per Pitch Deck Hunt)ness [S4] — how many rounds, at what valuations, and from which investors?
+?                                               ----------------------
++ - What is the composition of the $23.1M (per Pitch Deck Hunt) listedness [S4] — how many rounds, at what valuations, and from which investors?
+?                                         ++++++++++++++++++++++
+
+
+======================================================================
+FAIL: test_complete_word_tails_and_longer_words (zelda_api.tests_output_fidelity.F1FigureTailWholeWordTests.test_complete_word_tails_and_longer_words) (words='raisedness')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4712, in test_complete_word_tails_and_longer_words
+    self.assertEqual(out, _Q.format(words).replace(f'$23.1M {words} [S4]', phrase))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '- Wh[31 chars]3.1M raised (per Pitch Deck Hunt)ness [S4] — h[57 chars]ors?' != '- Wh[31 chars]3.1M (per Pitch Deck Hunt) raisedness [S4] — h[57 chars]ors?'
+- - What is the composition of the $23.1M raised (per Pitch Deck Hunt)ness [S4] — how many rounds, at what valuations, and from which investors?
+?                                               ----------------------
++ - What is the composition of the $23.1M (per Pitch Deck Hunt) raisedness [S4] — how many rounds, at what valuations, and from which investors?
+?                                         ++++++++++++++++++++++
+
+
+======================================================================
+FAIL: test_every_tail_alternative_ends_at_a_word_boundary (zelda_api.tests_output_fidelity.F1FigureTailWholeWordTests.test_every_tail_alternative_ends_at_a_word_boundary) (word='funding')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4724, in test_every_tail_alternative_ends_at_a_word_boundary
+    self.assertEqual(_FIGURE_TAIL.match(f'$1M {longer}', 3).group(0), '', longer)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ' funding' != ''
+-  funding
+ : fundingly
+
+======================================================================
+FAIL: test_every_tail_alternative_ends_at_a_word_boundary (zelda_api.tests_output_fidelity.F1FigureTailWholeWordTests.test_every_tail_alternative_ends_at_a_word_boundary) (word='raised')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4724, in test_every_tail_alternative_ends_at_a_word_boundary
+    self.assertEqual(_FIGURE_TAIL.match(f'$1M {longer}', 3).group(0), '', longer)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ' raised' != ''
+-  raised
+ : raisedly
+
+======================================================================
+FAIL: test_every_tail_alternative_ends_at_a_word_boundary (zelda_api.tests_output_fidelity.F1FigureTailWholeWordTests.test_every_tail_alternative_ends_at_a_word_boundary) (word='figure')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4724, in test_every_tail_alternative_ends_at_a_word_boundary
+    self.assertEqual(_FIGURE_TAIL.match(f'$1M {longer}', 3).group(0), '', longer)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ' figure' != ''
+-  figure
+ : figurely
+
+======================================================================
+FAIL: test_every_tail_alternative_ends_at_a_word_boundary (zelda_api.tests_output_fidelity.F1FigureTailWholeWordTests.test_every_tail_alternative_ends_at_a_word_boundary) (word='total')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4724, in test_every_tail_alternative_ends_at_a_word_boundary
+    self.assertEqual(_FIGURE_TAIL.match(f'$1M {longer}', 3).group(0), '', longer)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ' total' != ''
+-  total
+ : totally
+
+======================================================================
+FAIL: test_every_tail_alternative_ends_at_a_word_boundary (zelda_api.tests_output_fidelity.F1FigureTailWholeWordTests.test_every_tail_alternative_ends_at_a_word_boundary) (word='listed')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4724, in test_every_tail_alternative_ends_at_a_word_boundary
+    self.assertEqual(_FIGURE_TAIL.match(f'$1M {longer}', 3).group(0), '', longer)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ' listed' != ''
+-  listed
+ : listedly
+
+======================================================================
+FAIL: test_every_tail_alternative_ends_at_a_word_boundary (zelda_api.tests_output_fidelity.F1FigureTailWholeWordTests.test_every_tail_alternative_ends_at_a_word_boundary) (word='reported')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4724, in test_every_tail_alternative_ends_at_a_word_boundary
+    self.assertEqual(_FIGURE_TAIL.match(f'$1M {longer}', 3).group(0), '', longer)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ' reported' != ''
+-  reported
+ : reportedly
+
+======================================================================
+FAIL: test_memo_104_s_question_reads_naturally (zelda_api.tests_output_fidelity.F1FigureTailWholeWordTests.test_memo_104_s_question_reads_naturally)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4699, in test_memo_104_s_question_reads_naturally
+    self.assertEqual(self.full(Q5_104_RAW), (Q5_104_AFTER, ['attribution:Pitch Deck Hunt']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- W[32 chars]3.1M reported (per Pitch Deck Hunt)ly raised [[98 chars]nt']) != ('- W[32 chars]3.1M (per Pitch Deck Hunt) reportedly raised [[98 chars]nt'])
+
+First differing element 0:
+'- Wh[31 chars]3.1M reported (per Pitch Deck Hunt)ly raised [[64 chars]ors?'
+'- Wh[31 chars]3.1M (per Pitch Deck Hunt) reportedly raised [[64 chars]ors?'
+
+- ('- What is the composition of the $23.1M reported (per Pitch Deck Hunt)ly '
++ ('- What is the composition of the $23.1M (per Pitch Deck Hunt) reportedly '
+   'raised [S4] — how many rounds, at what valuations, and from which investors?',
+   ['attribution:Pitch Deck Hunt'])
+
+======================================================================
+FAIL: test_the_funding_guard_alone_and_a_second_pass (zelda_api.tests_output_fidelity.F1FigureTailWholeWordTests.test_the_funding_guard_alone_and_a_second_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4704, in test_the_funding_guard_alone_and_a_second_pass
+    self.assertEqual((out, changes), (Q5_104_AFTER, ['attribution:Pitch Deck Hunt']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('- W[32 chars]3.1M reported (per Pitch Deck Hunt)ly raised [[98 chars]nt']) != ('- W[32 chars]3.1M (per Pitch Deck Hunt) reportedly raised [[98 chars]nt'])
+
+First differing element 0:
+'- Wh[31 chars]3.1M reported (per Pitch Deck Hunt)ly raised [[64 chars]ors?'
+'- Wh[31 chars]3.1M (per Pitch Deck Hunt) reportedly raised [[64 chars]ors?'
+
+- ('- What is the composition of the $23.1M reported (per Pitch Deck Hunt)ly '
++ ('- What is the composition of the $23.1M (per Pitch Deck Hunt) reportedly '
+   'raised [S4] — how many rounds, at what valuations, and from which investors?',
+   ['attribution:Pitch Deck Hunt'])
+
+======================================================================
+FAIL: test_another_pair_alike (zelda_api.tests_output_fidelity.F2HeadingScopeTests.test_another_pair_alike)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4836, in test_another_pair_alike
+    self.assertEqual(guard_basis_wording(before, facts), (after, ['basis_heading_scope']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[34 chars]bots or 3M bots/week [S7, S8] — contextualised[67 chars], []) != ("The[34 chars]bots with no explicit interval [S7] on page 7,[246 chars]pe'])
+
+First differing element 0:
+"The [33 chars]bots or 3M bots/week [S7, S8] — contextualised[62 chars]ied."
+"The [33 chars]bots with no explicit interval [S7] on page 7,[220 chars]ied."
+
+- ('The self-reported usage figures — 3M bots or 3M bots/week [S7, S8] — '
+-  "contextualised under a slide heading 'Growth by Q3-19', but neither is "
++ ('The self-reported usage figures — 3M bots with no explicit interval [S7] on '
++  "page 7, under 'Growth by Q3-19', and separately 3M bots/week [S8] on page 8 "
++  '(how the figure stated without an explicit interval relates to the weekly '
++  'figure needs clarification before either is relied on) — but neither is '
+   'verified.',
+-  [])
++  ['basis_heading_scope'])
+
+======================================================================
+FAIL: test_the_heading_is_scoped_to_the_evidence_that_carries_it (zelda_api.tests_output_fidelity.F2HeadingScopeTests.test_the_heading_is_scoped_to_the_evidence_that_carries_it) (text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4804, in test_the_heading_is_scoped_to_the_evidence_that_carries_it
+    self.assertEqual(self.full(before), (after, ['basis_heading_scope']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[42 chars]— 140,000+ bots [S1] and 500M messages or 500M[210 chars], []) != ("The[42 chars]— 140 000+ bots [S1] and 500M messages with no[262 chars]pe'])
+
+First differing element 0:
+"The [41 chars]— 140,000+ bots [S1] and 500M messages or 500M[205 chars]C4]."
+"The [41 chars]— 140 000+ bots [S1] and 500M messages with no[236 chars]C4]."
+
+Diff is 836 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_the_heading_is_scoped_to_the_evidence_that_carries_it (zelda_api.tests_output_fidelity.F2HeadingScopeTests.test_the_heading_is_scoped_to_the_evidence_that_carries_it) (text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4804, in test_the_heading_is_scoped_to_the_evidence_that_carries_it
+    self.assertEqual(self.full(before), (after, ['basis_heading_scope']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[42 chars]— 140,000+ bots [S1] and 500M messages or 500M[86 chars], []) != ("The[42 chars]— 140 000+ bots [S1] and 500M messages with no[267 chars]pe'])
+
+First differing element 0:
+"The [41 chars]— 140,000+ bots [S1] and 500M messages or 500M[81 chars]16'."
+"The [41 chars]— 140 000+ bots [S1] and 500M messages with no[241 chars]on)."
+
+Diff is 711 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_the_heading_is_scoped_to_the_evidence_that_carries_it (zelda_api.tests_output_fidelity.F2HeadingScopeTests.test_the_heading_is_scoped_to_the_evidence_that_carries_it) (text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', while Pitch Deck Hunt lists $23.1M raised [C1, S4].")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4804, in test_the_heading_is_scoped_to_the_evidence_that_carries_it
+    self.assertEqual(self.full(before), (after, ['basis_heading_scope']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[42 chars]— 140,000+ bots [S1] and 500M messages or 500M[138 chars], []) != ("The[42 chars]— 140 000+ bots [S1] and 500M messages with no[320 chars]pe'])
+
+First differing element 0:
+"The [41 chars]— 140,000+ bots [S1] and 500M messages or 500M[133 chars]S4]."
+"The [41 chars]— 140 000+ bots [S1] and 500M messages with no[294 chars]S4]."
+
+Diff is 828 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_the_heading_is_scoped_to_the_evidence_that_carries_it (zelda_api.tests_output_fidelity.F2HeadingScopeTests.test_the_heading_is_scoped_to_the_evidence_that_carries_it) (text="The company's unverified traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4804, in test_the_heading_is_scoped_to_the_evidence_that_carries_it
+    self.assertEqual(self.full(before), (after, ['basis_heading_scope']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[39 chars]— 140,000+ bots [S1] and 500M messages or 500M[86 chars], []) != ("The[39 chars]— 140 000+ bots [S1] and 500M messages with no[267 chars]pe'])
+
+First differing element 0:
+"The [38 chars]— 140,000+ bots [S1] and 500M messages or 500M[81 chars]16'."
+"The [38 chars]— 140 000+ bots [S1] and 500M messages with no[241 chars]on)."
+
+Diff is 699 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_the_heading_is_scoped_to_the_evidence_that_carries_it (zelda_api.tests_output_fidelity.F2HeadingScopeTests.test_the_heading_is_scoped_to_the_evidence_that_carries_it) (text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — presented under the 'Traction by Apr-16' slide heading.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4804, in test_the_heading_is_scoped_to_the_evidence_that_carries_it
+    self.assertEqual(self.full(before), (after, ['basis_heading_scope']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[42 chars]— 140,000+ bots [S1] and 500M messages or 500M[83 chars], []) != ("The[42 chars]— 140 000+ bots [S1] and 500M messages with no[267 chars]pe'])
+
+First differing element 0:
+"The [41 chars]— 140,000+ bots [S1] and 500M messages or 500M[78 chars]ing."
+"The [41 chars]— 140 000+ bots [S1] and 500M messages with no[241 chars]on)."
+
+Diff is 708 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_the_heading_is_scoped_to_the_evidence_that_carries_it (zelda_api.tests_output_fidelity.F2HeadingScopeTests.test_the_heading_is_scoped_to_the_evidence_that_carries_it) (text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — shown on a slide headed 'Traction by Apr-16'.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4804, in test_the_heading_is_scoped_to_the_evidence_that_carries_it
+    self.assertEqual(self.full(before), (after, ['basis_heading_scope']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[42 chars]— 140,000+ bots [S1] and 500M messages or 500M[73 chars], []) != ("The[42 chars]— 140 000+ bots [S1] and 500M messages with no[267 chars]pe'])
+
+First differing element 0:
+"The [41 chars]— 140,000+ bots [S1] and 500M messages or 500M[68 chars]16'."
+"The [41 chars]— 140 000+ bots [S1] and 500M messages with no[241 chars]on)."
+
+Diff is 698 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_the_heading_is_scoped_to_the_evidence_that_carries_it (zelda_api.tests_output_fidelity.F2HeadingScopeTests.test_the_heading_is_scoped_to_the_evidence_that_carries_it) (text="The company's self-reported traction figures — 140,000+ bots [C4] and 500M messages or 500M messages/month [C3, C2] — contextualised under a slide heading 'Traction by Apr-16'.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4804, in test_the_heading_is_scoped_to_the_evidence_that_carries_it
+    self.assertEqual(self.full(before), (after, ['basis_heading_scope']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[42 chars]— 140,000+ bots [C4] and 500M messages or 500M[86 chars], []) != ("The[42 chars]— 140 000+ bots [C4] and 500M messages with no[267 chars]pe'])
+
+First differing element 0:
+"The [41 chars]— 140,000+ bots [C4] and 500M messages or 500M[81 chars]16'."
+"The [41 chars]— 140 000+ bots [C4] and 500M messages with no[241 chars]on)."
+
+Diff is 711 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_the_heading_is_scoped_to_the_evidence_that_carries_it (zelda_api.tests_output_fidelity.F2HeadingScopeTests.test_the_heading_is_scoped_to_the_evidence_that_carries_it) (text="The company's self-reported traction figures — 500M messages/month [S3] and 140,000+ bots and 500M messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16'.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4804, in test_the_heading_is_scoped_to_the_evidence_that_carries_it
+    self.assertEqual(self.full(before), (after, ['basis_heading_scope']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[64 chars][S3] and 140,000+ bots and 500M messages [S1, [65 chars], []) != ("The[64 chars][S3] on page 12, and separately 140 000+ bots [245 chars]pe'])
+
+First differing element 0:
+"The [63 chars][S3] and 140,000+ bots and 500M messages [S1, [60 chars]16'."
+"The [63 chars][S3] on page 12, and separately 140 000+ bots [219 chars]on)."
+
+Diff is 758 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_the_heading_is_scoped_to_the_evidence_that_carries_it (zelda_api.tests_output_fidelity.F2HeadingScopeTests.test_the_heading_is_scoped_to_the_evidence_that_carries_it) (text="The company states 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4804, in test_the_heading_is_scoped_to_the_evidence_that_carries_it
+    self.assertEqual(self.full(before), (after, ['basis_heading_scope']))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[14 chars]s 140,000+ bots [S1] and 500M messages or 500M[110 chars], []) != ("The[14 chars]s 140 000+ bots [S1] and 500M messages with no[292 chars]pe'])
+
+First differing element 0:
+"The [13 chars]s 140,000+ bots [S1] and 500M messages or 500M[105 chars]ied."
+"The [13 chars]s 140 000+ bots [S1] and 500M messages with no[266 chars]ied."
+
+Diff is 820 characters long. Set self.maxDiff to None to see it.
+
+----------------------------------------------------------------------
+Ran 22 tests in 1.146s
+
+FAILED (failures=30)
+Destroying test database for alias 'default'...
+Found 22 test(s).
+System check identified no issues (0 silenced).
