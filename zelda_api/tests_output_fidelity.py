@@ -4812,6 +4812,14 @@ HEADING_KEPT = (
     f"{_LEAD104}140,000+ bots and 500M messages [S1] and 500M messages/month [S3]{_HEAD104}.",
     f"{_LEAD104}140,000+ bots [S1, S2] and 500M messages/month [S3]{_HEAD104}.",
     f"{_LEAD104}140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] with no audit{_HEAD104}.",
+    # Review of 64dff63: a "+" no cited statement gives that figure is kept, on either side and in both forms. The
+    # per-figure check reads the value without its "+"; the complete-figure vocabulary check is what refuses it.
+    f"{_LEAD104}140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3]{_HEAD104}.",
+    "The company states 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3], contextualised under a "
+    "slide heading 'Traction by Apr-16'.",
+    f"{_LEAD104}140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3]{_HEAD104}.",
+    "The company states 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3], contextualised under a "
+    "slide heading 'Traction by Apr-16'.",
 )
 
 
