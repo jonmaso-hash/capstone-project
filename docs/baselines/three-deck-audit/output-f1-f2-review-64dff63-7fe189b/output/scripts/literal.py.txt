@@ -1,0 +1,5 @@
+from zelda_api import tests_output_fidelity as t
+reviewer = ("The company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages or 500M messages/month "
+            "[S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.")
+print('reviewer sentence is a HEADING_KEPT control byte-for-byte:', reviewer in t.HEADING_KEPT)
+print('HEADING_KEPT', len(t.HEADING_KEPT), 'HEADING_FIXED', len(t.HEADING_FIXED))

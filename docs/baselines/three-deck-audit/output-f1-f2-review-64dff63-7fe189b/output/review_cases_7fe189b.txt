@@ -1,0 +1,19 @@
+R1 140,000+ messages [S1] (metric)               5120190=kept    41e4d35=CHANGED fix=kept    fix==41e4d35:False
+R2 bots with no messages [S1] (qualification)    5120190=kept    41e4d35=CHANGED fix=kept    fix==41e4d35:False
+W1 R1, comma form                                5120190=kept    41e4d35=CHANGED fix=kept    fix==41e4d35:False
+W2 R2, comma form                                5120190=kept    41e4d35=CHANGED fix=kept    fix==41e4d35:False
+W3 500M bots [S2]                                5120190=kept    41e4d35=CHANGED fix=kept    fix==41e4d35:False
+W4 bots with no explicit interval [S1]           5120190=kept    41e4d35=CHANGED fix=kept    fix==41e4d35:False
+W5 two figures under [S1]                        5120190=kept    41e4d35=kept    fix=kept    fix==41e4d35:True
+W6 [S1, S2] with S2 unwritten                    5120190=kept    41e4d35=CHANGED fix=kept    fix==41e4d35:False
+W7 words after the last group                    5120190=kept    41e4d35=kept    fix=kept    fix==41e4d35:True
+K1 HEADING_FIXED                                 5120190=kept    41e4d35=CHANGED fix=CHANGED fix==41e4d35:True
+K2 HEADING_FIXED                                 5120190=kept    41e4d35=CHANGED fix=CHANGED fix==41e4d35:True
+K3 HEADING_FIXED                                 5120190=kept    41e4d35=CHANGED fix=CHANGED fix==41e4d35:True
+K4 HEADING_FIXED                                 5120190=kept    41e4d35=CHANGED fix=CHANGED fix==41e4d35:True
+K5 HEADING_FIXED                                 5120190=kept    41e4d35=CHANGED fix=CHANGED fix==41e4d35:True
+K6 HEADING_FIXED                                 5120190=kept    41e4d35=CHANGED fix=CHANGED fix==41e4d35:True
+K7 HEADING_FIXED                                 5120190=kept    41e4d35=CHANGED fix=CHANGED fix==41e4d35:True
+K8 HEADING_FIXED                                 5120190=kept    41e4d35=CHANGED fix=CHANGED fix==41e4d35:True
+K9 HEADING_FIXED                                 5120190=kept    41e4d35=CHANGED fix=CHANGED fix==41e4d35:True
+K0 memo 104 stored sentence                      5120190=kept    41e4d35=CHANGED fix=CHANGED fix==41e4d35:True

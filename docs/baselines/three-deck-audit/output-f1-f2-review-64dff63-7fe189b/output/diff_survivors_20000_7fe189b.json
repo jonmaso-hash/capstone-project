@@ -1,0 +1,1338 @@
+{
+ "head": "7fe189b7d1056529f1998d2c733f85d6c0d17347",
+ "seed": 64,
+ "n": 20000,
+ "rewritten_by_committed": 570,
+ "differing": {
+  "H2": 0,
+  "H3": 0,
+  "H4": 0,
+  "H6": 101,
+  "S1": 0,
+  "O3": 0,
+  "P3": 0
+ },
+ "examples": {
+  "H2": [],
+  "H3": [],
+  "H4": [],
+  "H6": [
+   {
+    "input": "The company's self-reported, unverified traction figures — 140,000+ bots and 500M+ messages [S1, S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The company's self-reported, unverified traction figures — 140,000+ bots and 500M+ messages [S1, S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The company's self-reported, unverified traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's own self-reported traction figures — 140 000+ bots [S1] and 500M messages and 500M messages/month [S2, S3] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The company's own self-reported traction figures — 140 000+ bots [S1] and 500M messages and 500M messages/month [S2, S3] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The company's own self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots, 500M messages [S1, S2] and 500M+ messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots, 500M messages [S1, S2] and 500M+ messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's own self-reported traction figures — 140,000+ bots [S1], 500M+ messages [S2] and 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+    "committed": [
+     "The company's own self-reported traction figures — 140,000+ bots [S1], 500M+ messages [S2] and 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The company's own self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's traction figures — 140 000+ bots, 500M messages [S1, S2] and 500M+ messages/month [S3] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The company's traction figures — 140 000+ bots, 500M messages [S1, S2] and 500M+ messages/month [S3] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The company's traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The deck's self-reported traction figures — 500M+ messages/month [S3] and 140,000+ bots and 500M messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "The deck's self-reported traction figures — 500M+ messages/month [S3] and 140,000+ bots and 500M messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The deck's self-reported traction figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's own self-reported traction figures — 140,000+ bots, 500M messages [S1, S2] and 500M+ messages/month [S3] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The company's own self-reported traction figures — 140,000+ bots, 500M messages [S1, S2] and 500M+ messages/month [S3] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The company's own self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's self-reported traction figures — 140,000+ bots [S1], 500M+ messages with no explicit interval [S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "The company's self-reported traction figures — 140,000+ bots [S1], 500M+ messages with no explicit interval [S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's self-reported, unverified traction figures — 500M messages/month [S3] and 140 000+ bots or 500M messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The company's self-reported, unverified traction figures — 500M messages/month [S3] and 140 000+ bots or 500M messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The company's self-reported, unverified traction figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 500M+ messages/month [S3] and 140,000+ bots and 500M messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 500M+ messages/month [S3] and 140,000+ bots and 500M messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company states 140,000+ bots [S1] and 500M+ messages with no or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The company states 140,000+ bots [S1] and 500M+ messages with no or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The company states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The deck states 140,000+ bots or 500M messages [S1, S2] and 500M+ messages/month [S3], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The deck states 140,000+ bots or 500M messages [S1, S2] and 500M+ messages/month [S3], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The deck states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company states 140,000+ bots and 500M+ messages with no explicit interval [S1, S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The company states 140,000+ bots and 500M+ messages with no explicit interval [S1, S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The company states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The deck states 140,000+ bots [S1] and 500M messages, 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The deck states 140,000+ bots [S1] and 500M messages, 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The deck states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's own self-reported traction figures — 140 000+ bots [S1] and 500M+ messages with no, 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "The company's own self-reported traction figures — 140 000+ bots [S1] and 500M+ messages with no, 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The company's own self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (see consistency note below) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's unverified traction figures — 140,000+ bots [S1], 500M+ messages with no [S2] or 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "The company's unverified traction figures — 140,000+ bots [S1], 500M+ messages with no [S2] or 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The company's unverified traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company states 140,000+ bots [S1] and 500M+ messages with no explicit interval and 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The company states 140,000+ bots [S1] and 500M+ messages with no explicit interval and 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The company states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company states 140 000+ bots [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The company states 140 000+ bots [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The company states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] and 140 000+ bots and 500M messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] and 140 000+ bots and 500M messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The deck states 140,000+ bots [S1] and 500M+ messages with no explicit interval or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "The deck states 140,000+ bots [S1] and 500M+ messages with no explicit interval or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The deck states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company states 500M messages/month [S3] and 140,000+ bots or 500M+ messages with no [S1, S2], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The company states 500M messages/month [S3] and 140,000+ bots or 500M+ messages with no [S1, S2], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The company states 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1], 500M+ messages with no explicit interval [S2] and 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1], 500M+ messages with no explicit interval [S2] and 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The deck states 140,000+ bots and 500M+ messages with no [S1, S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The deck states 140,000+ bots and 500M+ messages with no [S1, S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The deck states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's self-reported, unverified traction figures — 140 000+ bots [S1], 500M messages [S2] or 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The company's self-reported, unverified traction figures — 140 000+ bots [S1], 500M messages [S2] or 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The company's self-reported, unverified traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's self-reported traction figures — 140,000+ bots, 500M messages [S1, S2] and 500M+ messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The company's self-reported traction figures — 140,000+ bots, 500M messages [S1, S2] and 500M+ messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The deck states 140 000+ bots [S1] and 500M messages and 500M+ messages/month (see consistency note below) [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The deck states 140 000+ bots [S1] and 500M messages and 500M+ messages/month (see consistency note below) [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The deck states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (see consistency note below).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's unverified traction figures — 140,000+ bots [S1], 500M+ messages with no explicit interval [S2], 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The company's unverified traction figures — 140,000+ bots [S1], 500M+ messages with no explicit interval [S2], 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The company's unverified traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots, 500M+ messages [S1, S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots, 500M+ messages [S1, S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The self-reported figures — 500M messages/month [S3] and 140,000+ bots, 500M+ messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The self-reported figures — 500M messages/month [S3] and 140,000+ bots, 500M+ messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The self-reported figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's self-reported traction figures — 140,000+ bots or 500M+ messages with no [S1, S2] and 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The company's self-reported traction figures — 140,000+ bots or 500M+ messages with no [S1, S2] and 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's traction figures — 140,000+ bots [S1], 500M+ messages with no explicit interval [S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The company's traction figures — 140,000+ bots [S1], 500M+ messages with no explicit interval [S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The company's traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The deck's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages and 500M messages/month (see consistency note below) [S3, S2] — contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The deck's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages and 500M messages/month (see consistency note below) [S3, S2] — contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The deck's self-reported traction figures — 140 000+ bots [S1] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12, and separately 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (see consistency note below).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages with no and 500M messages/month (see consistency note below) [S3, S2] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages with no and 500M messages/month (see consistency note below) [S3, S2] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The company's self-reported traction figures — 140 000+ bots [S1] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12, and separately 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (see consistency note below).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company states 140 000+ bots [S1] and 500M messages and 500M messages/month (see consistency note below) [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The company states 140 000+ bots [S1] and 500M messages and 500M messages/month (see consistency note below) [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The company states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (see consistency note below).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company states 140,000+ bots and 500M+ messages with no explicit interval [S1, S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The company states 140,000+ bots and 500M+ messages with no explicit interval [S1, S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The company states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] and 140,000+ bots, 500M+ messages with no [S1, S2] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] and 140,000+ bots, 500M+ messages with no [S1, S2] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] and 140,000+ bots, 500M+ messages with no explicit interval [S1, S2] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] and 140,000+ bots, 500M+ messages with no explicit interval [S1, S2] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "Management states 140,000+ bots [S1], 500M messages [S2] or 500M+ messages/month [S3], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "Management states 140,000+ bots [S1], 500M messages [S2] or 500M+ messages/month [S3], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "Management states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The deck states 140,000+ bots and 500M+ messages [S1, S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The deck states 140,000+ bots and 500M+ messages [S1, S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The deck states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's self-reported traction figures — 500M messages/month [S3] and 140,000+ bots, 500M+ messages with no [S1, S2] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The company's self-reported traction figures — 500M messages/month [S3] and 140,000+ bots, 500M+ messages with no [S1, S2] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The company's self-reported traction figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The self-reported figures — 140,000+ bots, 500M+ messages with no explicit interval [S1, S2] and 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The self-reported figures — 140,000+ bots, 500M+ messages with no explicit interval [S1, S2] and 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The self-reported figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's traction figures — 500M messages/month [S3] and 140 000+ bots and 500M messages [S1, S2] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+    "committed": [
+     "The company's traction figures — 500M messages/month [S3] and 140 000+ bots and 500M messages [S1, S2] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The company's traction figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's unverified traction figures — 140,000+ bots [S1] and 500M+ messages with no explicit interval, 500M messages/month (see consistency note below) [S3, S2] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "The company's unverified traction figures — 140,000+ bots [S1] and 500M+ messages with no explicit interval, 500M messages/month (see consistency note below) [S3, S2] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The company's unverified traction figures — 140 000+ bots [S1] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12, and separately 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (see consistency note below) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's own self-reported traction figures — 140,000+ bots [S1], 500M+ messages [S2] or 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The company's own self-reported traction figures — 140,000+ bots [S1], 500M+ messages [S2] or 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The company's own self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots, 500M+ messages [S1, S2] and 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots, 500M+ messages [S1, S2] and 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's own self-reported traction figures — 140,000+ bots [S1], 500M messages [S2] and 500M+ messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "The company's own self-reported traction figures — 140,000+ bots [S1], 500M messages [S2] and 500M+ messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The company's own self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "Management states 500M+ messages/month [S3] and 140,000+ bots and 500M messages [S1, S2], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "Management states 500M+ messages/month [S3] and 140,000+ bots and 500M messages [S1, S2], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "Management states 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "Management states 140 000+ bots [S1] and 500M messages and 500M messages/month (see consistency note below) [S3, S2], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "Management states 140 000+ bots [S1] and 500M messages and 500M messages/month (see consistency note below) [S3, S2], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "Management states 140 000+ bots [S1] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12, and separately 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (see consistency note below), but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1], 500M+ messages with no [S2] or 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1], 500M+ messages with no [S2] or 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "Management states 140,000 bots [S1], 500M messages [S2] or 500M+ messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "Management states 140,000 bots [S1], 500M messages [S2] or 500M+ messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "Management states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's unverified traction figures — 140,000+ bots, 500M messages [S1, S2] and 500M+ messages/month [S3] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The company's unverified traction figures — 140,000+ bots, 500M messages [S1, S2] and 500M+ messages/month [S3] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The company's unverified traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company states 140,000+ bots [S1], 500M+ messages with no explicit interval [S2] or 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The company states 140,000+ bots [S1], 500M+ messages with no explicit interval [S2] or 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The company states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages with no and 500M messages/month [S2, S3] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages with no and 500M messages/month [S2, S3] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "Management states 140,000+ bots [S1], 500M+ messages [S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "Management states 140,000+ bots [S1], 500M+ messages [S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "Management states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's self-reported traction figures — 500M messages/month [S3] and 140,000+ bots, 500M+ messages with no explicit interval [S1, S2] — presented under the 'Traction by Apr-16' slide heading, but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The company's self-reported traction figures — 500M messages/month [S3] and 140,000+ bots, 500M+ messages with no explicit interval [S1, S2] — presented under the 'Traction by Apr-16' slide heading, but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The company's self-reported traction figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The self-reported figures — 140 000+ bots or 500M messages [S1, S2] and 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+    "committed": [
+     "The self-reported figures — 140 000+ bots or 500M messages [S1, S2] and 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The self-reported figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's traction figures — 500M messages/month [S3] and 140,000+ bots and 500M+ messages with no [S1, S2] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The company's traction figures — 500M messages/month [S3] and 140,000+ bots and 500M+ messages with no [S1, S2] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The company's traction figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's self-reported, unverified traction figures — 140,000+ bots or 500M+ messages with no explicit interval [S1, S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The company's self-reported, unverified traction figures — 140,000+ bots or 500M+ messages with no explicit interval [S1, S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The company's self-reported, unverified traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's self-reported, unverified traction figures — 140,000+ bots [S1], 500M+ messages [S2], 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The company's self-reported, unverified traction figures — 140,000+ bots [S1], 500M+ messages [S2], 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The company's self-reported, unverified traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "Management states 140,000+ bots [S1] and 500M messages and 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "Management states 140,000+ bots [S1] and 500M messages and 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "Management states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The deck states 140,000+ bots [S1], 500M messages [S2] or 500M+ messages/month [S3], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "The deck states 140,000+ bots [S1], 500M messages [S2] or 500M+ messages/month [S3], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The deck states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots and 500M+ messages with no explicit interval [S1, S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots and 500M+ messages with no explicit interval [S1, S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] and 140,000+ bots, 500M+ messages [S1, S2] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] and 140,000+ bots, 500M+ messages [S1, S2] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's unverified traction figures — 140,000+ bots or 500M+ messages [S1, S2] and 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The company's unverified traction figures — 140,000+ bots or 500M+ messages [S1, S2] and 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The company's unverified traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's own self-reported traction figures — 500M messages/month [S3] and 140 000+ bots or 500M messages [S1, S2] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+    "committed": [
+     "The company's own self-reported traction figures — 500M messages/month [S3] and 140 000+ bots or 500M messages [S1, S2] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The company's own self-reported traction figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "Management states 140,000+ bots and 500M+ messages with no explicit interval [S1, S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "Management states 140,000+ bots and 500M+ messages with no explicit interval [S1, S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "Management states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company states 140,000+ bots [S1], 500M messages [S2], 500M+ messages/month [S3], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The company states 140,000+ bots [S1], 500M messages [S2], 500M+ messages/month [S3], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The company states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The self-reported figures — 140,000+ bots [S1], 500M+ messages with no explicit interval [S2] or 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+    "committed": [
+     "The self-reported figures — 140,000+ bots [S1], 500M+ messages with no explicit interval [S2] or 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The self-reported figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The deck states 140 000+ bots and 500M messages [S1, S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The deck states 140 000+ bots and 500M messages [S1, S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The deck states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The deck states 140 000+ bots [S1], 500M messages [S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The deck states 140 000+ bots [S1], 500M messages [S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The deck states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] and 140,000+ bots, 500M+ messages with no explicit interval [S1, S2] — presented under the 'Traction by Apr-16' slide heading, but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] and 140,000+ bots, 500M+ messages with no explicit interval [S1, S2] — presented under the 'Traction by Apr-16' slide heading, but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's traction figures — 140,000+ bots or 500M+ messages with no [S1, S2] and 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The company's traction figures — 140,000+ bots or 500M+ messages with no [S1, S2] and 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The company's traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The deck's self-reported traction figures — 140 000+ bots [S1] and 500M messages and 500M messages/month [S2, S3] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The deck's self-reported traction figures — 140 000+ bots [S1] and 500M messages and 500M messages/month [S2, S3] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The deck's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The self-reported figures — 140,000+ bots [S1] and 500M+ messages with no or 500M messages/month (see consistency note below) [S3, S2] — presented under the 'Traction by Apr-16' slide heading, but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The self-reported figures — 140,000+ bots [S1] and 500M+ messages with no or 500M messages/month (see consistency note below) [S3, S2] — presented under the 'Traction by Apr-16' slide heading, but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The self-reported figures — 140 000+ bots [S1] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12, and separately 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (see consistency note below) — but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The deck's self-reported traction figures — 140,000+ bots [S1], 500M+ messages [S2], 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "The deck's self-reported traction figures — 140,000+ bots [S1], 500M+ messages [S2], 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The deck's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots and 500M messages [S1, S2] and 500M+ messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots and 500M messages [S1, S2] and 500M+ messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company states 140,000+ bots [S1] and 500M+ messages with no, 500M messages/month [S3, S2], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The company states 140,000+ bots [S1] and 500M+ messages with no, 500M messages/month [S3, S2], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The company states 140 000+ bots [S1] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12, and separately 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company states 500M messages/month [S3] and 140 000+ bots, 500M messages [S1, S2], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The company states 500M messages/month [S3] and 140 000+ bots, 500M messages [S1, S2], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The company states 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's unverified traction figures — 500M+ messages/month [S3] and 140,000+ bots or 500M messages [S1, S2] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The company's unverified traction figures — 500M+ messages/month [S3] and 140,000+ bots or 500M messages [S1, S2] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The company's unverified traction figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's self-reported traction figures — 500M messages/month [S3] and 140 000+ bots or 500M messages [S1, S2] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+    "committed": [
+     "The company's self-reported traction figures — 500M messages/month [S3] and 140 000+ bots or 500M messages [S1, S2] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The company's self-reported traction figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company states 140 000+ bots [S1] and 500M messages, 500M messages/month (see consistency note below) [S2, S3], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "The company states 140 000+ bots [S1] and 500M messages, 500M messages/month (see consistency note below) [S2, S3], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The company states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (see consistency note below), but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "Management states 140 000+ bots [S1], 500M messages [S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "Management states 140 000+ bots [S1], 500M messages [S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "Management states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's own self-reported traction figures — 140,000+ bots, 500M+ messages with no [S1, S2] and 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The company's own self-reported traction figures — 140,000+ bots, 500M+ messages with no [S1, S2] and 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The company's own self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S3, S2] — presented under the 'Traction by Apr-16' slide heading, but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S3, S2] — presented under the 'Traction by Apr-16' slide heading, but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140 000+ bots [S1] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12, and separately 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages, 500M+ messages/month [S2, S3] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages, 500M+ messages/month [S2, S3] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "Management states 140,000+ bots [S1], 500M+ messages with no explicit interval [S2], 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "Management states 140,000+ bots [S1], 500M+ messages with no explicit interval [S2], 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "Management states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The deck's self-reported traction figures — 140 000+ bots and 500M messages [S1, S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The deck's self-reported traction figures — 140 000+ bots and 500M messages [S1, S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The deck's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's self-reported, unverified traction figures — 140,000+ bots [S1], 500M messages with no [S2] or 500M+ messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+    "committed": [
+     "The company's self-reported, unverified traction figures — 140,000+ bots [S1], 500M messages with no [S2] or 500M+ messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The company's self-reported, unverified traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's unverified traction figures — 140,000+ bots [S1], 500M+ messages with no [S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "The company's unverified traction figures — 140,000+ bots [S1], 500M+ messages with no [S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The company's unverified traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "Management states 140,000+ bots [S1], 500M messages [S2] and 500M+ messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "Management states 140,000+ bots [S1], 500M messages [S2] and 500M+ messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "Management states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages and 500M+ messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages and 500M+ messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] and 140,000+ bots, 500M+ messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] and 140,000+ bots, 500M+ messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The self-reported figures — 500M+ messages/month [S3] and 140,000+ bots, 500M messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "The self-reported figures — 500M+ messages/month [S3] and 140,000+ bots, 500M messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The self-reported figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company states 140,000+ bots [S1], 500M+ messages [S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The company states 140,000+ bots [S1], 500M+ messages [S2] and 500M messages/month [S3], contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The company states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's unverified traction figures — 140,000+ bots [S1], 500M+ messages with no [S2], 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The company's unverified traction figures — 140,000+ bots [S1], 500M+ messages with no [S2], 500M messages/month [S3] — presented under the 'Traction by Apr-16' slide heading, but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The company's unverified traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company's traction figures — 140,000+ bots [S1], 500M messages [S2] and 500M+ messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The company's traction figures — 140,000+ bots [S1], 500M messages [S2] and 500M+ messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The company's traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The self-reported figures — 140 000+ bots [S1] and 500M messages and 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+    "committed": [
+     "The self-reported figures — 140 000+ bots [S1] and 500M messages and 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+     []
+    ],
+    "mutant": [
+     "The self-reported figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3] — presented under the 'Traction by Apr-16' slide heading.",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3] — presented under the 'Traction by Apr-16' slide heading.",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] and 140 000+ bots, 500M messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+    "committed": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] and 140 000+ bots, 500M messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated [C2, C3, C4].",
+     []
+    ],
+    "mutant": [
+     "The only indicators of commercial activity are the company's self-reported traction figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — but these figures are undated [C2, C3, C4].",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "Management states 140,000+ bots [S1] and 500M messages, 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "Management states 140,000+ bots [S1] and 500M messages, 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "Management states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   },
+   {
+    "input": "The company states 500M messages/month [S3] and 140 000+ bots, 500M messages [S1, S2], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+    "committed": [
+     "The company states 500M messages/month [S3] and 140 000+ bots, 500M messages [S1, S2], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     []
+    ],
+    "mutant": [
+     "The company states 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), but neither is verified.",
+     [
+      "basis_heading_scope"
+     ]
+    ]
+   }
+  ],
+  "S1": [],
+  "O3": [],
+  "P3": []
+ }
+}
