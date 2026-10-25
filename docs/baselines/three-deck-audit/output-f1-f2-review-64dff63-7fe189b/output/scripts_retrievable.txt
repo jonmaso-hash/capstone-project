@@ -1,0 +1,60 @@
+# Checked against origin/fix/funding-word-heading-scope-f1-f2 at 3d1eeaea4e65574a5d1daa7455501e584a8f9cb9 after push (git cat-file -e on the fetched remote ref).
+## Manifest: scripts promised by the earlier READMEs
+OK   docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/t.sh.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/py.sh.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/m104.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/replay.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/carried_probe.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/cmp_probes.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/exact.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/cases.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/mutate_f12.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/probe_words.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-ff25de1-41e4d35/output/scripts/review_cases.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-ff25de1-41e4d35/output/scripts/t.sh.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-ff25de1-41e4d35/output/scripts/py.sh.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-ff25de1-41e4d35/output/scripts/mutate_f12.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-ff25de1-41e4d35/output/scripts/replay.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-ff25de1-41e4d35/output/scripts/carried_probe.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-ff25de1-41e4d35/output/scripts/cmp_probes.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-ff25de1-41e4d35/output/scripts/exact.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-41e4d35-64dff63/output/scripts/review_cases2.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-41e4d35-64dff63/output/scripts/t.sh.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-41e4d35-64dff63/output/scripts/py.sh.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-41e4d35-64dff63/output/scripts/mutate_f12.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-41e4d35-64dff63/output/scripts/replay.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-41e4d35-64dff63/output/scripts/carried_probe.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-41e4d35-64dff63/output/scripts/cmp_probes.py.txt
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-41e4d35-64dff63/output/scripts/exact.py.txt
+## This folder: every relative link in README.md
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/carried_probes_compare.txt (blob)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/committed_hashes.txt (blob)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/diff_stat_5120190_7fe189b.txt (blob)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/diff_stat_64dff63_7fe189b.txt (blob)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/diff_survivors_20000_7fe189b.json (blob)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/diff_survivors_20000_7fe189b.txt (blob)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/diff_survivors_h6_classes.txt (blob)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/exact_before_after_7fe189b.json (blob)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/mutations.txt (blob)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/mutations_h6_check.txt (blob)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/replay_memos_96_to_104_7fe189b.json (blob)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/repro_h6_7fe189b.json (blob)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/repro_h6_7fe189b.txt (blob)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/review_cases_7fe189b.txt (blob)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/scripts/ (tree)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/scripts/literal.py.txt (blob)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/scripts_manifest.txt (blob)
+SELF   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/scripts_retrievable.txt (this record; committed in the next commit and checked after that push)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/suite_ram.txt (blob)
+## This folder: scripts named in README.md, and byte-identical to the copy that ran
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/scripts/repro_h6.py.txt (== run copy)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/scripts/diff_survivors.py.txt (== run copy)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/scripts/literal.py.txt (== run copy)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/scripts/mutate_f12.py.txt (== run copy)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/scripts/review_cases2.py.txt (== run copy)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/scripts/replay.py.txt (== run copy)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/scripts/carried_probe.py.txt (== run copy)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/scripts/cmp_probes.py.txt (== run copy)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/scripts/exact.py.txt (== run copy)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/scripts/t.sh.txt (== run copy)
+OK   docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/scripts/py.sh.txt (== run copy)
