@@ -4784,6 +4784,21 @@ HEADING_KEPT = (
     f"Pitch Deck Hunt states {_LIST104}, contextualised under a slide heading 'Traction by Apr-16'.",
     f"According to an analyst, the company's self-reported traction figures — {_LIST104}{_HEAD104}.",
     f"The figures — {_LIST104}{_HEAD104}.",
+    # Review of ff25de1: an interval no cited statement gives that figure is kept for review, not erased.
+    f"{_LEAD104}140,000+ bots/month [S1] and 500M messages or 500M messages/month [S2, S3]{_HEAD104}.",
+    f"The company states 140,000+ bots/month [S1] and 500M messages or 500M messages/month [S2, S3], contextualised "
+    "under a slide heading 'Traction by Apr-16'.",
+    f"{_LEAD104}140,000+ bots [S1] and 500M messages/week or 500M messages/month [S2, S3]{_HEAD104}.",
+    f"{_LEAD104}140,000+/month bots [S1] and 500M messages or 500M messages/month [S2, S3]{_HEAD104}.",
+    f"{_LEAD104}140,000+ bots [S1] and 500M messages or 500M messages/bots [S2, S3]{_HEAD104}.",
+    # Review of ff25de1: another speaker's reading of the company's figures; mentioning "company" is not enough.
+    f"An analyst's interpretation of the company's traction figures — {_LIST104}{_HEAD104}.",
+    f"An analyst describes the company's traction figures — {_LIST104}{_HEAD104}.",
+    f"An analyst reads the company's traction figures — {_LIST104}{_HEAD104}.",
+    f"The analyst's view of the company's self-reported traction figures — {_LIST104}{_HEAD104}.",
+    f"Some investors think the indicators are the company's self-reported traction figures — {_LIST104}{_HEAD104}.",
+    f"The company's traction figures as an analyst summarises them — {_LIST104}{_HEAD104}.",
+    f"Rival Corp's comparison with the company's traction figures — {_LIST104}{_HEAD104}.",
 )
 
 
@@ -4826,6 +4841,21 @@ class F2HeadingScopeTests(SimpleTestCase):
                 self.assertNotIn('cumulative', after)
                 self.assertNotIn('April 2016', after)
                 self.assertNotRegex(after, r"messages/month \[[SC]\d\] on page 12, under")
+
+    def test_an_interval_counts_only_on_the_figure_a_statement_gives_it(self):
+        # Review of ff25de1: "month" from page 12's statement does not license "bots/month".
+        from .basis_fidelity import _slash_forms_stated
+        statements = ['140000+ bots', '500m messages with no explicit interval', '500m messages/month']
+        for text, ok in (("140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3]", True),
+                         ("140 000+ bots [S1] and 500M messages/month [S3]", True),
+                         ("500M+ messages/month [S3]", True),        # the "+" a statement leaves out may be written
+                         ("140,000+ bots/month [S1] and 500M messages/month [S3]", False),
+                         ("500M messages/week [S2]", False),
+                         ("500M messages/bots [S2]", False),
+                         ("250M messages/month [S3]", False),
+                         ("messages/month [S3]", False)):           # no figure to own the interval
+            with self.subTest(text=text):
+                self.assertEqual(_slash_forms_stated(text, statements), ok)
 
     def test_another_pair_alike(self):
         from .basis_fidelity import basis_facts, guard_basis_wording

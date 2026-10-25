@@ -134,10 +134,16 @@ and one rule about where figures are stated (memo 99, OF-705; review of d30a022)
                 pointer to the note in the list is kept word for word; without one the pair's clarification follows.
                 The participle ("contextualised", "presented", "shown", ...) must open the phrase straight after the
                 list's closing dash, or after the comma ending "the company states <list>"; the phrase must end its
-                clause; the list must hold nothing but the cited statements' words and figures; and its subject must
-                be the company's own source stated outright: a narrator, another speaker, a denial, a hedge, a
-                condition, a question, an aside or another figure keeps the sentence, as does a list whose refs all
-                carry the heading (or none does)
+                clause; the list must hold nothing but the cited statements' words and figures, and an interval
+                only on the figure a cited statement gives it ("500M messages/month"; "140,000+ bots/month",
+                "500M messages/week" or "messages/bots" keeps the sentence for review; review of ff25de1). The
+                list's subject must be the company's own figures, named as the last noun phrase before the dash
+                ("the company's self-reported traction figures", "the self-reported figures"), after at most an
+                allowlisted lead-in ending in a linking verb ("The only indicators of commercial activity are"); in
+                the comma form, "the company" (or the deck, ...) right before its reporting verb. Another speaker's
+                reading ("An analyst describes the company's ...", "An analyst's interpretation of the company's
+                ..."), a narrator, a denial, a hedge, a condition, a question, an aside or another figure keeps the
+                sentence, as does a list whose refs all carry the heading (or none does)
     cumulative  "the cumulative and monthly presentations" (memo 101, OF-906) presupposes that one side is
     presupposed cumulative. For the pair its own following citation group belongs to (or else the pair the
                 sentence resolved to), when that pair admits no cumulative fact, "cumulative" becomes
@@ -1078,6 +1084,36 @@ _HEADING_SCOPE = re.compile(
 # A pointer to the note an aside may hold in such a list: kept, word for word, after the restated figures.
 _NOTE_POINTER = re.compile(r"\(\s*see\s+(?:the\s+)?(?:consistency|measurement[-\s]basis)\s+note(?:\s+(?:below|above))?\s*\)",
                            re.I)
+# A figure written with its noun and an interval ("500M messages/month"), and any word pair joined by a slash.
+_NOUN_INTERVAL = re.compile(r"(?<![\w.$])(\$?\d[\d,]*(?:\.\d+)?[kmb]?\+?)\s+([a-z]+/[a-z]+)\b")
+_SLASH_PAIR = re.compile(r"[a-z]+/[a-z]+")
+# The appositive list's subject (review of ff25de1): the company's own figures, named as the clause's last noun
+# phrase ("the company's self-reported traction figures", "the self-reported figures"), after at most a short lead-in
+# of allowlisted words ending in a linking verb ("The only indicators of commercial activity are"). Any other lead-in
+# ("An analyst describes", "An analyst's interpretation of", "Some investors think the indicators are") keeps the
+# sentence: whose reading the list is, is then unknown.
+_OWN_FIGURES = re.compile(
+    r"(?:(?P<lead>(?:(?:the|an?|only|main|key|sole|principal|clearest|available|indicators?|signs?|evidence|measures?|"
+    r"of|commercial|activity|traction|usage|adoption|scale|demand)\s+)+)(?:are|is|were|was|include|includes)\s+)?"
+    r"(?:the\s+)?(?P<own>(?:company|deck|pitch\s+deck|presentation|founders?|management)['’]s\s+)?(?:own\s+)?"
+    r"(?P<adjectives>(?:(?:self-reported|stated|reported|unverified|disclosed|headline),?\s+)*)"
+    r"(?:(?:traction|usage)\s+)?(?:figures|metrics|numbers|counts|data)", re.I)
+
+
+def _slash_forms_stated(text, statements):
+    """Every "<noun>/<interval>" in the list belongs to a figure that one cited statement states with exactly that
+    noun and interval (review of ff25de1): "500M messages/month" when a statement says so, never "140,000+ bots/month"
+    (no statement gives the bots an interval), "500M messages/week" or "500M messages/bots"; and no other word pair
+    joined by a slash. A statement's form may leave out a "+" the list writes, never add one."""
+    stated = {(_figure_key(m.group(1)), m.group(2)) for fact in statements for m in _NOUN_INTERVAL.finditer(fact)}
+    text = _DIGIT_GROUP.sub('', _REF.sub(' ', text).lower())
+    covered = []
+    for match in _NOUN_INTERVAL.finditer(text):
+        key = _figure_key(match.group(1))
+        if (key, match.group(2)) not in stated and (key.rstrip('+'), match.group(2)) not in stated:
+            return False
+        covered.append(match.span(2))
+    return all(any(a <= hit.start() and hit.end() <= b for a, b in covered) for hit in _SLASH_PAIR.finditer(text))
 
 
 def _heading_scope(sentence, facts, changes):
@@ -1114,9 +1150,14 @@ def _heading_scope(sentence, facts, changes):
         statements = [_DIGIT_GROUP.sub('', fact.lower()) for ref, *_, fact in facts.places if ref in cited]
         vocabulary = (_PLACING_WORDS | {word for fact in statements for word in re.findall(r'[a-z]+', fact)}
                       | {form for fact in statements for form in _stated_forms(fact)})
-        bare = re.sub(r'(?<=[a-z])/(?=[a-z])', ' ', bare)    # "messages/month": the statement's own two words
+        if not _slash_forms_stated(bare, statements):
+            continue                           # an interval no cited statement gives that figure: kept for review
+        bare = re.sub(r'(?<=[a-z])/(?=[a-z])', ' ', bare)    # "messages/month": checked above, now two plain words
         if dash:                               # an appositive list: its subject is the clause before the dash
             subject = sentence[_place_clause_start(sentence, start - 1):start - 1]
+            own = _OWN_FIGURES.fullmatch(subject[_LEAD.match(subject).end():].strip())
+            if own is None or not (own.group('own') or re.search(r'self-reported', own.group('adjectives'), re.I)):
+                continue                       # another speaker's reading, or no own source: kept
             listed = bare
             head = sentence[:start] + ' '
         else:                                  # "the company states <list>, contextualised under ..."
