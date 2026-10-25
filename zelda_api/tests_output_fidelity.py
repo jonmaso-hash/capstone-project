@@ -4484,3 +4484,364 @@ class Of1102Of1103DateTransferTests(SimpleTestCase):
         for items in (headed, narrated):
             with self.subTest(items=[(i.ref, i.source_context, i.narrator) for i in items if i.ref == 'S8']):
                 self.assertEqual(guard_basis_wording(text, basis_facts(items, (OTHER_PAIR_NOTE,))), (text, []))
+
+
+# --- memo 104 (ManyChat, document 3146; post-merge run at 5120190, evidence f73bef5) -----------------------------------
+#     F-1  questions_for_management 5: the funding guard's figure tail ended inside "reportedly" and the attribution
+#          split the word: "the $23.1M reportedly raised [S4]" was stored as "the $23.1M reported (per Pitch Deck
+#          Hunt)ly raised [S4]" and rendered to staff. Provisional P2.
+#     F-2  business_model_analysis: "... — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency
+#          note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are
+#          undated ..." puts page 10's heading over page 12's S3, which has no context. A source-context defect even
+#          though the sentence calls the figures undated.
+#
+# The fixtures are memo 104's payload as sent and its raw reply (data/funding_fidelity/memo104*.json, from the
+# committed evidence f73bef5). Memo 104 itself is not edited; these tests replay its reply.
+
+def memo104():
+    with open(os.path.join(DATA, 'memo104.json'), encoding='utf-8') as f:
+        data = json.load(f)
+    return json.loads(re.search(r'\{.*\}', data['model_reply_text'], re.S).group(0)), data['stored']
+
+
+def memo104_payload():
+    with open(os.path.join(DATA, 'memo104_payload.json'), encoding='utf-8') as f:
+        return json.load(f)['payload']
+
+
+Q5_104_RAW = ("- What is the composition of the $23.1M reportedly raised [S4] — how many rounds, at what valuations, and "
+              "from which investors?")
+Q5_104_STORED = ("- What is the composition of the $23.1M reported (per Pitch Deck Hunt)ly raised [S4] — how many rounds, "
+                 "at what valuations, and from which investors?")
+Q5_104_AFTER = ("- What is the composition of the $23.1M (per Pitch Deck Hunt) reportedly raised [S4] — how many rounds, "
+                "at what valuations, and from which investors?")
+BM_104_BEFORE = ("The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ "
+                 "bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — "
+                 "contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and "
+                 "have not been independently verified [C2, C3, C4].")
+BM_104_AFTER = ("The only indicators of commercial activity are the company's self-reported traction figures — 140 000+ "
+                "bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and "
+                "separately 500M messages/month [S3] on page 12 (see consistency note below) — but these figures are "
+                "undated as counts and have not been independently verified [C2, C3, C4].")
+CHANGED_104 = {'business_model_analysis', 'questions_for_management'}
+
+
+class Memo104ReplayTests(SimpleTestCase):
+    """The actual memo-104 reply through the pipeline's guards: the two findings change, nothing else."""
+
+    def setUp(self):
+        self.raw, self.stored = memo104()
+        self.payload = memo104_payload()
+        self.items, self.notes = items_from(self.payload), notes_from(self.payload)
+        self.out, self.changes = replay(self.raw, self.items, self.notes)
+
+    def test_the_fixture_is_memo_104_as_stored(self):
+        self.assertIn(Q5_104_RAW, memo_text(self.raw['questions_for_management']))
+        self.assertIn(Q5_104_STORED, self.stored['questions_for_management'])
+        self.assertIn(BM_104_BEFORE, self.raw['business_model_analysis'])
+        self.assertIn(BM_104_BEFORE, self.stored['business_model_analysis'])
+        self.assertEqual(self.notes[0][1], ('C3', 'C2'))
+        sources = {i['ref']: (i['statement'], i['sources'][0].get('page'), i.get('source_context'))
+                   for i in self.payload['items']}
+        self.assertEqual(sources['S1'], ('140 000+ bots', 10, 'Traction by Apr-16'))
+        self.assertEqual(sources['S2'], ('500M messages', 10, 'Traction by Apr-16'))
+        self.assertEqual(sources['S3'], ('500M messages/month', 12, None))
+        self.assertEqual(sources['C3'], ('500M messages', 10, 'Traction by Apr-16'))
+        self.assertEqual(sources['C2'], ('500M messages/month', 12, None))
+        self.assertEqual(sources['S4'][1:], (2, None))
+
+    def test_f1_the_attribution_keeps_reportedly_whole(self):
+        self.assertEqual(self.out['questions_for_management'],
+                         self.stored['questions_for_management'].replace(Q5_104_STORED, Q5_104_AFTER))
+        self.assertNotIn(')ly', self.out['questions_for_management'])
+
+    def test_f2_page_10_s_heading_covers_only_page_10_s_figures(self):
+        self.assertEqual(self.out['business_model_analysis'],
+                         self.stored['business_model_analysis'].replace(BM_104_BEFORE, BM_104_AFTER))
+
+    def test_f2_keeps_the_qualifier_the_intervals_and_no_date(self):
+        out = self.out['business_model_analysis']
+        self.assertIn("the company's self-reported traction figures", out)
+        self.assertIn('have not been independently verified [C2, C3, C4]', out)
+        self.assertIn('500M messages with no explicit interval [S2] on page 10', out)
+        self.assertIn('500M messages/month [S3] on page 12', out)
+        self.assertNotRegex(out, r'500M messages/month \[S3\][^.;]*Traction by Apr-16')
+        for word in ('cumulative', 'April 2016', 'as of', 'at the time of'):
+            self.assertNotIn(word, out)
+
+    def test_every_other_field_is_exactly_as_stored(self):
+        for key, value in self.out.items():
+            if key in self.stored and key not in CHANGED_104:
+                self.assertEqual(value, self.stored[key], key)
+
+    def test_citations_change_only_where_corrected(self):
+        for key, value in self.out.items():
+            if isinstance(value, str) and key in self.stored:
+                expected = refs(self.stored[key])
+                if key == 'business_model_analysis':
+                    self.assertEqual(expected, ['S1', 'S2', 'S3', 'C2', 'C3', 'C4'])   # S2 and S3 each cite alone now
+                self.assertEqual(refs(value), expected, key)
+
+    def test_every_citation_names_a_supplied_ref(self):
+        supplied = {i['ref'] for i in self.payload['items']}
+        for key, value in self.out.items():
+            if isinstance(value, str):
+                self.assertLessEqual(set(refs(value)), supplied, key)
+
+    def test_a_second_pass_changes_nothing(self):
+        again, changes = replay(self.out, self.items, self.notes)
+        self.assertEqual(again, self.out)
+        self.assertEqual(changes, {})
+
+    def test_reversed_item_order_gives_the_same_output(self):
+        reversed_out, reversed_changes = replay(self.raw, list(reversed(self.items)), self.notes)
+        self.assertEqual(reversed_out, self.out)
+        self.assertEqual(reversed_changes, self.changes)
+
+    def test_only_the_expected_rules_fired(self):
+        self.assertEqual(self.changes, {
+            'business_model_analysis': ['basis_heading_scope'],
+            'questions_for_management': ['attribution:Pitch Deck Hunt'],
+        })
+
+    def test_earlier_memos_get_no_heading_rule(self):
+        for n in (96, 98, 99, 100, 101, 102, 103):
+            with open(os.path.join(DATA, f'memo{n}.json'), encoding='utf-8') as f:
+                raw = json.loads(re.search(r'\{.*\}', json.load(f)['model_reply_text'], re.S).group(0))
+            with open(os.path.join(DATA, f'memo{n}_payload.json'), encoding='utf-8') as f:
+                payload = json.load(f)['payload']
+            _, changes = replay(raw, items_from(payload), notes_from(payload))
+            fired = {rule for rules in changes.values() for rule in rules}
+            with self.subTest(memo=n):
+                self.assertNotIn('basis_heading_scope', fired)
+
+
+class Memo104StoredSectionsTests(SimpleTestCase):
+    """The stored memo-104 text through the basis guard: the heading repair only. (The stored F-1 line already names
+    the narrator, so the funding guard leaves it; only a fresh reply gets the whole-word attribution.)"""
+
+    def test_the_stored_sections_get_the_heading_repair(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        payload = memo104_payload()
+        facts = basis_facts(items_from(payload), notes_from(payload))
+        _, stored = memo104()
+        out = {key: guard_basis_wording(value, facts)[0] for key, value in stored.items()}
+        self.assertIn(BM_104_AFTER, out['business_model_analysis'])
+        self.assertEqual({k for k in stored if out[k] != stored[k]}, {'business_model_analysis'})
+
+
+class PipelineMemo104Tests(TestCase):
+    """The memo writer itself (intelligence_pipeline._generate_memo) stores the repaired memo-104 reply."""
+
+    def test_the_stored_memo_carries_the_repairs(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from .grounded_context import GroundedContext
+        from .intelligence_pipeline import ZeldaIntelligencePipelineV2
+        from .vector_models import DocumentSource, IntelligenceMemo
+        user = get_user_model().objects.create_user('memo104_writer', password='x')
+        doc = DocumentSource.objects.create(filename='mc.pptx', source_entity='ManyChat', uploaded_by=user,
+                                            document_type='pitch_deck')
+        payload = memo104_payload()
+        context = GroundedContext(document_id=doc.id, company='ManyChat', built_for='test', items=tuple(items_from(payload)),
+                                  gaps=(), verification='complete', analysis_confidence=0.5,
+                                  consistency_notes=notes_from(payload))
+        raw, stored = memo104()
+        pipeline = ZeldaIntelligencePipelineV2()
+        with mock.patch.object(pipeline, '_call_claude_for_memo', return_value=dict(raw)):
+            pipeline._generate_memo(context)
+        memo = IntelligenceMemo.objects.get(document_id=doc.id)
+        self.assertEqual(memo.questions_for_management,
+                         stored['questions_for_management'].replace(Q5_104_STORED, Q5_104_AFTER))
+        self.assertEqual(memo.business_model_analysis,
+                         stored['business_model_analysis'].replace(BM_104_BEFORE, BM_104_AFTER))
+        for key in ('executive_summary', 'information_readiness', 'supported_points', 'risk_assessment',
+                    'open_concerns', 'upside_scenario', 'base_scenario', 'downside_scenario', 'zelda_advantage',
+                    'financial_analysis', 'what_would_change_the_picture', 'problem_solution'):
+            self.assertEqual(getattr(memo, key), stored[key], key)
+
+
+# F-1: the figure's phrase is whole words. A tail word ends where the word ends; a longer word sharing its first letters
+# is not the tail, so the attribution follows the figure itself and the word stays whole.
+_Q = "- What is the composition of the $23.1M {} [S4] — how many rounds, at what valuations, and from which investors?"
+TAIL_WORDS_KEPT_WHOLE = (
+    # A valid complete-word tail: the attribution follows the whole phrase.
+    ('raised', '$23.1M raised (per Pitch Deck Hunt) [S4]'),
+    ('in funding', '$23.1M in funding (per Pitch Deck Hunt) [S4]'),
+    ('funding figure', '$23.1M funding figure (per Pitch Deck Hunt) [S4]'),
+    ('total', '$23.1M total (per Pitch Deck Hunt) [S4]'),
+    ('listed', '$23.1M listed (per Pitch Deck Hunt) [S4]'),
+    ('reported', '$23.1M reported (per Pitch Deck Hunt) [S4]'),
+    ('reported raised', '$23.1M reported raised (per Pitch Deck Hunt) [S4]'),
+    # A longer word sharing a tail word's first letters: the attribution follows the figure; the word stays whole.
+    ('reportedly raised', '$23.1M (per Pitch Deck Hunt) reportedly raised [S4]'),
+    ('reporters', '$23.1M (per Pitch Deck Hunt) reporters [S4]'),
+    ('figures', '$23.1M (per Pitch Deck Hunt) figures [S4]'),
+    ('totalling', '$23.1M (per Pitch Deck Hunt) totalling [S4]'),
+    ('fundings', '$23.1M (per Pitch Deck Hunt) fundings [S4]'),
+    ('listedness', '$23.1M (per Pitch Deck Hunt) listedness [S4]'),
+    ('raisedness', '$23.1M (per Pitch Deck Hunt) raisedness [S4]'),
+)
+
+
+class F1FigureTailWholeWordTests(SimpleTestCase):
+    """F-1: "$23.1M reportedly raised" keeps "reportedly" whole; every alternative of the figure tail is a whole word."""
+
+    def setUp(self):
+        payload = memo104_payload()
+        self.items, self.notes = items_from(payload), notes_from(payload)
+
+    def full(self, text):
+        out, changes = replay({'s': text}, self.items, self.notes)
+        return out['s'], changes.get('s', [])
+
+    def test_memo_104_s_question_reads_naturally(self):
+        self.assertEqual(self.full(Q5_104_RAW), (Q5_104_AFTER, ['attribution:Pitch Deck Hunt']))
+
+    def test_the_funding_guard_alone_and_a_second_pass(self):
+        facts = funding_facts(self.items, 'ManyChat')
+        out, changes = guard_funding_fidelity(Q5_104_RAW, facts)
+        self.assertEqual((out, changes), (Q5_104_AFTER, ['attribution:Pitch Deck Hunt']))
+        self.assertEqual(guard_funding_fidelity(out, facts), (out, []))
+        self.assertEqual(self.full(Q5_104_AFTER), (Q5_104_AFTER, []))
+
+    def test_complete_word_tails_and_longer_words(self):
+        for words, phrase in TAIL_WORDS_KEPT_WHOLE:
+            with self.subTest(words=words):
+                out, changes = self.full(_Q.format(words))
+                self.assertEqual(out, _Q.format(words).replace(f'$23.1M {words} [S4]', phrase))
+                self.assertEqual(changes, ['attribution:Pitch Deck Hunt'])
+                self.assertEqual(self.full(out), (out, []))
+                self.assertNotRegex(out, r'\)[a-z]')          # no attribution inside a word
+
+    def test_every_tail_alternative_ends_at_a_word_boundary(self):
+        from .funding_fidelity import _FIGURE_TAIL
+        for word in ('funding', 'raised', 'figure', 'total', 'listed', 'reported'):
+            with self.subTest(word=word):
+                self.assertEqual(_FIGURE_TAIL.match(f'$1M {word}', 3).group(0), f' {word}')
+                self.assertEqual(_FIGURE_TAIL.match(f'$1M in {word}.', 3).group(0), f' in {word}')
+                for longer in (word + 'ly', word + 's', word + 'ness', word + 'x'):
+                    self.assertEqual(_FIGURE_TAIL.match(f'$1M {longer}', 3).group(0), '', longer)
+                    self.assertEqual(_FIGURE_TAIL.match(f'$1M raised {longer}', 3).group(0), ' raised', longer)
+
+
+# F-2: a heading phrase closing a figure list covers only the refs whose items carry it.
+_LEAD104 = "The company's self-reported traction figures — "
+_HEAD104 = " — contextualised under a slide heading 'Traction by Apr-16'"
+_LIST104 = "140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3]"
+_SCOPED = ("140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', "
+           "and separately 500M messages/month [S3] on page 12")
+HEADING_FIXED = (
+    # Memo 104's own sentence, without its opening words.
+    (f"{_LEAD104}140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3]"
+     f"{_HEAD104}, but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+     f"{_LEAD104}{_SCOPED} (see consistency note below) — but these figures are undated as counts and have not been "
+     "independently verified [C2, C3, C4]."),
+    # No pointer to the note: the pair's clarification follows; the sentence's end or another clause after it.
+    (f"{_LEAD104}{_LIST104}{_HEAD104}.", f"{_LEAD104}{_SCOPED} ({CLARIFY})."),
+    (f"{_LEAD104}{_LIST104}{_HEAD104}, while Pitch Deck Hunt lists $23.1M raised [C1, S4].",
+     f"{_LEAD104}{_SCOPED} ({CLARIFY}) — while Pitch Deck Hunt lists $23.1M raised [C1, S4]."),
+    (f"The company's unverified traction figures — {_LIST104}{_HEAD104}.",
+     f"The company's unverified traction figures — {_SCOPED} ({CLARIFY})."),
+    # Other wordings of the heading, claim refs, the other order, and the company's own reporting verb.
+    (f"{_LEAD104}{_LIST104} — presented under the 'Traction by Apr-16' slide heading.", f"{_LEAD104}{_SCOPED} ({CLARIFY})."),
+    (f"{_LEAD104}{_LIST104} — shown on a slide headed 'Traction by Apr-16'.", f"{_LEAD104}{_SCOPED} ({CLARIFY})."),
+    (f"{_LEAD104}140,000+ bots [C4] and 500M messages or 500M messages/month [C3, C2]{_HEAD104}.",
+     f"{_LEAD104}{_SCOPED.replace('[S1]', '[C4]').replace('[S2]', '[C3]').replace('[S3]', '[C2]')} ({CLARIFY})."),
+    (f"{_LEAD104}500M messages/month [S3] and 140,000+ bots and 500M messages [S1, S2]{_HEAD104}.",
+     f"{_LEAD104}500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no "
+     f"explicit interval [S2] on page 10, under 'Traction by Apr-16' ({CLARIFY})."),
+    (f"The company states {_LIST104}, contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+     f"The company states {_SCOPED} ({CLARIFY}), but neither is verified."),
+)
+HEADING_KEPT = (
+    # Correctly scoped mixed-source sentences: the heading names only page 10's refs.
+    f"{_LEAD104}140,000+ bots [S1] and 500M messages [S2]{_HEAD104}, but page 12 states 500M messages/month [S3].",
+    f"{_LEAD104}140,000+ bots [S1] and 500M messages [S2]{_HEAD104}.",
+    # A heading mention that assigns no context to the other figure.
+    "The deck states 500M messages/month [S3] on page 12, apart from the slide heading 'Traction by Apr-16' that covers "
+    "140,000+ bots [S1] and 500M messages [S2].",
+    # Denials.
+    f"{_LEAD104}{_LIST104} — not all contextualised under a slide heading 'Traction by Apr-16'.",
+    f"{_LEAD104}140,000+ bots [S1] and not 500M messages/month [S2, S3]{_HEAD104}.",
+    f"The company does not state {_LIST104}, contextualised under a slide heading 'Traction by Apr-16'.",
+    # Hypotheses, a hedge and a question.
+    f"If the figures — {_LIST104}{_HEAD104}, and the basis is monthly, ManyChat would be large.",
+    f"If the company's self-reported traction figures — {_LIST104}{_HEAD104}, and the basis is monthly, ManyChat would "
+    "be large.",                                     # the company's own subject: only the condition keeps it
+    f"{_LEAD104}possibly {_LIST104}{_HEAD104}.",
+    f"The company's self-reported traction figures may be — {_LIST104}{_HEAD104}.",
+    f"Were {_LIST104}{_HEAD104}?",
+    # Unrelated content in the list, another figure or interval, another ref, an aside, mid-clause.
+    f"{_LEAD104}140,000+ bots [S1], revenue of $10M and 500M messages or 500M messages/month [S2, S3]{_HEAD104}.",
+    f"{_LEAD104}140,000+ bots [S1] and 250M messages/month [S2, S3]{_HEAD104}.",
+    f"{_LEAD104}140,000+ bots [S1] and 500M messages/day [S2, S3]{_HEAD104}.",
+    f"{_LEAD104}140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3, S4]{_HEAD104}.",
+    f"{_LEAD104}140,000+ bots [S1] and 500M messages or 500M messages/month (unaudited) [S2, S3]{_HEAD104}.",
+    f"{_LEAD104}{_LIST104}{_HEAD104} that dates them.",
+    # A narrator's figures, another speaker, and no source named.
+    f"Pitch Deck Hunt's traction figures — {_LIST104}{_HEAD104}.",
+    f"Pitch Deck Hunt states {_LIST104}, contextualised under a slide heading 'Traction by Apr-16'.",
+    f"According to an analyst, the company's self-reported traction figures — {_LIST104}{_HEAD104}.",
+    f"The figures — {_LIST104}{_HEAD104}.",
+)
+
+
+class F2HeadingScopeTests(SimpleTestCase):
+    """F-2: page 10's heading covers only page 10's figures. Each figure keeps its ref, interval and qualifier; correctly
+    scoped sentences, unassigned heading mentions, denials, hypotheses, hedges, questions, unrelated content, narrators
+    and other speakers keep their wording."""
+
+    def setUp(self):
+        payload = memo104_payload()
+        self.items, self.notes = items_from(payload), notes_from(payload)
+
+    def full(self, text, items=None):
+        out, changes = replay({'s': text}, items or self.items, self.notes)
+        return out['s'], changes.get('s', [])
+
+    def test_the_heading_is_scoped_to_the_evidence_that_carries_it(self):
+        for before, after in HEADING_FIXED:
+            with self.subTest(text=before):
+                self.assertEqual(self.full(before), (after, ['basis_heading_scope']))
+
+    def test_controls_are_kept(self):
+        for text in HEADING_KEPT:
+            with self.subTest(text=text):
+                self.assertEqual(self.full(text), (text, []))
+
+    def test_stable_idempotent_reversed_and_every_citation_owned(self):
+        supplied = {item.ref for item in self.items}
+        for text in HEADING_KEPT + tuple(b for b, _ in HEADING_FIXED):
+            with self.subTest(text=text):
+                out, _ = self.full(text)
+                self.assertEqual(self.full(out), (out, []))
+                self.assertEqual(self.full(text, list(reversed(self.items)))[0], out)
+                self.assertLessEqual(set(refs(out)), supplied)
+
+    def test_each_fixed_sentence_keeps_its_figures_and_adds_no_basis_or_date(self):
+        for before, after in HEADING_FIXED:
+            with self.subTest(text=before):
+                self.assertEqual(sorted(refs(after)), sorted(refs(before)))   # every ref kept, none added or doubled
+                self.assertNotIn('cumulative', after)
+                self.assertNotIn('April 2016', after)
+                self.assertNotRegex(after, r"messages/month \[[SC]\d\] on page 12, under")
+
+    def test_another_pair_alike(self):
+        from .basis_fidelity import basis_facts, guard_basis_wording
+        facts = basis_facts(OTHER_PAIR_ITEMS(), (OTHER_PAIR_NOTE,))
+        facts_rev = basis_facts(list(reversed(OTHER_PAIR_ITEMS())), (OTHER_PAIR_NOTE,))
+        before = ("The self-reported usage figures — 3M bots or 3M bots/week [S7, S8] — contextualised under a slide "
+                  "heading 'Growth by Q3-19', but neither is verified.")
+        after = ("The self-reported usage figures — 3M bots with no explicit interval [S7] on page 7, under 'Growth by "
+                 "Q3-19', and separately 3M bots/week [S8] on page 8 (" + CLARIFY_WEEKLY + ") — but neither is verified.")
+        self.assertEqual(guard_basis_wording(before, facts), (after, ['basis_heading_scope']))
+        self.assertEqual(guard_basis_wording(before, facts_rev), (after, ['basis_heading_scope']))
+        self.assertEqual(guard_basis_wording(after, facts), (after, []))
+        kept = ("The self-reported usage figures — 3M bots or 3M bots/week [S7, S8] — contextualised under a slide "
+                "heading 'Traction by Apr-16'.")             # not this pair's heading: neither figure carries it
+        self.assertEqual(guard_basis_wording(kept, facts), (kept, []))
+        # Another fact cited in the list (S9, not narrated and outside the pair) is not pulled into the restatement.
+        other_fact = ("The self-reported usage figures — 3M bots or 3M bots/week [S7, S8, S9] — contextualised under a "
+                      "slide heading 'Growth by Q3-19'.")
+        self.assertEqual(guard_basis_wording(other_fact, facts), (other_fact, []))
