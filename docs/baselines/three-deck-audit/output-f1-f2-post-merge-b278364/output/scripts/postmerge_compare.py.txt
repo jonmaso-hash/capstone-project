@@ -1,0 +1,93 @@
+"""Post-merge verification at b278364 (PR #290): compare this run's replay, probe, exact-case and review-case outputs
+with the 7fe189b evidence committed at 3d1eeae, separating metadata keys from content, and check F-1, F-2 and the
+four H6 preservation controls explicitly. Reads committed evidence with git show; no database, no model call.
+Usage: postmerge_compare.py <replay json> <probes json> <exact json> <review json> <out json>"""
+import json, subprocess, sys
+from zelda_api import tests_output_fidelity as t
+
+EVIDENCE = ('3d1eeae', 'docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output')
+META = ('head', 'working_tree_guards_differ_from_head')
+REVIEWER_H6 = ("The company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages or 500M messages/month "
+               "[S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.")
+
+
+def show(rev, path):
+    return subprocess.run(['git', 'show', f'{rev}:{path}'], capture_output=True, text=True, encoding='utf-8', check=True).stdout
+
+
+def split(doc):
+    return {k: doc[k] for k in META if k in doc}, {k: v for k, v in doc.items() if k not in META}
+
+
+def paths(a, b, at=''):
+    if isinstance(a, dict) and isinstance(b, dict):
+        return [p for k in sorted(set(a) | set(b)) for p in paths(a.get(k), b.get(k), f'{at}/{k}')]
+    if isinstance(a, list) and isinstance(b, list) and len(a) == len(b):
+        return [p for i, (x, y) in enumerate(zip(a, b)) for p in paths(x, y, f'{at}[{i}]')]
+    return [] if a == b else [at]
+
+
+now = {name: json.load(open(path, encoding='utf-8')) for name, path in zip(('replay', 'probes', 'exact', 'review'), sys.argv[1:5])}
+files = {'replay': 'replay_memos_96_to_104_7fe189b.json', 'probes': 'carried_probes_75_7fe189b.json',
+         'exact': 'exact_before_after_7fe189b.json', 'review': 'review_cases_7fe189b.json'}
+result = {'execution_sha': subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip(),
+          'compared_with': {k: f'{EVIDENCE[0]}:{EVIDENCE[1]}/{v}' for k, v in files.items()}, 'comparisons': {}}
+for name, file in files.items():
+    meta_now, body_now = split(now[name])
+    meta_then, body_then = split(json.loads(show(EVIDENCE[0], f'{EVIDENCE[1]}/{file}')))
+    result['comparisons'][name] = {
+        'metadata_now': meta_now, 'metadata_7fe189b': meta_then,
+        'metadata_keys_differing': [k for k in META if meta_now.get(k) != meta_then.get(k)],
+        'content_identical': body_now == body_then, 'content_paths_differing': paths(body_now, body_then)}
+
+replay, exact = now['replay'], now['exact']['cases']
+m104 = replay['memo104']
+q = m104['fields_differing_from_base_replay'].get('questions_for_management', {})
+bm = m104['fields_differing_from_base_replay'].get('business_model_analysis', {})
+f1_case, f2_case = exact['memo104 questions_for_management 5 raw (F-1)'], exact['memo104 business_model_analysis (F-2)']
+checks = {
+    'F-1 defect reproduced at 5120190 (stored text)': f1_case['at_5120190'] == t.Q5_104_STORED,
+    'F-1 corrected: exact case equals Q5_104_AFTER': f1_case['fix'] == t.Q5_104_AFTER,
+    'F-1 memo 104 replay: field holds Q5_104_AFTER, not the split word': t.Q5_104_AFTER in q.get('after', '') and 'reported (per' not in q.get('after', ''),
+    'F-2 defect reproduced at 5120190 (heading over S3)': f2_case['at_5120190'] == t.BM_104_BEFORE,
+    'F-2 corrected: exact case equals BM_104_AFTER': f2_case['fix'] == t.BM_104_AFTER,
+    'F-2 memo 104 replay: field holds BM_104_AFTER': t.BM_104_AFTER in bm.get('after', ''),
+    'memo 104 base replay equals what the run stored (every field)': all(m104['base_replay_equals_stored'].values()),
+    'memo 104 changes only business_model_analysis and questions_for_management': sorted(m104['fields_differing_from_base_replay']) == ['business_model_analysis', 'questions_for_management'],
+    'memos 96-103 unchanged against the 5120190 replay': all(not replay[f'memo{n}']['fields_differing_from_base_replay'] for n in range(96, 104)),
+    'every memo: second pass unchanged, item order free, every ref supplied': all(
+        replay[f'memo{n}'][k] for n in range(96, 105) for k in ('second_pass_unchanged', 'reversed_items_same_output_and_changes', 'every_ref_supplied')),
+}
+h6 = list(t.HEADING_KEPT[-4:])
+names = {text: name for name, row in exact.items() if name.startswith('F-2 kept') for text in [row['input']]}
+checks['H6 reviewer sentence is a HEADING_KEPT control byte for byte'] = REVIEWER_H6 in t.HEADING_KEPT
+checks['H6 the four controls are the last four of HEADING_KEPT and each carries an unstated "+" on a 500M figure'] = (
+    REVIEWER_H6 in h6 and all('500M+ messages' in c for c in h6))
+h6_rows = {}
+for text in h6:
+    row = exact[names[text]]
+    h6_rows[names[text]] = {'input': text, 'at_b278364': row['fix'], 'rules': row['rules_fix'],
+                            'kept_byte_for_byte': row['fix'] == text and row['rules_fix'] == [],
+                            'second_pass_unchanged': row['second_pass_unchanged'], 'reversed_items_same': row['reversed_items_same']}
+    checks[f'H6 {names[text]} kept byte for byte, no rule fired'] = h6_rows[names[text]]['kept_byte_for_byte']
+result['h6_controls'] = h6_rows
+result['f1'] = {'raw': t.Q5_104_RAW, 'stored_5120190': f1_case['at_5120190'], 'at_b278364': f1_case['fix'], 'rules': f1_case['rules_fix']}
+result['f2'] = {'before': t.BM_104_BEFORE, 'at_5120190': f2_case['at_5120190'], 'at_b278364': f2_case['fix'], 'rules': f2_case['rules_fix']}
+exact_all = now['exact']['cases']
+result['exact_summary'] = {'cases': len(exact_all), 'differ_from_5120190': sum(r['fix_differs_from_5120190'] for r in exact_all.values()),
+                           'all_idempotent': all(r['second_pass_unchanged'] for r in exact_all.values()),
+                           'all_order_free': all(r['reversed_items_same'] for r in exact_all.values()),
+                           'kept_controls_byte_identical': all(r['fix'] == r['input'] for n, r in exact_all.items() if n.startswith('F-2 kept'))}
+result['probes_summary'] = {'cases': len(now['probes']['cases'])}
+result['checks'] = checks
+result['all_checks_pass'] = all(checks.values())
+result['all_content_identical'] = all(c['content_identical'] for c in result['comparisons'].values())
+json.dump(result, open(sys.argv[5], 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)
+for name, c in result['comparisons'].items():
+    print(f"{name:7s} content identical: {c['content_identical']} | metadata differing: {c['metadata_keys_differing']} "
+          f"{ {k: (c['metadata_7fe189b'].get(k), c['metadata_now'].get(k)) for k in c['metadata_keys_differing']} }"
+          + (f" | content paths: {c['content_paths_differing'][:10]}" if c['content_paths_differing'] else ''))
+for name, ok in checks.items():
+    print('PASS' if ok else 'FAIL', name)
+print('exact', result['exact_summary'], '| probes', result['probes_summary'])
+print('ALL CHECKS PASS' if result['all_checks_pass'] and result['all_content_identical'] else 'VERIFICATION FAILED')

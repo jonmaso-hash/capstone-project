@@ -1,0 +1,9 @@
+2026-10-25 16:52:43,011 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+cases 81 differing ['F-1 tail: figures', 'F-1 tail: fundings', 'F-1 tail: listedness', 'F-1 tail: raisedness', 'F-1 tail: reportedly raised', 'F-1 tail: totalling', 'F-2 fixed 1', 'F-2 fixed 2', 'F-2 fixed 3', 'F-2 fixed 4', 'F-2 fixed 5', 'F-2 fixed 6', 'F-2 fixed 7', 'F-2 fixed 8', 'F-2 fixed 9', 'memo104 business_model_analysis (F-2)', 'memo104 questions_for_management 5 raw (F-1)', 'recorded replay: memo104_business_model_analysis_s2 (stored)', 'recorded replay: memo104_questions_for_management_5 (raw reply)']
+all idempotent True all order-free True
+== memo104 business_model_analysis (F-2)
+ 5120190: The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4].
+ fix    : The only indicators of commercial activity are the company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (see consistency note below) — but these figures are undated as counts and have not been independently verified [C2, C3, C4].
+== memo104 questions_for_management 5 raw (F-1)
+ 5120190: - What is the composition of the $23.1M reported (per Pitch Deck Hunt)ly raised [S4] — how many rounds, at what valuations, and from which investors?
+ fix    : - What is the composition of the $23.1M (per Pitch Deck Hunt) reportedly raised [S4] — how many rounds, at what valuations, and from which investors?

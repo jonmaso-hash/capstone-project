@@ -1,0 +1,145 @@
+{
+ "execution_sha": "b27836439ca0e6aa9acc1ca6feaeae1be80b6415",
+ "compared_with": {
+  "replay": "3d1eeae:docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/replay_memos_96_to_104_7fe189b.json",
+  "probes": "3d1eeae:docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/carried_probes_75_7fe189b.json",
+  "exact": "3d1eeae:docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/exact_before_after_7fe189b.json",
+  "review": "3d1eeae:docs/baselines/three-deck-audit/output-f1-f2-review-64dff63-7fe189b/output/review_cases_7fe189b.json"
+ },
+ "comparisons": {
+  "replay": {
+   "metadata_now": {
+    "head": "b27836439ca0e6aa9acc1ca6feaeae1be80b6415",
+    "working_tree_guards_differ_from_head": false
+   },
+   "metadata_7fe189b": {
+    "head": "7fe189b7d1056529f1998d2c733f85d6c0d17347",
+    "working_tree_guards_differ_from_head": false
+   },
+   "metadata_keys_differing": [
+    "head"
+   ],
+   "content_identical": true,
+   "content_paths_differing": []
+  },
+  "probes": {
+   "metadata_now": {
+    "head": "b27836439ca0e6aa9acc1ca6feaeae1be80b6415"
+   },
+   "metadata_7fe189b": {
+    "head": "7fe189b7d1056529f1998d2c733f85d6c0d17347"
+   },
+   "metadata_keys_differing": [
+    "head"
+   ],
+   "content_identical": true,
+   "content_paths_differing": []
+  },
+  "exact": {
+   "metadata_now": {
+    "head": "b27836439ca0e6aa9acc1ca6feaeae1be80b6415"
+   },
+   "metadata_7fe189b": {
+    "head": "7fe189b7d1056529f1998d2c733f85d6c0d17347"
+   },
+   "metadata_keys_differing": [
+    "head"
+   ],
+   "content_identical": true,
+   "content_paths_differing": []
+  },
+  "review": {
+   "metadata_now": {
+    "head": "b27836439ca0e6aa9acc1ca6feaeae1be80b6415"
+   },
+   "metadata_7fe189b": {
+    "head": "7fe189b7d1056529f1998d2c733f85d6c0d17347"
+   },
+   "metadata_keys_differing": [
+    "head"
+   ],
+   "content_identical": true,
+   "content_paths_differing": []
+  }
+ },
+ "h6_controls": {
+  "F-2 kept 43": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_b278364": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules": [],
+   "kept_byte_for_byte": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 44": {
+   "input": "The company states 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_b278364": "The company states 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules": [],
+   "kept_byte_for_byte": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 45": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_b278364": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules": [],
+   "kept_byte_for_byte": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 46": {
+   "input": "The company states 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_b278364": "The company states 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules": [],
+   "kept_byte_for_byte": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  }
+ },
+ "f1": {
+  "raw": "- What is the composition of the $23.1M reportedly raised [S4] — how many rounds, at what valuations, and from which investors?",
+  "stored_5120190": "- What is the composition of the $23.1M reported (per Pitch Deck Hunt)ly raised [S4] — how many rounds, at what valuations, and from which investors?",
+  "at_b278364": "- What is the composition of the $23.1M (per Pitch Deck Hunt) reportedly raised [S4] — how many rounds, at what valuations, and from which investors?",
+  "rules": [
+   "attribution:Pitch Deck Hunt"
+  ]
+ },
+ "f2": {
+  "before": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+  "at_5120190": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+  "at_b278364": "The only indicators of commercial activity are the company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (see consistency note below) — but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+  "rules": [
+   "basis_heading_scope"
+  ]
+ },
+ "exact_summary": {
+  "cases": 81,
+  "differ_from_5120190": 19,
+  "all_idempotent": true,
+  "all_order_free": true,
+  "kept_controls_byte_identical": true
+ },
+ "probes_summary": {
+  "cases": 75
+ },
+ "checks": {
+  "F-1 defect reproduced at 5120190 (stored text)": true,
+  "F-1 corrected: exact case equals Q5_104_AFTER": true,
+  "F-1 memo 104 replay: field holds Q5_104_AFTER, not the split word": true,
+  "F-2 defect reproduced at 5120190 (heading over S3)": true,
+  "F-2 corrected: exact case equals BM_104_AFTER": true,
+  "F-2 memo 104 replay: field holds BM_104_AFTER": true,
+  "memo 104 base replay equals what the run stored (every field)": true,
+  "memo 104 changes only business_model_analysis and questions_for_management": true,
+  "memos 96-103 unchanged against the 5120190 replay": true,
+  "every memo: second pass unchanged, item order free, every ref supplied": true,
+  "H6 reviewer sentence is a HEADING_KEPT control byte for byte": true,
+  "H6 the four controls are the last four of HEADING_KEPT and each carries an unstated \"+\" on a 500M figure": true,
+  "H6 F-2 kept 43 kept byte for byte, no rule fired": true,
+  "H6 F-2 kept 44 kept byte for byte, no rule fired": true,
+  "H6 F-2 kept 45 kept byte for byte, no rule fired": true,
+  "H6 F-2 kept 46 kept byte for byte, no rule fired": true
+ },
+ "all_checks_pass": true,
+ "all_content_identical": true
+}

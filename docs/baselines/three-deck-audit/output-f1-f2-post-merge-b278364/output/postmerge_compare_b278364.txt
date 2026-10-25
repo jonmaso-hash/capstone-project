@@ -1,0 +1,22 @@
+replay  content identical: True | metadata differing: ['head'] {'head': ('7fe189b7d1056529f1998d2c733f85d6c0d17347', 'b27836439ca0e6aa9acc1ca6feaeae1be80b6415')}
+probes  content identical: True | metadata differing: ['head'] {'head': ('7fe189b7d1056529f1998d2c733f85d6c0d17347', 'b27836439ca0e6aa9acc1ca6feaeae1be80b6415')}
+exact   content identical: True | metadata differing: ['head'] {'head': ('7fe189b7d1056529f1998d2c733f85d6c0d17347', 'b27836439ca0e6aa9acc1ca6feaeae1be80b6415')}
+review  content identical: True | metadata differing: ['head'] {'head': ('7fe189b7d1056529f1998d2c733f85d6c0d17347', 'b27836439ca0e6aa9acc1ca6feaeae1be80b6415')}
+PASS F-1 defect reproduced at 5120190 (stored text)
+PASS F-1 corrected: exact case equals Q5_104_AFTER
+PASS F-1 memo 104 replay: field holds Q5_104_AFTER, not the split word
+PASS F-2 defect reproduced at 5120190 (heading over S3)
+PASS F-2 corrected: exact case equals BM_104_AFTER
+PASS F-2 memo 104 replay: field holds BM_104_AFTER
+PASS memo 104 base replay equals what the run stored (every field)
+PASS memo 104 changes only business_model_analysis and questions_for_management
+PASS memos 96-103 unchanged against the 5120190 replay
+PASS every memo: second pass unchanged, item order free, every ref supplied
+PASS H6 reviewer sentence is a HEADING_KEPT control byte for byte
+PASS H6 the four controls are the last four of HEADING_KEPT and each carries an unstated "+" on a 500M figure
+PASS H6 F-2 kept 43 kept byte for byte, no rule fired
+PASS H6 F-2 kept 44 kept byte for byte, no rule fired
+PASS H6 F-2 kept 45 kept byte for byte, no rule fired
+PASS H6 F-2 kept 46 kept byte for byte, no rule fired
+exact {'cases': 81, 'differ_from_5120190': 19, 'all_idempotent': True, 'all_order_free': True, 'kept_controls_byte_identical': True} | probes {'cases': 75}
+ALL CHECKS PASS
