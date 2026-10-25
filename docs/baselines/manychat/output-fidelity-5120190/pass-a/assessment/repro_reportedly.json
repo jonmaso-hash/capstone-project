@@ -1,0 +1,39 @@
+{
+ "raw_reply_sentence": "- What is the composition of the $23.1M reportedly raised [S4] — how many rounds, at what valuations, and from which investors?",
+ "stored_and_rendered_sentence": "- What is the composition of the $23.1M reported (per Pitch Deck Hunt)ly raised [S4] — how many rounds, at what valuations, and from which investors?",
+ "part_a": {
+  "figure_tail_pattern": "(?:\\s+(?:in\\s+)?(?:funding|raised|figure|total|listed|reported))*",
+  "figure_end": 39,
+  "tail_end": 48,
+  "tail_text": " reported",
+  "next_chars_after_tail": "ly raise",
+  "insert_at_tail_end": "- What is the composition of the $23.1M reported (per Pitch Deck Hunt)ly raised [S4] — how many rounds, at what valuations, and from which investors?",
+  "controls": {
+   "$23.1M reported raised": " reported raised",
+   "$23.1M raised": " raised",
+   "$23.1M reportedly raised": " reported",
+   "$23.1M reportedness": " reported"
+  }
+ },
+ "part_b": {
+  "narrated_items": [
+   {
+    "refs": [
+     "C1",
+     "S4"
+    ],
+    "narrator": "Pitch Deck Hunt"
+   }
+  ],
+  "after_time": "- What is the composition of the $23.1M reportedly raised [S4] — how many rounds, at what valuations, and from which investors?",
+  "time_removed": [],
+  "after_funding": "- What is the composition of the $23.1M reported (per Pitch Deck Hunt)ly raised [S4] — how many rounds, at what valuations, and from which investors?",
+  "funding_changes": [
+   "attribution:Pitch Deck Hunt"
+  ],
+  "after_basis": "- What is the composition of the $23.1M reported (per Pitch Deck Hunt)ly raised [S4] — how many rounds, at what valuations, and from which investors?",
+  "basis_changes": [],
+  "output_equals_stored": true,
+  "idempotent": true
+ }
+}

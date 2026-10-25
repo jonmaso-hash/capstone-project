@@ -1,0 +1,26 @@
+"""List the Bash/PowerShell commands the c6c3d1b run (scratchpad rc6c) issued, in order, from this session's
+transcript. Prints descriptions and the first 400 chars of each command. Usage: python find_cmds.py <needle> <out>"""
+import json, sys
+T = r'C:\Users\jonathan\.claude\projects\C--Users-jonathan-Desktop-KCV-of903\76db1fe6-5688-4619-abfd-5bc2b6bec113.jsonl'
+needle, out = sys.argv[1], sys.argv[2]
+n = 0
+with open(T, encoding='utf-8') as f, open(out, 'w', encoding='utf-8') as o:
+    for line in f:
+        try:
+            rec = json.loads(line)
+        except Exception:
+            continue
+        msg = rec.get('message') or {}
+        content = msg.get('content')
+        if not isinstance(content, list):
+            continue
+        for block in content:
+            if block.get('type') != 'tool_use':
+                continue
+            inp = block.get('input') or {}
+            cmd = inp.get('command') or inp.get('file_path') or ''
+            if needle in json.dumps(inp):
+                n += 1
+                o.write('#%d %s %s | %s\n%s\n\n' % (n, rec.get('timestamp', ''), block.get('name'), inp.get('description', ''),
+                                                  str(cmd)))
+print(n)

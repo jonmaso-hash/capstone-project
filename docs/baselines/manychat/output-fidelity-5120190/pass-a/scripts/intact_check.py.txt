@@ -1,0 +1,26 @@
+"""Read-only recovery check after the low-memory shutdown (run via run_ro.py, RO_DB = this run's copy):
+memo 104 stored fields vs the committed-to-be evidence 09_memo.json, document 3146, memo/document counts,
+and Celery queue lengths on run db 8 (nothing is consumed). Usage: run_ro.py intact_check.py"""
+import json, hashlib, os, redis
+from zelda_api.vector_models import IntelligenceMemo as ICMemo
+from zelda_api.vector_models import DocumentSource
+E = r'C:\Users\jonathan\Desktop\KCV-mc-512\docs\baselines\manychat\output-fidelity-5120190\pass-a'
+ev = json.load(open(os.path.join(E, '09_memo.json'), encoding='utf-8'))['memo']
+m = ICMemo.objects.get(id=104)
+diff = []
+for k, v in ev.items():
+    if k in ('created_at', 'updated_at', 'document_id', 'id'):
+        continue
+    if hasattr(m, k) and getattr(m, k) != v:
+        diff.append(k)
+print('MEMO104 exists document_id=%s fields_differing_from_09_memo=%s' % (m.document_id, diff))
+print('MEMO104 updated_at', m.updated_at.isoformat(), 'evidence', ev['updated_at'])
+d = DocumentSource.objects.get(id=3146)
+print('DOC3146', d.filename, 'status=%s' % getattr(d, 'status', None))
+print('MAX memo id', ICMemo.objects.order_by('-id').values_list('id', flat=True).first(),
+      'MAX doc id', DocumentSource.objects.order_by('-id').values_list('id', flat=True).first())
+r = redis.Redis.from_url('redis://localhost:6379/8')
+print('REDIS8 keys', sorted(k.decode() for k in r.keys('*'))[:20])
+for k in r.keys('*'):
+    if r.type(k) == b'list':
+        print('REDIS8 list', k.decode(), 'len', r.llen(k))

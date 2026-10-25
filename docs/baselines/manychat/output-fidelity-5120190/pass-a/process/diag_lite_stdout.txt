@@ -1,0 +1,18 @@
+READ-ONLY (1,)
+USER m512mc_owner id=321 exact_username='m512mc_owner' active=True usable_password=True hasher=pbkdf2_sha256$1200000 last_login=2026-10-24T23:39:02.467504+00:00 staff=False
+USER m512mc_lite id=322 exact_username='m512mc_lite' active=True usable_password=True hasher=pbkdf2_sha256$1200000 last_login=2026-10-24T23:18:38.024490+00:00 staff=False
+USER m512mc_paid id=323 exact_username='m512mc_paid' active=True usable_password=True hasher=pbkdf2_sha256$1200000 last_login=2026-10-24T23:18:49.606248+00:00 staff=False
+USER m512mc_staff id=324 exact_username='m512mc_staff' active=True usable_password=True hasher=pbkdf2_sha256$1200000 last_login=2026-10-24T23:19:38.144744+00:00 staff=True
+USER founder2 id=5 exact_username='founder2' active=True usable_password=True hasher=pbkdf2_sha256$1200000 last_login=2026-10-24T23:31:33.290379+00:00 staff=False
+SAME-HASHER-PARAMS True hashes_differ_as_expected_with_random_salts True
+SESSION expires=2026-11-07T23:39:02.479807+00:00 user=m512mc_owner backend=django.contrib.auth.backends.ModelBackend
+SESSION expires=2026-11-07T23:18:57.250091+00:00 user=None backend=None
+SESSION expires=2026-11-07T23:15:44.244470+00:00 user=m512mc_owner backend=django.contrib.auth.backends.ModelBackend
+SESSION expires=2026-10-25T09:07:19.041653+00:00 user=None backend=None
+SESSION expires=2026-10-25T09:05:20.729399+00:00 user=None backend=None
+SESSION expires=2026-10-25T08:59:44.534295+00:00 user=None backend=None
+SESSION expires=2026-10-25T08:57:11.993375+00:00 user=None backend=None
+SESSION expires=2026-10-25T01:44:01.658992+00:00 user=None backend=None
+AXES not installed ModuleNotFoundError
+AUTH_BACKENDS ['django.contrib.auth.backends.ModelBackend', 'allauth.account.auth_backends.AuthenticationBackend']
+ACCOUNT_LOGIN_METHODS None ACCOUNT_AUTHENTICATION_METHOD None

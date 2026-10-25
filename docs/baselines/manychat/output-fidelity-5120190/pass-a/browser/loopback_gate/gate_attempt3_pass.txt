@@ -1,0 +1,17 @@
+browser gate attempt 3 (PASSED) 2026-10-24T16:15:28-07:00
+device: b60b1997-c8fe-4250-82c0-9bd77a0e5dae (selected by device id on the owner's instruction; listed 'Browser 1' at selection)
+nonce=c601933be9b8543a
+browser tool page text: Title kcv-loopback-c601933be9b8543a / KCV-LOOPBACK-PROBE c601933be9b8543a
+probe server log:
+Serving HTTP on 127.0.0.1 port 8765 (http://127.0.0.1:8765/) ...
+127.0.0.1 - - [24/Oct/2026 16:14:45] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [24/Oct/2026 16:14:45] code 404, message File not found
+127.0.0.1 - - [24/Oct/2026 16:14:45] "GET /favicon.ico HTTP/1.1" 404 -
+run server (pid 20368, head 5120190) log:
+2026-10-24 16:14:59,347 INFO django.server - "GET /accounts/login/?gate=c601933be9b8543a HTTP/1.1" 200 13399
+2026-10-24 16:14:59,903 INFO django.server - "GET /static/img/brand/interlink-logo.svg HTTP/1.1" 200 4406
+2026-10-24 16:14:59,948 INFO django.server - "GET /static/css/base.css HTTP/1.1" 200 3632
+2026-10-24 16:14:59,985 INFO django.server - "GET /static/img/brand/interlink-mark.svg HTTP/1.1" 200 2678
+2026-10-24 16:15:00,046 INFO django.server - "GET /static/js/matchmaking.js HTTP/1.1" 200 14727
+browser page at run server: Title 'Log in', URL http://127.0.0.1:8000/accounts/login/?gate=c601933be9b8543a
+model calls before upload: 0

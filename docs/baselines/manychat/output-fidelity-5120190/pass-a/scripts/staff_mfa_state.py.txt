@@ -1,0 +1,13 @@
+"""Staff MFA enrollment state, without secret material: per StaffMFA row the user, enabled_at, last_counter set or not,
+and the recovery-code count. Never prints encrypted_secret or recovery hashes. Also prints the connected DB.
+Usage: run_ro.py staff_mfa_state.py <label>  (or run_r512.py script)"""
+import sys
+from django.db import connection
+from accounts.models import StaffMFA
+print('LABEL', sys.argv[1] if len(sys.argv) > 1 else '')
+print('DB', connection.settings_dict['NAME'])
+rows = list(StaffMFA.objects.select_related('user').order_by('id'))
+print('STAFFMFA rows', len(rows))
+for r in rows:
+    print('ROW id=%s user=%s enabled_at=%s counter_set=%s recovery_codes=%d' % (
+        r.id, r.user.username, r.enabled_at.isoformat() if r.enabled_at else None, r.last_counter >= 0, len(r.recovery_hashes)))

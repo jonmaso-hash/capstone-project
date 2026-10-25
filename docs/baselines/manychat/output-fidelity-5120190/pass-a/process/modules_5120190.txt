@@ -1,0 +1,436 @@
+head=5120190ce47708e99cff5b417baf2c565059cf7f 2026-10-24T15:33:40-07:00
+== zelda_api.tests_output_fidelity free=2.21GB
+2026-10-24 15:33:59,560 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-24 15:35:03,892 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:03,958 INFO zelda_api.intelligence_pipeline - Memo supported_points: funding-source fidelity ['unsupported_total', 'narrator_narrative'] for document 1
+2026-10-24 15:35:03,962 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:04,020 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-24 15:35:04,023 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt', 'funding_not_runway'] for document 1
+2026-10-24 15:35:04,160 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 15:35:04,221 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:04,227 INFO zelda_api.signals - DocumentSource created: a.pptx
+2026-10-24 15:35:04,232 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 15:35:04,250 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:04,256 INFO zelda_api.signals - DocumentSource created: b.pptx
+2026-10-24 15:35:04,261 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 15:35:04,278 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:04,283 INFO zelda_api.signals - DocumentSource created: c.pptx
+2026-10-24 15:35:04,288 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 15:35:04,289 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_cumulative_referent'] for document 1
+2026-10-24 15:35:04,308 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:04,325 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:04,372 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-24 15:35:04,376 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:04,383 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:04,386 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 15:35:04,388 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label', 'basis_referent_judgment'] for document 1
+2026-10-24 15:35:04,390 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_condition_attribution'] for document 1
+2026-10-24 15:35:04,411 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:04,417 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:04,477 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:04,482 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 15:35:04,484 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:04,492 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:04,494 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 15:35:04,514 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:04,519 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:04,572 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:04,583 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_citation_identity'] for document 1
+2026-10-24 15:35:04,588 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_citation_identity'] for document 1
+2026-10-24 15:35:04,590 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_condition_context'] for document 1
+2026-10-24 15:35:04,610 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:04,616 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:04,672 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-24 15:35:04,675 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:04,679 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:04,682 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:04,696 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_consequence_context'] for document 1
+2026-10-24 15:35:04,697 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:04,715 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:04,720 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:04,792 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: funding-source fidelity ['cash_premise'] for document 1
+2026-10-24 15:35:04,795 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:04,797 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-24 15:35:04,800 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:04,802 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:04,806 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-24 15:35:04,811 INFO zelda_api.intelligence_pipeline - Memo supported_points: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-24 15:35:04,813 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label'] for document 1
+2026-10-24 15:35:04,836 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:04,844 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:04,854 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-24 15:35:04,859 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:04,867 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:04,870 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 15:35:04,873 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_condition_attribution'] for document 1
+2026-10-24 15:35:04,894 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:04,899 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:04,906 INFO zelda_api.intelligence_pipeline - Memo financial_analysis: funding-source fidelity ['provenance:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:04,907 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: funding-source fidelity ['profile_undated'] for document 1
+2026-10-24 15:35:04,911 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:04,918 INFO zelda_api.intelligence_pipeline - Memo team_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 15:35:04,920 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:04,923 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 15:35:04,925 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label', 'basis_referent_judgment'] for document 1
+2026-10-24 15:35:04,927 INFO zelda_api.intelligence_pipeline - Memo upside_scenario: measurement-basis wording ['basis_condition_attribution'] for document 1
+2026-10-24 15:35:04,956 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:04,962 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:04,982 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:04,985 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 15:35:04,992 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 15:35:04,994 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:05,000 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:05,001 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 15:35:05,021 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:05,027 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:05,045 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:05,047 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 15:35:05,052 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 15:35:05,054 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:05,060 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:05,061 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 15:35:05,078 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:05,083 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:05,105 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:05,108 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 15:35:05,113 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 15:35:05,115 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:05,122 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:05,123 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 15:35:05,141 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:05,147 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:05,163 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:05,170 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 15:35:05,171 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:05,178 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:05,178 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 15:35:05,197 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:05,203 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:05,222 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:05,228 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 15:35:05,229 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:05,237 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:05,238 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 15:35:05,255 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:05,260 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:05,278 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:05,280 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 15:35:05,282 INFO zelda_api.intelligence_pipeline - Memo market_analysis: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 15:35:05,286 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 15:35:05,288 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:05,294 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:05,295 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 15:35:05,313 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:05,321 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:05,341 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:05,343 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 15:35:05,348 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 15:35:05,349 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:05,357 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:05,358 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 15:35:05,376 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:05,381 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:05,394 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 15:35:05,424 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:05,430 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:05,451 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:05,456 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 15:35:05,464 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 15:35:05,466 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:05,473 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:05,474 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 15:35:05,493 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:05,498 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:05,517 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:05,520 INFO zelda_api.intelligence_pipeline - Memo problem_solution: measurement-basis wording ['basis_overstatement'] for document 1
+2026-10-24 15:35:05,525 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: measurement-basis wording ['basis_referent_judgment'] for document 1
+2026-10-24 15:35:05,526 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:05,532 INFO zelda_api.intelligence_pipeline - Memo base_scenario: measurement-basis wording ['basis_source_context'] for document 1
+2026-10-24 15:35:05,533 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: measurement-basis wording ['basis_cumulative_presupposed'] for document 1
+2026-10-24 15:35:05,551 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:35:05,558 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 15:35:05,568 INFO zelda_api.intelligence_pipeline - Memo risk_assessment: funding-source fidelity ['cash_premise'] for document 1
+2026-10-24 15:35:05,571 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:05,574 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['funding_not_runway'] for document 1
+2026-10-24 15:35:05,577 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:05,579 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:35:05,580 INFO zelda_api.intelligence_pipeline - Memo executive_summary: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-24 15:35:05,583 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-24 15:35:05,588 INFO zelda_api.intelligence_pipeline - Memo supported_points: measurement-basis wording ['basis_source_location'] for document 1
+2026-10-24 15:35:05,590 INFO zelda_api.intelligence_pipeline - Memo open_concerns: measurement-basis wording ['basis_contradiction_label'] for document 1
+2026-10-24 15:35:05,611 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+..............................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 259 tests in 7.375s
+
+OK
+Destroying test database for alias 'default'...
+Found 259 test(s).
+System check identified no issues (0 silenced).
+== zelda_api.tests_usage_basis free=2.19GB
+2026-10-24 15:35:27,384 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-24 15:36:24,645 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-24 15:36:24,760 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-24 15:36:24,823 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:24,854 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-24 15:36:24,931 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-24 15:36:25,009 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-24 15:36:25,010 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:25,030 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-24 15:36:25,055 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-24 15:36:25,135 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-24 15:36:25,136 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:25,157 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-24 15:36:25,181 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-24 15:36:25,262 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-24 15:36:25,263 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:25,285 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+2026-10-24 15:36:25,380 ERROR zelda_api.intelligence_pipeline - Claude API error in memo generation: stop after capture
+.2026-10-24 15:36:25,386 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-24 15:36:25,464 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-24 15:36:25,465 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:25,486 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-24 15:36:25,514 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-24 15:36:25,650 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-24 15:36:25,855 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-24 15:36:26,980 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-24 15:36:27,055 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-24 15:36:27,062 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-24 15:36:27,072 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-24 15:36:27,080 INFO zelda_api.signals - DocumentSource created: mc.pptx
+.2026-10-24 15:36:27,089 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-24 15:36:27,095 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-24 15:36:27,104 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,113 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-24 15:36:27,126 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,136 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-24 15:36:27,154 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,163 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-24 15:36:27,178 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,190 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-24 15:36:27,203 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,212 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-24 15:36:27,224 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,233 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-24 15:36:27,239 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-24 15:36:27,257 INFO zelda_api.intelligence_pipeline - Extracted 2 insights with dynamic confidence
+2026-10-24 15:36:27,258 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,272 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 2 claims from insights
+2026-10-24 15:36:27,290 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-24 15:36:27,291 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,303 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-24 15:36:27,324 INFO zelda_api.intelligence_pipeline - Extracted 2 insights with dynamic confidence
+2026-10-24 15:36:27,325 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,340 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 2 claims from insights
+2026-10-24 15:36:27,361 INFO zelda_api.intelligence_pipeline - Extracted 2 insights with dynamic confidence
+2026-10-24 15:36:27,362 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,378 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 2 claims from insights
+.2026-10-24 15:36:27,386 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-24 15:36:27,403 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-24 15:36:27,404 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,412 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-24 15:36:27,433 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-24 15:36:27,434 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,442 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-24 15:36:27,461 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-24 15:36:27,462 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,472 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-24 15:36:27,518 INFO zelda_api.intelligence_pipeline - Extracted 2 insights with dynamic confidence
+2026-10-24 15:36:27,519 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,528 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-24 15:36:27,549 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-24 15:36:27,550 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,559 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-24 15:36:27,577 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-24 15:36:27,577 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,585 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-24 15:36:27,597 INFO zelda_api.intelligence_pipeline - Extracted 0 insights with dynamic confidence
+2026-10-24 15:36:27,598 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,606 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-24 15:36:27,611 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-24 15:36:27,619 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-24 15:36:27,624 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-24 15:36:27,635 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,652 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 2 claims from insights
+.2026-10-24 15:36:27,658 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-24 15:36:27,663 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-24 15:36:27,667 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-24 15:36:27,672 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-24 15:36:27,676 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-24 15:36:27,686 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,693 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-24 15:36:27,699 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-24 15:36:27,705 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-24 15:36:27,788 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-24 15:36:27,789 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,810 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-24 15:36:27,838 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-24 15:36:27,915 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-24 15:36:27,916 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:27,935 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-24 15:36:27,943 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-24 15:36:28,020 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-24 15:36:28,021 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,040 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-24 15:36:28,047 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-24 15:36:28,133 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-24 15:36:28,134 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,154 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-24 15:36:28,161 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-24 15:36:28,239 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-24 15:36:28,240 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,262 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-24 15:36:28,277 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-24 15:36:28,285 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,295 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-24 15:36:28,310 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,318 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-24 15:36:28,331 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,342 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-24 15:36:28,353 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,362 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-24 15:36:28,373 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,382 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-24 15:36:28,388 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-24 15:36:28,403 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-24 15:36:28,403 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,414 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-24 15:36:28,435 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-24 15:36:28,436 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,447 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-24 15:36:28,464 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-24 15:36:28,465 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,476 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-24 15:36:28,494 INFO zelda_api.intelligence_pipeline - Extracted 2 insights with dynamic confidence
+2026-10-24 15:36:28,495 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,510 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 2 claims from insights
+2026-10-24 15:36:28,530 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-24 15:36:28,531 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,546 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-24 15:36:28,553 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-24 15:36:28,566 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-24 15:36:28,567 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,575 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-24 15:36:28,589 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-24 15:36:28,590 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,597 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-24 15:36:28,614 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-24 15:36:28,614 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,625 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+2026-10-24 15:36:28,642 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-24 15:36:28,643 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,651 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+2026-10-24 15:36:28,673 INFO zelda_api.intelligence_pipeline - Extracted 2 insights with dynamic confidence
+2026-10-24 15:36:28,674 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,681 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-24 15:36:28,687 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-24 15:36:28,693 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-24 15:36:28,698 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-24 15:36:28,702 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-24 15:36:28,706 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-24 15:36:28,711 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-24 15:36:28,799 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-24 15:36:28,800 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,820 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-24 15:36:28,860 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-24 15:36:28,864 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-24 15:36:28,888 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-24 15:36:28,889 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,906 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+.2026-10-24 15:36:28,913 INFO zelda_api.signals - DocumentSource created: d.pptx
+.2026-10-24 15:36:28,917 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-24 15:36:28,940 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-24 15:36:28,941 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,961 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+.2026-10-24 15:36:28,971 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-24 15:36:28,976 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:28,988 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-24 15:36:28,994 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-24 15:36:28,998 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:29,008 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-24 15:36:29,015 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-24 15:36:29,020 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:29,028 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-24 15:36:29,034 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-24 15:36:29,046 INFO zelda_api.intelligence_pipeline - Extracted 1 insights with dynamic confidence
+2026-10-24 15:36:29,048 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:29,057 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-24 15:36:29,063 INFO zelda_api.signals - DocumentSource created: d.pptx
+2026-10-24 15:36:29,069 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:29,081 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 1 claims from insights
+.2026-10-24 15:36:29,087 INFO zelda_api.signals - DocumentSource created: u.pptx
+2026-10-24 15:36:29,097 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:29,116 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+.2026-10-24 15:36:29,122 INFO zelda_api.signals - DocumentSource created: u.pptx
+2026-10-24 15:36:29,126 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:29,133 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 0 claims from insights
+.2026-10-24 15:36:29,140 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-24 15:36:29,215 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-24 15:36:29,217 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:29,241 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.2026-10-24 15:36:29,248 INFO zelda_api.signals - DocumentSource created: manychat.pptx
+2026-10-24 15:36:29,327 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-24 15:36:29,328 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:36:29,350 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+.........................
+----------------------------------------------------------------------
+Ran 77 tests in 4.785s
+
+OK
+Destroying test database for alias 'default'...
+Found 77 test(s).
+System check identified no issues (0 silenced).
+== zelda_api.tests_funding_fidelity free=2.27GB
+2026-10-24 15:36:42,321 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-24 15:37:39,491 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-24 15:37:39,536 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-24 15:37:39,569 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:37:39,593 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-24 15:37:39,858 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=1, output_tokens=1
+2026-10-24 15:37:39,871 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:37:39,872 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt', 'raise_premise'] for document 1
+2026-10-24 15:37:39,873 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:37:39,874 INFO zelda_api.intelligence_pipeline - Memo base_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt', 'profile_undated'] for document 1
+2026-10-24 15:37:39,892 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['funding_as_event', 'attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:37:39,893 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt', 'raise_premise', 'raise_premise'] for document 1
+2026-10-24 15:37:40,057 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:37:57,283 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-24 15:37:57,325 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-24 15:37:57,326 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:37:57,342 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-24 15:37:57,358 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=1, output_tokens=1
+2026-10-24 15:37:57,369 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:37:57,371 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt', 'cash_premise'] for document 1
+2026-10-24 15:37:57,372 INFO zelda_api.intelligence_pipeline - Memo base_scenario: funding-source fidelity ['mixed_self_reported:Pitch Deck Hunt'] for document 1
+2026-10-24 15:37:57,372 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:37:57,401 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:37:57,597 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-24 15:37:57,628 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-24 15:37:57,628 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:37:57,645 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-24 15:37:57,672 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=1, output_tokens=1
+2026-10-24 15:37:57,676 INFO zelda_api.intelligence_pipeline - Memo zelda_advantage: funding-source fidelity ['provenance:Pitch Deck Hunt', 'provenance:Pitch Deck Hunt', 'provenance:Pitch Deck Hunt'] for document 1
+2026-10-24 15:37:57,710 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-24 15:37:57,886 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-24 15:37:57,916 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-24 15:37:57,917 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-24 15:37:57,935 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-24 15:37:57,952 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=1, output_tokens=1
+2026-10-24 15:37:57,954 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:37:57,955 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt', 'raise_premise'] for document 1
+2026-10-24 15:37:57,956 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:37:57,956 INFO zelda_api.intelligence_pipeline - Memo base_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt', 'profile_undated'] for document 1
+2026-10-24 15:37:57,957 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['funding_as_event', 'attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 15:37:57,958 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt', 'raise_premise', 'raise_premise'] for document 1
+2026-10-24 15:37:57,988 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+................................................................
+----------------------------------------------------------------------
+Ran 67 tests in 19.566s
+
+OK
+Destroying test database for alias 'default'...
+Found 67 test(s).
+System check identified no issues (0 silenced).

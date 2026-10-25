@@ -1,0 +1,224 @@
+{
+ "section": "business_model_analysis",
+ "stored_sentence": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+ "raw_reply_sentence": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+ "stored_equals_raw": true,
+ "cited_refs": [
+  "C2",
+  "C3",
+  "C4",
+  "S1",
+  "S2",
+  "S3"
+ ],
+ "refs": {
+  "C2": {
+   "ref": "C2",
+   "kind": "claim",
+   "category": "usage",
+   "statement": "500M messages/month",
+   "status": "INSUFFICIENT",
+   "reason": "no_external_evidence",
+   "confidence": 95,
+   "as_of": "not stated",
+   "sources": [
+    {
+     "document_id": 3146,
+     "page": 12
+    }
+   ]
+  },
+  "C3": {
+   "ref": "C3",
+   "kind": "claim",
+   "category": "usage",
+   "statement": "500M messages",
+   "status": "INSUFFICIENT",
+   "reason": "no_external_evidence",
+   "confidence": 95,
+   "as_of": "not stated",
+   "source_context": "Traction by Apr-16",
+   "sources": [
+    {
+     "document_id": 3146,
+     "page": 10
+    }
+   ]
+  },
+  "C4": {
+   "ref": "C4",
+   "kind": "claim",
+   "category": "usage",
+   "statement": "140 000+ bots",
+   "status": "INSUFFICIENT",
+   "reason": "no_external_evidence",
+   "confidence": 95,
+   "as_of": "not stated",
+   "source_context": "Traction by Apr-16",
+   "sources": [
+    {
+     "document_id": 3146,
+     "page": 10
+    }
+   ]
+  },
+  "S1": {
+   "ref": "S1",
+   "kind": "statement",
+   "category": "Traction",
+   "statement": "140 000+ bots",
+   "status": "SELF_REPORTED",
+   "confidence": 95,
+   "as_of": "not stated",
+   "source_context": "Traction by Apr-16",
+   "sources": [
+    {
+     "document_id": 3146,
+     "page": 10,
+     "chunk": 9
+    }
+   ]
+  },
+  "S2": {
+   "ref": "S2",
+   "kind": "statement",
+   "category": "Traction",
+   "statement": "500M messages",
+   "status": "SELF_REPORTED",
+   "confidence": 95,
+   "as_of": "not stated",
+   "source_context": "Traction by Apr-16",
+   "sources": [
+    {
+     "document_id": 3146,
+     "page": 10,
+     "chunk": 9
+    }
+   ]
+  },
+  "S3": {
+   "ref": "S3",
+   "kind": "statement",
+   "category": "Traction",
+   "statement": "500M messages/month",
+   "status": "SELF_REPORTED",
+   "confidence": 95,
+   "as_of": "not stated",
+   "sources": [
+    {
+     "document_id": 3146,
+     "page": 12,
+     "chunk": 11
+    }
+   ]
+  }
+ },
+ "consistency_notes": [
+  {
+   "kind": "measurement_basis",
+   "refs": [
+    "C3",
+    "C2"
+   ],
+   "note": "Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month. These use different measurement bases and need clarification before comparison."
+  }
+ ],
+ "deck_pages_9_to_12_as_chunked": [
+  {
+   "chunk_index": 8,
+   "page_number": 9,
+   "section_title": "angel.co/manychat",
+   "raw_text": "angel.co/manychat\nmike@manychat.com\nWe launched\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 7"
+  },
+  {
+   "chunk_index": 9,
+   "page_number": 10,
+   "section_title": "angel.co/manychat",
+   "raw_text": "angel.co/manychat\nmike@manychat.com\nTotal Bots Created\nJul-15\nAug-15\nSep-15\nOct-15\nNov-15\nDec-15\nJan-16\nFeb-16\nMar-16\nApr-16\n0\n20,000\n40,000\n60,000\n80,000\n100,000\n120,000\n140,000\nTraction by Apr-16\n140 000+ bots\n500M messages\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 8"
+  },
+  {
+   "chunk_index": 10,
+   "page_number": 11,
+   "section_title": "angel.co/manychat",
+   "raw_text": "angel.co/manychat\nmike@manychat.com\n⚡\nJust got approved on\nFacebook Messenger.\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 9"
+  },
+  {
+   "chunk_index": 11,
+   "page_number": 12,
+   "section_title": "angel.co/manychat",
+   "raw_text": "angel.co/manychat\nmike@manychat.com\n🐙\nManyChat\n140 000+ bots\n500M\nmessages/month\nLaunching on Facebook\nMessenger this month\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 10"
+  }
+ ],
+ "all_chunk_page_boundaries": [
+  {
+   "chunk_index": 0,
+   "page_number": 1,
+   "section_title": "Audit source deck"
+  },
+  {
+   "chunk_index": 1,
+   "page_number": 2,
+   "section_title": "Why this deck fits the audit leg"
+  },
+  {
+   "chunk_index": 2,
+   "page_number": 3,
+   "section_title": "angel.co/manychat"
+  },
+  {
+   "chunk_index": 3,
+   "page_number": 4,
+   "section_title": "angel.co/manychat"
+  },
+  {
+   "chunk_index": 4,
+   "page_number": 5,
+   "section_title": "angel.co/manychat"
+  },
+  {
+   "chunk_index": 5,
+   "page_number": 6,
+   "section_title": "angel.co/manychat"
+  },
+  {
+   "chunk_index": 6,
+   "page_number": 7,
+   "section_title": "angel.co/manychat"
+  },
+  {
+   "chunk_index": 7,
+   "page_number": 8,
+   "section_title": "angel.co/manychat"
+  },
+  {
+   "chunk_index": 8,
+   "page_number": 9,
+   "section_title": "angel.co/manychat"
+  },
+  {
+   "chunk_index": 9,
+   "page_number": 10,
+   "section_title": "angel.co/manychat"
+  },
+  {
+   "chunk_index": 10,
+   "page_number": 11,
+   "section_title": "angel.co/manychat"
+  },
+  {
+   "chunk_index": 11,
+   "page_number": 12,
+   "section_title": "angel.co/manychat"
+  }
+ ],
+ "guard_replay": {
+  "before": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+  "after": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+  "changed": false,
+  "time_removed": [],
+  "funding_changes": [],
+  "basis_changes": [],
+  "idempotent": true
+ },
+ "observation": "The heading 'Traction by Apr-16' is page-10 context (S1, S2). The sentence groups S3 (page 12, no context) under that heading inside one parenthetical citation group and also says the figures are 'undated as counts'. The merged guards leave it unchanged (basis_changes empty). Possible OF-1003 class (context spread across a group that includes an uncontexted page-12 ref); provisional, for the grader."
+}

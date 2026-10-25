@@ -1,0 +1,70 @@
+"""ASSESSMENT ONLY (not part of the run): read-only replay of selected sentences through the merged guard sequence
+(time -> funding -> basis) at 5120190 with document 3146's own context. No model call, no write. Run via run_r512.py
+script mode after the run's 8 calls. Usage: assess_replay.py <doc_id> <out json>"""
+import json, sys
+from zelda_api.claim_context import guard_time_wording
+from zelda_api.funding_fidelity import funding_facts, guard_funding_fidelity
+from zelda_api.basis_fidelity import basis_facts, guard_basis_wording
+from zelda_api.grounded_context import GroundedContext
+from zelda_api.principal import ORIGIN_TASK, Principal
+from zelda_api.vector_models import DocumentSource
+
+DOC, OUT = int(sys.argv[1]), sys.argv[2]
+doc = DocumentSource.objects.get(id=DOC)
+ctx = GroundedContext.build(Principal.for_user(doc.uploaded_by, ORIGIN_TASK, label='mc512.assess (read-only)'), doc)
+allowed = {item.ref: item.time_wording_allowed for item in ctx.items if item.dated}
+facts = funding_facts(ctx.items, ctx.company)
+basis = basis_facts(ctx.items, ctx.consistency_notes)
+UPSIDE = ("If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month "
+          "figure is the correct basis, ")
+CASES = {
+    # memo 103's graded sentences (4ee3639 / e967274): the merged rules should now place the note
+    'memo103_base_scenario (OF-1102, stored at 4ee3639)':
+        "Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had "
+        "deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch "
+        "Deck Hunt listing $23.1M in prior funding [C1, S4].",
+    'memo103_upside_scenario_sentence1 (OF-1103, stored at 4ee3639)':
+        UPSIDE + "ManyChat would represent a platform with significant throughput at the time of the "
+        "'Traction by Apr-16' slide — consistent with a network-effect-driven software business approaching scale.",
+    # memo 104's flagged sentences (raw reply = stored, apart from the funding edit)
+    'memo104_business_model_analysis_s2 (stored)':
+        "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] "
+        "and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide "
+        "heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified "
+        "[C2, C3, C4].",
+    'memo104_questions_for_management_5 (raw reply)':
+        "- What is the composition of the $23.1M reportedly raised [S4] — how many rounds, at what valuations, and from "
+        "which investors?",
+    'memo104_base_scenario_s1 (stored)':
+        "Taking the self-reported traction figures at face value [S1, S2, S3] and the Pitch Deck Hunt-listed funding of "
+        "$23.1M [S4] as directionally correct, ManyChat appears to be a Series A-stage software company with a large "
+        "installed base of bots and message volume.",
+    # preservation controls from the reviewed boundaries (must stay unchanged)
+    'control: denial in the consequence':
+        UPSIDE + "No platform would have significant throughput at the time of the 'Traction by Apr-16' slide.",
+    'control: unrelated consequence':
+        UPSIDE + "revenue would be $10M at the time of the 'Traction by Apr-16' slide.",
+    'control: unknown trailing clause':
+        UPSIDE + "ManyChat would represent a platform with significant throughput at the time of the "
+        "'Traction by Apr-16' slide — on the footing that this holds.",
+    'control: date stated as the hypothesis':
+        "If the 500M messages/month [S3] were measured as of the 'Traction by Apr-16' slide, ManyChat would represent a "
+        "platform with significant throughput at the time of the 'Traction by Apr-16' slide.",
+    'control: qualifier and funding attribution kept (no heading)':
+        "Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had "
+        "deployed a meaningful bot platform, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4].",
+}
+out = {}
+for name, text in CASES.items():
+    after_time, removed = guard_time_wording(text, allowed)
+    after, fid = guard_funding_fidelity(after_time, facts)
+    after, bas = guard_basis_wording(after, basis)
+    again_t, _ = guard_time_wording(after, allowed)
+    again_f, _ = guard_funding_fidelity(again_t, facts)
+    again, _ = guard_basis_wording(again_f, basis)
+    out[name] = {'before': text, 'after': after, 'changed': after != text, 'time_removed': removed,
+                 'funding_changes': fid, 'basis_changes': bas, 'idempotent': again == after}
+    print(name, '| changed' if after != text else '| unchanged', bas, fid, 'idempotent=%s' % (again == after))
+    if after != text:
+        print('   after:', after)
+json.dump(out, open(OUT, 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)

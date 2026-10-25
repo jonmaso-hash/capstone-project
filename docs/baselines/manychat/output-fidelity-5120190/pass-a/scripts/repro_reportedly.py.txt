@@ -1,0 +1,40 @@
+"""READ-ONLY reproducer for the funding-guard word split in memo 104 (provisional finding; no code changed).
+Part A needs no database: it shows where zelda_api.funding_fidelity._FIGURE_TAIL ends after "$23.1M" in the raw
+sentence. Part B runs the merged guard sequence (time -> funding -> basis) on the raw reply sentence with document 3146's
+own context, rebuilt read-only (run via run_ro.py: PRAGMA query_only=ON on this run's copy). Prints input, output, the
+guard's change labels and an idempotence check. Usage: run_ro.py repro_reportedly.py <out json>"""
+import json, re, sys
+from zelda_api import funding_fidelity as ff
+from zelda_api.claim_context import guard_time_wording
+from zelda_api.basis_fidelity import basis_facts, guard_basis_wording
+from zelda_api.grounded_context import GroundedContext
+from zelda_api.principal import ORIGIN_TASK, Principal
+from zelda_api.vector_models import DocumentSource
+RAW = ("- What is the composition of the $23.1M reportedly raised [S4] — how many rounds, at what valuations, and from "
+       "which investors?")
+STORED = ("- What is the composition of the $23.1M reported (per Pitch Deck Hunt)ly raised [S4] — how many rounds, at what "
+          "valuations, and from which investors?")
+out = {'raw_reply_sentence': RAW, 'stored_and_rendered_sentence': STORED}
+# Part A: the tail regex alone
+m = re.search(r'\$23\.1M', RAW)
+tail = ff._FIGURE_TAIL.match(RAW, m.end())
+out['part_a'] = {'figure_tail_pattern': ff._FIGURE_TAIL.pattern, 'figure_end': m.end(), 'tail_end': tail.end(),
+                 'tail_text': RAW[m.end():tail.end()], 'next_chars_after_tail': RAW[tail.end():tail.end() + 8],
+                 'insert_at_tail_end': RAW[:tail.end()] + ' (per Pitch Deck Hunt)' + RAW[tail.end():],
+                 'controls': {s: ff._FIGURE_TAIL.match(s, s.index('M') + 1).group(0) for s in (
+                     '$23.1M reported raised', '$23.1M raised', '$23.1M reportedly raised', '$23.1M reportedness')}}
+# Part B: the merged guards with document 3146's context
+doc = DocumentSource.objects.get(id=3146)
+ctx = GroundedContext.build(Principal.for_user(doc.uploaded_by, ORIGIN_TASK, label='mc512.repro (read-only)'), doc)
+allowed = {i.ref: i.time_wording_allowed for i in ctx.items if i.dated}
+facts, basis = ff.funding_facts(ctx.items, ctx.company), basis_facts(ctx.items, ctx.consistency_notes)
+t, removed = guard_time_wording(RAW, allowed)
+f, fchanges = ff.guard_funding_fidelity(t, facts)
+b, bchanges = guard_basis_wording(f, basis)
+t2, _ = guard_time_wording(b, allowed); f2, _ = ff.guard_funding_fidelity(t2, facts); b2, _ = guard_basis_wording(f2, basis)
+out['part_b'] = {'narrated_items': [{'refs': sorted(e.refs), 'narrator': e.narrator} for e in facts.narrated],
+                 'after_time': t, 'time_removed': removed, 'after_funding': f, 'funding_changes': fchanges,
+                 'after_basis': b, 'basis_changes': bchanges, 'output_equals_stored': b == STORED,
+                 'idempotent': b2 == b}
+print(json.dumps(out, indent=1, ensure_ascii=False))
+json.dump(out, open(sys.argv[1], 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)

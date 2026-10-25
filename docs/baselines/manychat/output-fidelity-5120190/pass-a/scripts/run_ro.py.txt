@@ -1,0 +1,25 @@
+"""READ-ONLY snapshot runner for the ORIGINAL dev DB (scratchpad, not repo code).
+Runs one script with Django pointed at the original db.sqlite3, with SQLite
+`PRAGMA query_only = ON` set before the script runs, so any write raises.
+Paid keys blanked, local broker URIs (nothing is enqueued by the snapshot scripts).
+Usage: python run_ro.py <script.py>"""
+import os, sys
+WT = r'C:\Users\jonathan\Desktop\KCV-mc-512'
+for k in ['FILED_API_KEY', 'COMPANYENRICH_API_KEY', 'NEWS_API_KEY', 'DATA4B2B_API_KEY', 'USPTO_ODP_API_KEY', 'CRUNCHBASE_API_KEY']:
+    os.environ[k] = ''
+os.environ.update(CELERY_BROKER_URL='redis://localhost:6379/8', CELERY_RESULT_BACKEND='redis://localhost:6379/9',
+                  CACHE_URL='redis://localhost:6379/9',
+                  DATABASE_URL='sqlite:///' + os.environ.get('RO_DB', 'C:/Users/jonathan/Desktop/KCV/db.sqlite3'),
+                  DJANGO_SETTINGS_MODULE='config.settings')
+os.chdir(WT)
+sys.path.insert(0, WT)
+import environ
+environ.Env.read_env(r'C:\Users\jonathan\Desktop\KCV\.env')
+import django
+django.setup()
+from django.db import connection
+connection.cursor().execute('PRAGMA query_only = ON')
+print('READ-ONLY', connection.cursor().execute('PRAGMA query_only').fetchone(), flush=True)
+path = sys.argv[1]
+sys.argv = [path] + sys.argv[2:]
+exec(compile(open(path, encoding='utf-8').read(), path, 'exec'), {'__name__': '__main__'})

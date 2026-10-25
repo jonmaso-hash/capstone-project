@@ -1,0 +1,21 @@
+"""Print unique scan hits per check (by sentence text). Usage: scan_unique.py <09f file> <check> [<check> ...]"""
+import sys
+t = open(sys.argv[1], encoding='utf-8').read()
+want = set(sys.argv[2:])
+for block in t.split('\n== ')[1:]:
+    name = block.split(':')[0]
+    if name not in want:
+        continue
+    hits = [l.strip() for l in block.splitlines()[1:] if l.strip()]
+    seen, out = {}, []
+    for h in hits:
+        where, sent = h.split(': ', 1)
+        k = sent[-120:]
+        if k in seen:
+            seen[k] += 1
+            continue
+        seen[k] = 1
+        out.append((k, where.split(':')[0] + ':' + where.split(':')[-1], sent))
+    print('==', name, len(hits), 'unique', len(out))
+    for k, w, s in out:
+        print('   [x%d] %s | %s' % (seen[k], w, s[:330]))

@@ -1,0 +1,180 @@
+{
+ "note": "Browser checks, recorded separately from the automated HTTP probe (11_authorization_matrix.json). Real Chrome (Claude in Chrome extension) on this computer, device b60b1997-c8fe-4250-82c0-9bd77a0e5dae, against the run server 127.0.0.1:8000, 2026-10-24 local time (UTC-7). Sign-ins were MANUAL: the machine owner typed each username and password (and the staff authenticator code) directly in Chrome; the browser tool never typed, read or stored a credential. Identity was verified before counting each check: nav text plus, for Lite/paid/staff, the account's last_login and newest session read-only from the copy DB. Logout: the nav \"Sign Out\" form (POST /accounts/logout/). No model call was made by the checks (model_calls.jsonl stayed at 8). Page values are document.body.innerText read in the browser at the time; screenshots in browser/.",
+ "browser_gate": {
+  "attempt_1": "FAILED 16:01 device 203c1a8f (no chrome.exe on this computer): Chrome error page, probe server logged no browser request. browser/loopback_gate/gate_attempt1.txt",
+  "attempt_2": "FAILED 16:12 device 203c1a8f (chosen by the owner while b60b1997 was also listed): Chrome error page, no browser request. gate_attempt2.txt",
+  "attempt_3": "PASSED before any model call. 16:14:45 b60b1997 loaded http://127.0.0.1:8765/index.html and the browser tool read \"KCV-LOOPBACK-PROBE c601933be9b8543a\" (fresh nonce); probe server logged GET /index.html 200 at 16:14:45. 16:14:59 run server (pid 20368, CODE-CHECK head 5120190) logged GET /accounts/login/?gate=c601933be9b8543a 200; page title \"Log in\". Upload 16:15:51, first model call after. gate_attempt3_pass.txt",
+  "after_restart": "PASSED 19:15:23 (after the low-memory restart, before the remaining checks): b60b1997 loaded /home/?gate=0a56b792ed1b2c1a (fresh nonce, gate/nonce4.txt) and the browser tool read that URL back, title \"Interlink Foundry\"; restarted server (pid 21608, CODE-CHECK head 5120190) logged that exact request 200."
+ },
+ "walks": {
+  "ANON": {
+   "result": "PASS",
+   "time": "16:22:16-16:22:17",
+   "observed": "/home/ 200 signed out; /api/v1/zelda/documents/3146/ic-memo/, /verification/, /matchmaking/memo/profile/50/ and /accounts/profile/m512mc_owner/ each returned 302 to login (fetch: opaqueredirect)"
+  },
+  "OWNER": {
+   "result": "PASS",
+   "principal": "m512mc_owner",
+   "time": "16:35-16:36",
+   "failed_attempt_preserved": "16:31 first handoff signed in as founder2 (Chrome saved login), not m512mc_owner: /api/v1/zelda/documents/3146/ic-memo/ 404 for that account; signed out; not counted",
+   "identity": "nav \"m512mc_owner\", \"Welcome back, Rerun Owner\"",
+   "positive_control": {
+    "url": "/api/v1/zelda/documents/3146/ic-memo/",
+    "title": "AI Investment Committee Memo — ManyChat | Interlink Foundry",
+    "badge": "Zelda Lite Memo",
+    "text_chars": 5420
+   },
+   "observed": {
+    "business_model_analysis_heading_sentence_shown_verbatim": true,
+    "open_concerns_1": "contains \"as an undated total on page 10\"",
+    "scenario_sections_shown": false,
+    "questions_for_management_shown": false,
+    "reported_per_ly_line_shown": false,
+    "group_[C3, S3]_shown": false,
+    "canary": false
+   },
+   "logout": "POST /accounts/logout/ 302 at 16:36:45",
+   "screenshot": "browser/owner_ic_memo_business_model.jpg"
+  },
+  "LITE": {
+   "result": "PASS",
+   "principal": "m512mc_lite",
+   "time": "19:20:35-19:22:12",
+   "failed_attempt_preserved": "16:39 first handoff signed in as m512mc_owner (Chrome autofilled the saved owner login): company overview 403 = the owner's expected row. Diagnosed read-only (process/diag_lite_stdout.txt): m512mc_lite active, usable password, same hasher, one shared fixture password, no lockout. Not counted. Retry after clearing the autofilled fields; username typed by hand.",
+   "identity": "nav \"m512mc_lite\"; last_login 2026-10-25T02:20:35Z; newest session = m512mc_lite",
+   "positive_control": {
+    "url": "/matchmaking/memo/profile/50/",
+    "status": 200,
+    "bytes": 135925,
+    "probe_bytes": 136323,
+    "title": "Intelligence Memo: ManyChat | Interlink Foundry",
+    "badge": "Zelda Lite Report"
+   },
+   "observed": {
+    "overview": "ManyChat is a software company, profiled as Series A [P1, P2], operating in the bot/messaging automation space. Pitch Deck Hunt lists $23.1M raised [S4], though this figure is undated and could not be independently verified [C1]. The company's deck, contextualised under a 'Traction by Apr-16' slide heading, states 140,000+ bots and 500M messages as traction figures [S1, S2], neither of which has been independently confirmed.",
+    "investment_analysis_locked": true,
+    "ic_memo_links": 0,
+    "absent": [
+     "upside",
+     "downside",
+     "Base scenario",
+     "Questions for management",
+     "reportedly",
+     "reported (per",
+     "messages/month",
+     "[C3, S3]",
+     "consistency note",
+     "canary",
+     "as of April 2016"
+    ],
+    "series_b_in_html_not_visible": "observation only (the probe's LITE row lists it among markers too)"
+   },
+   "logout": "POST /accounts/logout/ 302 at 19:22:11",
+   "truth_delta_signed_out": "GET /api/v1/zelda/documents/3146/truth-delta/ 403 \"Authentication credentials were not provided.\" (= probe ANON H row)",
+   "screenshot": "browser/lite_company_overview.jpg"
+  },
+  "PAID": {
+   "result": "PASS",
+   "principal": "m512mc_paid",
+   "time": "19:26:30-19:46:52",
+   "identity": "last_login 2026-10-25T02:26:30Z; newest session = m512mc_paid; nav on / \"m512mc_paid\" before sign-out",
+   "positive_control": {
+    "url": "/api/v1/zelda/documents/3146/verification/",
+    "status": 200,
+    "bytes": 54461,
+    "probe_bytes": 54461,
+    "label": "Zelda Lite Verification",
+    "claims": "4 analyzed, 0 verified, 4 not established, showing 3 of 4"
+   },
+   "observed": {
+    "Measurement basis to clarify block": "Measurement basis to clarify Figures in this deck that need clarification before they are compared. This is not a verification result and doesn't affect the score. Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month. These use different measurement bases and need clarification before comparison.",
+    "absent": [
+     "reportedly",
+     "reported (per",
+     "Apr-16",
+     "as of April 2016",
+     "canary",
+     "[C3, S3]",
+     "upside",
+     "Questions for management"
+    ],
+    "site_nav_logout_form_on_page": false
+   },
+   "logout": "via / (FF-413): GET / 200 (nav m512mc_paid), Sign Out POST /accounts/logout/ 302 at 19:46:52",
+   "screenshot": "browser/paid_verification_measurement_basis.jpg"
+  },
+  "STAFF": {
+   "result": "PASS",
+   "principal": "m512mc_staff",
+   "time": "19:51:43-20:41:24",
+   "setup_repair": "TEST-ACCOUNT SETUP REPAIR, not a product check. The probe-created MFA enrollment (StaffMFA id 3, 23:18:55Z) was unusable by the owner. On the owner's instruction, 20:03:29: the app's supported command reset_staff_mfa for m512mc_staff only, on the copy (run_r512.py gates + script assert); the other two staff enrollments unchanged; the MFA requirement unchanged. The owner then enrolled through the normal setup page (text setup key; this page has no QR code) with password + fresh code: StaffMFA id 4 enabled 03:34:46Z, 10 recovery codes. Setup key, codes and recovery codes were not read, captured or recorded. snapshots/staff_mfa_state_*.txt, process/reset_staff_mfa_copy.txt",
+   "identity": "normal password sign-in 19:51:43 (last_login 02:51:43Z); MFA setup POST 20:34:46; newest session = m512mc_staff; nav \"m512mc_staff\"",
+   "checks": {
+    "truth_delta_ui": {
+     "url": "/api/v1/zelda/documents/3146/verification/",
+     "status": 200,
+     "bytes": 61485,
+     "probe_bytes": 61485,
+     "label": "Zelda AI — Full Verification",
+     "measurement_basis_block": true,
+     "screenshot": "browser/staff_verification_full.jpg"
+    },
+    "truth_delta_api": {
+     "url": "/api/v1/zelda/documents/3146/truth-delta/?format=json",
+     "status": 200,
+     "bytes": 5173,
+     "probe_bytes": 5173,
+     "tier": "full",
+     "claims": [
+      "2393 $23.1M raised",
+      "2396 140 000+ bots",
+      "2395 500M messages",
+      "2394 500M messages/month (claim_period_kind monthly)"
+     ],
+     "states": "all no_data / no_external_evidence"
+    },
+    "ic_memo": {
+     "url": "/api/v1/zelda/documents/3146/ic-memo/",
+     "status": 200,
+     "bytes": 171854,
+     "probe_bytes": 171854,
+     "questions_for_management_5": "What is the composition of the $23.1M reported (per Pitch Deck Hunt)ly raised [S4] — how many rounds, at what valuations, and from which investors?",
+     "reported_per_ly_rendered_to_staff": true,
+     "upside": "If the company's self-reported figures of 140,000+ bots and 500M messages/month [S1, S3] are accurate and the 500M figure reflects a monthly recurring rate rather than a cumulative total, the platform would represent substantial recurring engagement. ...",
+     "base": "Taking the self-reported traction figures at face value [S1, S2, S3] and the Pitch Deck Hunt-listed funding of $23.1M [S4] as directionally correct, ManyChat appears to be a Series A-stage software company with a large installed base of bots and message volume. ...",
+     "date_transfer_in_scenarios": false,
+     "absent": [
+      "at the time of the",
+      "by the period referenced",
+      "as of April 2016",
+      "canary",
+      "[C3, S3]"
+     ],
+     "present_p3_wording": [
+      "undated total on page 10",
+      "see consistency note below"
+     ],
+     "screenshots": [
+      "browser/staff_ic_memo_questions_reportedly.jpg",
+      "browser/staff_ic_memo_upside.jpg"
+     ]
+    },
+    "company_overview": {
+     "url": "/matchmaking/memo/profile/50/",
+     "status": 200,
+     "bytes": 159303,
+     "probe_bytes": 159701,
+     "badge": "Zelda AI — Full Report",
+     "investment_analysis_locked": false,
+     "ic_memo_links": "/api/v1/zelda/documents/3146/ic-memo/",
+     "overview_same_as_lite": true,
+     "worth_investigating": "The 500M messages figure appears twice with different measurement bases — as an undated… see the IC Memo",
+     "screenshot": "browser/staff_company_overview.jpg"
+    }
+   },
+   "logout": "POST /accounts/logout/ 302 at 20:41:24, landed /home/, nav Sign In"
+  }
+ },
+ "not_run": [],
+ "interruption": "After the owner walk and the first Lite attempt, Claude Code's low-memory reaper stopped the server, worker and watchdog (free RAM 0.97 GB). Data verified intact read-only; restart only at >= 1.2 GB held (1.86-1.96 GB); watchdog then server only; worker left stopped; gate re-run (after_restart above)."
+}

@@ -1,0 +1,18 @@
+"""Read-only (via run_ro.py with RO_DB = the memo-103 run copy): memo 103's stored fields vs the committed
+09_memo.json of that run (4ee3639). Prints per-field equality; text fields compared exactly."""
+import json, subprocess
+from zelda_api.vector_models import IntelligenceMemo
+committed = json.loads(subprocess.run(
+    ['git', 'show', '4ee3639:docs/baselines/manychat/output-fidelity-c6c3d1b/pass-a/09_memo.json'],
+    capture_output=True, text=True, encoding='utf-8').stdout)['memo']
+row = IntelligenceMemo.objects.values().get(pk=103)
+diffs = []
+for key, value in committed.items():
+    if key not in row:
+        continue
+    live = row[key]
+    if isinstance(value, str) and not isinstance(live, str):
+        live = live.isoformat() if hasattr(live, 'isoformat') else str(live)
+    if live != value:
+        diffs.append(key)
+print('MEMO103-vs-4ee3639 fields compared', len([k for k in committed if k in row]), 'differing', diffs)

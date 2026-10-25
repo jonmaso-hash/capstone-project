@@ -1,0 +1,9 @@
+browser gate attempt 2026-10-24T16:01:16-07:00
+nonce=362a05f40a1dd9f2 page=http://127.0.0.1:8765/index.html
+connected browser: deviceId 203c1a8f-f7f4-42f3-ae45-909ada617a59 (listed as 'Browser 1'; /chrome reported 'Browser 2')
+chrome.exe processes on this computer: 0
+browser result: Chrome error page (get_page_text and screenshot: 'Frame with ID 0 is showing error page')
+probe server log (only request is the local curl positive control):
+Serving HTTP on 127.0.0.1 port 8765 (http://127.0.0.1:8765/) ...
+127.0.0.1 - - [24/Oct/2026 16:00:59] "GET /index.html HTTP/1.1" 200 -
+model calls so far: 0

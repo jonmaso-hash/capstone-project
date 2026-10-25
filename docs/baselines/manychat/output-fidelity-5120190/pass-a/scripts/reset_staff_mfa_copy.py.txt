@@ -1,0 +1,11 @@
+"""Test-account setup repair: reset ONLY m512mc_staff's staff-MFA enrollment in this run's copy DB through the app's
+supported management command (accounts reset_staff_mfa). Refuses unless connected to the copy. Prints no secrets.
+Usage: run_r512.py script reset_staff_mfa_copy.py"""
+import os
+from django.core.management import call_command
+from django.db import connection
+COPY = os.path.join(os.path.dirname(os.path.abspath(r'C:\Users\jonathan\AppData\Local\Temp\claude\C--Users-jonathan-Desktop-KCV-of903\76db1fe6-5688-4619-abfd-5bc2b6bec113\scratchpad\r512\x')), 'db_r512_copy.sqlite3')
+name = os.path.normcase(os.path.abspath(connection.settings_dict['NAME']))
+assert name == os.path.normcase(COPY), ('not the copy', name)
+print('DB', name, 'is_copy=True')
+call_command('reset_staff_mfa', 'm512mc_staff', confirm_username='m512mc_staff')

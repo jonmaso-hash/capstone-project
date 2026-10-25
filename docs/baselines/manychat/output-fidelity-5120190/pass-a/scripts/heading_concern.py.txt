@@ -1,0 +1,36 @@
+"""ASSESSMENT ONLY (no DB access): the business_model_analysis heading concern in memo 104. Writes the full stored
+sentence, the raw-reply sentence, each cited ref (S1, S2, S3 and C2, C3, C4) with its statement/context/page from the
+sent payload, the deck pages 10 and 12 as chunked (page boundaries: chunk index, page number, section title, raw text),
+and the guard replay for this sentence from assessment/assess_replay.json. Usage: heading_concern.py <evidence dir> <out>"""
+import json, os, re, sys
+EV, OUT = sys.argv[1], sys.argv[2]
+r = lambda n: json.load(open(os.path.join(EV, n), encoding='utf-8'))
+payload = r('09a_grounded_context_rebuilt.json')['payload']
+memo = r('09_memo.json')['memo']
+raw = json.loads(re.search(r'\{.*\}', r('09b_model_call.json')['response']['text'][0], re.S).group(0))
+KEY = 'The only indicators of commercial activity'
+sent = lambda text: next((s for s in re.split(r'(?<=[.!?])\s+(?=[A-Z])', text) if KEY in s), None)
+stored, raw_s = sent(memo['business_model_analysis']), sent(raw.get('business_model_analysis', ''))
+refs = {i['ref']: i for i in payload['items']}
+cited = sorted(set(re.findall(r'\b([CSP]\d+)\b', stored or '')))
+chunks = sorted(r('02_chunks.json'), key=lambda c: c['chunk_index'])
+pages = [{'chunk_index': c['chunk_index'], 'page_number': c['page_number'], 'section_title': c['section_title'],
+          'raw_text': c['raw_text']} for c in chunks if c['page_number'] in (9, 10, 11, 12)]
+replay = json.load(open(os.path.join(EV, 'assessment', 'assess_replay.json'), encoding='utf-8'))
+case = replay['memo104_business_model_analysis_s2 (stored)']
+out = {'section': 'business_model_analysis', 'stored_sentence': stored, 'raw_reply_sentence': raw_s,
+       'stored_equals_raw': stored == raw_s, 'cited_refs': cited,
+       'refs': {k: refs[k] for k in cited if k in refs},
+       'consistency_notes': payload['consistency_notes'],
+       'deck_pages_9_to_12_as_chunked': pages,
+       'all_chunk_page_boundaries': [{'chunk_index': c['chunk_index'], 'page_number': c['page_number'],
+                                      'section_title': c['section_title']} for c in chunks],
+       'guard_replay': case,
+       'observation': "The heading 'Traction by Apr-16' is page-10 context (S1, S2). The sentence groups S3 (page 12, no "
+                      "context) under that heading inside one parenthetical citation group and also says the figures are "
+                      "'undated as counts'. The merged guards leave it unchanged (basis_changes empty). Possible OF-1003 class "
+                      "(context spread across a group that includes an uncontexted page-12 ref); provisional, for the grader."}
+assert stored and case['before'] == stored, 'replay input must be the stored sentence'
+json.dump(out, open(OUT, 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)
+print('cited', cited, 'stored==raw', stored == raw_s, 'pages', [(p['chunk_index'], p['page_number']) for p in pages],
+      'replay changed', case['changed'], case['basis_changes'])

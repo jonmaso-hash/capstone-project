@@ -1,0 +1,772 @@
+{
+ "memo_generation_principal": {
+  "user_id": 321,
+  "origin": "ORIGIN_TASK",
+  "as_in": "zelda_api/tasks.py:244 Principal.for_user(document.uploaded_by, ORIGIN_TASK)"
+ },
+ "model": "claude-sonnet-4-6",
+ "response_model": "claude-sonnet-4-6",
+ "stop_reason": "end_turn",
+ "usage": {
+  "input_tokens": 3771,
+  "output_tokens": 2304
+ },
+ "params": {
+  "model": "claude-sonnet-4-6",
+  "max_tokens": 4000
+ },
+ "prompt_rule_10_present": true,
+ "prompt_dated_runway_rule_present": true,
+ "sent_payload_equals_dump_rebuilt": true,
+ "sent_payload_equals_fresh_build_for_generation_principal": true,
+ "sent_items": [
+  {
+   "ref": "C1",
+   "kind": "claim",
+   "category": "funding_raised",
+   "statement": "$23.1M raised",
+   "status": "INSUFFICIENT",
+   "as_of": "not stated",
+   "narrator": "Pitch Deck Hunt",
+   "source_context": null,
+   "dates_not_as_of": [
+    "2015"
+   ]
+  },
+  {
+   "ref": "C2",
+   "kind": "claim",
+   "category": "usage",
+   "statement": "500M messages/month",
+   "status": "INSUFFICIENT",
+   "as_of": "not stated",
+   "narrator": null,
+   "source_context": null,
+   "dates_not_as_of": null
+  },
+  {
+   "ref": "C3",
+   "kind": "claim",
+   "category": "usage",
+   "statement": "500M messages",
+   "status": "INSUFFICIENT",
+   "as_of": "not stated",
+   "narrator": null,
+   "source_context": "Traction by Apr-16",
+   "dates_not_as_of": null
+  },
+  {
+   "ref": "C4",
+   "kind": "claim",
+   "category": "usage",
+   "statement": "140 000+ bots",
+   "status": "INSUFFICIENT",
+   "as_of": "not stated",
+   "narrator": null,
+   "source_context": "Traction by Apr-16",
+   "dates_not_as_of": null
+  },
+  {
+   "ref": "S1",
+   "kind": "statement",
+   "category": "Traction",
+   "statement": "140 000+ bots",
+   "status": "SELF_REPORTED",
+   "as_of": "not stated",
+   "narrator": null,
+   "source_context": "Traction by Apr-16",
+   "dates_not_as_of": null
+  },
+  {
+   "ref": "S2",
+   "kind": "statement",
+   "category": "Traction",
+   "statement": "500M messages",
+   "status": "SELF_REPORTED",
+   "as_of": "not stated",
+   "narrator": null,
+   "source_context": "Traction by Apr-16",
+   "dates_not_as_of": null
+  },
+  {
+   "ref": "S3",
+   "kind": "statement",
+   "category": "Traction",
+   "statement": "500M messages/month",
+   "status": "SELF_REPORTED",
+   "as_of": "not stated",
+   "narrator": null,
+   "source_context": null,
+   "dates_not_as_of": null
+  },
+  {
+   "ref": "S4",
+   "kind": "statement",
+   "category": "Funding",
+   "statement": "$23.1M raised",
+   "status": "SELF_REPORTED",
+   "as_of": "not stated",
+   "narrator": "Pitch Deck Hunt",
+   "source_context": null,
+   "dates_not_as_of": [
+    "2015"
+   ]
+  },
+  {
+   "ref": "P1",
+   "kind": "profile",
+   "category": "Stage (profile)",
+   "statement": "Stage (profile): Series A",
+   "status": "SELF_REPORTED",
+   "as_of": null,
+   "narrator": null,
+   "source_context": null,
+   "dates_not_as_of": null
+  },
+  {
+   "ref": "P2",
+   "kind": "profile",
+   "category": "Sector (profile)",
+   "statement": "Sector (profile): Software",
+   "status": "SELF_REPORTED",
+   "as_of": null,
+   "narrator": null,
+   "source_context": null,
+   "dates_not_as_of": null
+  }
+ ],
+ "time_wording_allowed_for_dated_items": {
+  "C1": [],
+  "C2": [],
+  "C3": [],
+  "C4": [],
+  "S1": [],
+  "S2": [],
+  "S3": [],
+  "S4": []
+ },
+ "funding_facts": {
+  "narrated": [
+   "Narrated(narrator='Pitch Deck Hunt', refs=frozenset({'S4', 'C1'}), figure=re.compile('\\\\$\\\\s?23\\\\.1\\\\s?(?:m|mn|million)(?!\\\\w|\\\\.\\\\d)', re.IGNORECASE), funding=True, undated=True)"
+  ],
+  "funding_figures": [
+   "re.compile('\\\\$\\\\s?23\\\\.1\\\\s?(?:m|mn|million)(?!\\\\w|\\\\.\\\\d)', re.IGNORECASE)"
+  ],
+  "profile_refs": [
+   "P1",
+   "P2"
+  ],
+  "raise_supported": false,
+  "company": "ManyChat",
+  "funding_items": [
+   [
+    "\\$\\s?23\\.1\\s?(?:m|mn|million)(?!\\w|\\.\\d)",
+    "pitch deck hunt"
+   ]
+  ],
+  "funding_refs": [
+   "C1",
+   "S4"
+  ],
+  "cash": "",
+  "burn": "",
+  "runway_as_of": "",
+  "cash_as_of": "",
+  "ref_sources": [
+   [
+    "C1",
+    "Pitch Deck Hunt",
+    "funding"
+   ],
+   [
+    "C2",
+    "",
+    "traction"
+   ],
+   [
+    "C3",
+    "",
+    "traction"
+   ],
+   [
+    "C4",
+    "",
+    "traction"
+   ],
+   [
+    "P1",
+    "",
+    "profile"
+   ],
+   [
+    "P2",
+    "",
+    "profile"
+   ],
+   [
+    "S1",
+    "",
+    "traction"
+   ],
+   [
+    "S2",
+    "",
+    "traction"
+   ],
+   [
+    "S3",
+    "",
+    "traction"
+   ],
+   [
+    "S4",
+    "Pitch Deck Hunt",
+    "funding"
+   ]
+  ],
+  "ref_figures": [
+   [
+    "C1",
+    "$23.1m raised"
+   ],
+   [
+    "C2",
+    "500m messages/month"
+   ],
+   [
+    "C3",
+    "500m messages"
+   ],
+   [
+    "C4",
+    "140 000+ bots"
+   ],
+   [
+    "P1",
+    "stage (profile): series a"
+   ],
+   [
+    "P2",
+    "sector (profile): software"
+   ],
+   [
+    "S1",
+    "140 000+ bots"
+   ],
+   [
+    "S2",
+    "500m messages"
+   ],
+   [
+    "S3",
+    "500m messages/month"
+   ],
+   [
+    "S4",
+    "$23.1m raised"
+   ]
+  ]
+ },
+ "funding_facts_equal_with_reversed_items": true,
+ "absent_from_model_input": {
+  "Series A deck with": true,
+  "SlideShare deck has": true,
+  "CANARY": true,
+  "163000000": true,
+  "163,000,000": true,
+  "Bessemer": true,
+  "TechCrunch": true,
+  "Summit Partners": true,
+  "2019": true,
+  "$18M": true,
+  "$140M": true,
+  "STALENESS": true,
+  "ATTRIBUTION ERROR": true,
+  "INVENTED IDENTITY": true,
+  "ANSWER_KEY": true,
+  "Mike Yan": true,
+  "Anton Gorin": true,
+  "m512mc": true,
+  "Rerun Owner": true,
+  "Disposable profile": true,
+  "cumulative by context": true,
+  "manychat_ra109": true,
+  "ANSWER": true,
+  "conflict": true,
+  "UB-604": true,
+  "NP-603": true,
+  "NP-604": true,
+  "memo 98": true,
+  "figure stated without an explicit interval": true,
+  "before either is relied on": true,
+  "not cash on hand": true,
+  "OF-704": true,
+  "OF-705": true,
+  "memo 99": true,
+  "and separately 500M": true,
+  "with no explicit interval [": true,
+  "OF-805": true,
+  "OF-806": true,
+  "OF-807": true,
+  "memo 100": true,
+  "OF-903": true,
+  "OF-904": true,
+  "OF-905": true,
+  "OF-906": true,
+  "memo 101": true,
+  "OF-1003": true,
+  "OF-1004": true,
+  "OF-1005": true,
+  "memo 102": true,
+  "OF-1102": true,
+  "OF-1103": true,
+  "memo 103": true,
+  "footing": true,
+  "harmless continuation": true,
+  "unspecified-interval": true,
+  "hypotheses the evidence does not state": true,
+  "conditions placed on them": true
+ },
+ "basis_facts": [
+  {
+   "refs": [
+    "C3",
+    "C2"
+   ],
+   "members": [
+    "C2",
+    "C3",
+    "S2",
+    "S3"
+   ],
+   "noun": "messages",
+   "cumulative_admitted": false,
+   "clarification": "How the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on"
+  }
+ ],
+ "basis_facts_equal_with_reversed_items": false,
+ "sent_consistency_notes": [
+  {
+   "kind": "measurement_basis",
+   "refs": [
+    "C3",
+    "C2"
+   ],
+   "note": "Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month. These use different measurement bases and need clarification before comparison."
+  }
+ ],
+ "rebuilt_consistency_notes": [
+  {
+   "kind": "measurement_basis",
+   "refs": [
+    "C3",
+    "C2"
+   ],
+   "note": "Page 10 states 500M messages without an explicit interval; page 12 states 500M messages/month. These use different measurement bases and need clarification before comparison."
+  }
+ ],
+ "prompt_rule_11_present": true,
+ "user_prompt_points_to_rule_11": true,
+ "sections": {
+  "executive_summary": {
+   "stored_equals_guard_replay_of_raw": true,
+   "raw_equals_stored": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "rule_families": [],
+   "reversed_item_order_same_output": true,
+   "idempotent_second_pass_unchanged": true,
+   "refs_model": [
+    "P1",
+    "P2",
+    "S4",
+    "C1",
+    "S1",
+    "S2"
+   ],
+   "refs_stored": [
+    "P1",
+    "P2",
+    "S4",
+    "C1",
+    "S1",
+    "S2"
+   ],
+   "refs_identical_in_order": true,
+   "ref_multiset_identical": true
+  },
+  "problem_solution": {
+   "stored_equals_guard_replay_of_raw": true,
+   "raw_equals_stored": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "rule_families": [],
+   "reversed_item_order_same_output": true,
+   "idempotent_second_pass_unchanged": true,
+   "refs_model": [
+    "S1",
+    "S2",
+    "S3"
+   ],
+   "refs_stored": [
+    "S1",
+    "S2",
+    "S3"
+   ],
+   "refs_identical_in_order": true,
+   "ref_multiset_identical": true
+  },
+  "market_analysis": {
+   "stored_equals_guard_replay_of_raw": true,
+   "raw_equals_stored": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "rule_families": [],
+   "reversed_item_order_same_output": true,
+   "idempotent_second_pass_unchanged": true,
+   "refs_model": [],
+   "refs_stored": [],
+   "refs_identical_in_order": true,
+   "ref_multiset_identical": true
+  },
+  "team_assessment": {
+   "stored_equals_guard_replay_of_raw": true,
+   "raw_equals_stored": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "rule_families": [],
+   "reversed_item_order_same_output": true,
+   "idempotent_second_pass_unchanged": true,
+   "refs_model": [],
+   "refs_stored": [],
+   "refs_identical_in_order": true,
+   "ref_multiset_identical": true
+  },
+  "financial_analysis": {
+   "stored_equals_guard_replay_of_raw": true,
+   "raw_equals_stored": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "rule_families": [],
+   "reversed_item_order_same_output": true,
+   "idempotent_second_pass_unchanged": true,
+   "refs_model": [
+    "S4",
+    "C1"
+   ],
+   "refs_stored": [
+    "S4",
+    "C1"
+   ],
+   "refs_identical_in_order": true,
+   "ref_multiset_identical": true
+  },
+  "risk_assessment": {
+   "stored_equals_guard_replay_of_raw": true,
+   "raw_equals_stored": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "rule_families": [],
+   "reversed_item_order_same_output": true,
+   "idempotent_second_pass_unchanged": true,
+   "refs_model": [
+    "S1",
+    "S2",
+    "S3",
+    "C2",
+    "C3",
+    "C4",
+    "C2",
+    "C3"
+   ],
+   "refs_stored": [
+    "S1",
+    "S2",
+    "S3",
+    "C2",
+    "C3",
+    "C4",
+    "C2",
+    "C3"
+   ],
+   "refs_identical_in_order": true,
+   "ref_multiset_identical": true
+  },
+  "business_model_analysis": {
+   "stored_equals_guard_replay_of_raw": true,
+   "raw_equals_stored": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "rule_families": [],
+   "reversed_item_order_same_output": true,
+   "idempotent_second_pass_unchanged": true,
+   "refs_model": [
+    "S1",
+    "S2",
+    "S3",
+    "C2",
+    "C3",
+    "C4"
+   ],
+   "refs_stored": [
+    "S1",
+    "S2",
+    "S3",
+    "C2",
+    "C3",
+    "C4"
+   ],
+   "refs_identical_in_order": true,
+   "ref_multiset_identical": true
+  },
+  "information_readiness": {
+   "stored_equals_guard_replay_of_raw": true,
+   "raw_equals_stored": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "rule_families": [],
+   "reversed_item_order_same_output": true,
+   "idempotent_second_pass_unchanged": true,
+   "refs_model": [
+    "S4",
+    "S1",
+    "S2",
+    "S3",
+    "P1",
+    "P2",
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "C2",
+    "C3"
+   ],
+   "refs_stored": [
+    "S4",
+    "S1",
+    "S2",
+    "S3",
+    "P1",
+    "P2",
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "C2",
+    "C3"
+   ],
+   "refs_identical_in_order": true,
+   "ref_multiset_identical": true
+  },
+  "supported_points": {
+   "stored_equals_guard_replay_of_raw": true,
+   "raw_equals_stored": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "rule_families": [],
+   "reversed_item_order_same_output": true,
+   "idempotent_second_pass_unchanged": true,
+   "refs_model": [
+    "S4",
+    "C1",
+    "S1",
+    "S2",
+    "C3",
+    "C4"
+   ],
+   "refs_stored": [
+    "S4",
+    "C1",
+    "S1",
+    "S2",
+    "C3",
+    "C4"
+   ],
+   "refs_identical_in_order": true,
+   "ref_multiset_identical": true
+  },
+  "open_concerns": {
+   "stored_equals_guard_replay_of_raw": true,
+   "raw_equals_stored": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "rule_families": [],
+   "reversed_item_order_same_output": true,
+   "idempotent_second_pass_unchanged": true,
+   "refs_model": [
+    "C2",
+    "C3",
+    "S4",
+    "C1"
+   ],
+   "refs_stored": [
+    "C2",
+    "C3",
+    "S4",
+    "C1"
+   ],
+   "refs_identical_in_order": true,
+   "ref_multiset_identical": true
+  },
+  "what_would_change_the_picture": {
+   "stored_equals_guard_replay_of_raw": true,
+   "raw_equals_stored": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "rule_families": [],
+   "reversed_item_order_same_output": true,
+   "idempotent_second_pass_unchanged": true,
+   "refs_model": [],
+   "refs_stored": [],
+   "refs_identical_in_order": true,
+   "ref_multiset_identical": true
+  },
+  "upside_scenario": {
+   "stored_equals_guard_replay_of_raw": true,
+   "raw_equals_stored": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "rule_families": [],
+   "reversed_item_order_same_output": true,
+   "idempotent_second_pass_unchanged": true,
+   "refs_model": [
+    "S1",
+    "S3"
+   ],
+   "refs_stored": [
+    "S1",
+    "S3"
+   ],
+   "refs_identical_in_order": true,
+   "ref_multiset_identical": true
+  },
+  "base_scenario": {
+   "stored_equals_guard_replay_of_raw": true,
+   "raw_equals_stored": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "rule_families": [],
+   "reversed_item_order_same_output": true,
+   "idempotent_second_pass_unchanged": true,
+   "refs_model": [
+    "S1",
+    "S2",
+    "S3",
+    "S4"
+   ],
+   "refs_stored": [
+    "S1",
+    "S2",
+    "S3",
+    "S4"
+   ],
+   "refs_identical_in_order": true,
+   "ref_multiset_identical": true
+  },
+  "downside_scenario": {
+   "stored_equals_guard_replay_of_raw": true,
+   "raw_equals_stored": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "rule_families": [],
+   "reversed_item_order_same_output": true,
+   "idempotent_second_pass_unchanged": true,
+   "refs_model": [
+    "C2",
+    "C3"
+   ],
+   "refs_stored": [
+    "C2",
+    "C3"
+   ],
+   "refs_identical_in_order": true,
+   "ref_multiset_identical": true
+  },
+  "zelda_advantage": {
+   "stored_equals_guard_replay_of_raw": true,
+   "raw_equals_stored": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "rule_families": [],
+   "reversed_item_order_same_output": true,
+   "idempotent_second_pass_unchanged": true,
+   "refs_model": [
+    "C2",
+    "C3"
+   ],
+   "refs_stored": [
+    "C2",
+    "C3"
+   ],
+   "refs_identical_in_order": true,
+   "ref_multiset_identical": true
+  },
+  "questions_for_management": {
+   "stored_equals_guard_replay_of_raw": true,
+   "raw_equals_stored": false,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "rule_families": [
+    "attribution"
+   ],
+   "reversed_item_order_same_output": true,
+   "idempotent_second_pass_unchanged": true,
+   "refs_model": [
+    "C2",
+    "C3",
+    "S2",
+    "S3",
+    "S4",
+    "S1"
+   ],
+   "refs_stored": [
+    "C2",
+    "C3",
+    "S2",
+    "S3",
+    "S4",
+    "S1"
+   ],
+   "refs_identical_in_order": true,
+   "ref_multiset_identical": true
+  },
+  "evidence_level": {
+   "stored_equals_guard_replay_of_raw": true,
+   "raw_equals_stored": true,
+   "time_wording_removed": [],
+   "funding_fidelity_changes": [],
+   "rule_families": [],
+   "reversed_item_order_same_output": true,
+   "idempotent_second_pass_unchanged": true,
+   "refs_model": [],
+   "refs_stored": [],
+   "refs_identical_in_order": true,
+   "ref_multiset_identical": true
+  }
+ },
+ "memo_id": 104,
+ "summary": {
+  "sections_compared": 17,
+  "all_stored_equal_replay": true,
+  "all_reversed_order_stable": true,
+  "all_idempotent": true,
+  "all_refs_identical_in_order": true,
+  "sections_changed_by_guards": [
+   "questions_for_management"
+  ],
+  "time_guard_removed_anything": false,
+  "rule_families_fired": [
+   "attribution"
+  ],
+  "narrator_provenance_rule_fired": false,
+  "basis_rule_fired": false,
+  "all_changes_by_section": {
+   "questions_for_management": [
+    "attribution:Pitch Deck Hunt"
+   ]
+  },
+  "not_stored_keys": []
+ }
+}

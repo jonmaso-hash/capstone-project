@@ -1,0 +1,98 @@
+{
+ "memo103_base_scenario (OF-1102, stored at 4ee3639)": {
+  "before": "Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4].",
+  "after": "Taking the self-reported traction at face value without independent verification [S1, S2], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4]; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+  "changed": true,
+  "time_removed": [],
+  "funding_changes": [],
+  "basis_changes": [
+   "basis_source_context"
+  ],
+  "idempotent": true
+ },
+ "memo103_upside_scenario_sentence1 (OF-1103, stored at 4ee3639)": {
+  "before": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide — consistent with a network-effect-driven software business approaching scale.",
+  "after": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — consistent with a network-effect-driven software business approaching scale.",
+  "changed": true,
+  "time_removed": [],
+  "funding_changes": [],
+  "basis_changes": [
+   "basis_consequence_context"
+  ],
+  "idempotent": true
+ },
+ "memo104_business_model_analysis_s2 (stored)": {
+  "before": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+  "after": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+  "changed": false,
+  "time_removed": [],
+  "funding_changes": [],
+  "basis_changes": [],
+  "idempotent": true
+ },
+ "memo104_questions_for_management_5 (raw reply)": {
+  "before": "- What is the composition of the $23.1M reportedly raised [S4] — how many rounds, at what valuations, and from which investors?",
+  "after": "- What is the composition of the $23.1M reported (per Pitch Deck Hunt)ly raised [S4] — how many rounds, at what valuations, and from which investors?",
+  "changed": true,
+  "time_removed": [],
+  "funding_changes": [
+   "attribution:Pitch Deck Hunt"
+  ],
+  "basis_changes": [],
+  "idempotent": true
+ },
+ "memo104_base_scenario_s1 (stored)": {
+  "before": "Taking the self-reported traction figures at face value [S1, S2, S3] and the Pitch Deck Hunt-listed funding of $23.1M [S4] as directionally correct, ManyChat appears to be a Series A-stage software company with a large installed base of bots and message volume.",
+  "after": "Taking the self-reported traction figures at face value [S1, S2, S3] and the Pitch Deck Hunt-listed funding of $23.1M [S4] as directionally correct, ManyChat appears to be a Series A-stage software company with a large installed base of bots and message volume.",
+  "changed": false,
+  "time_removed": [],
+  "funding_changes": [],
+  "basis_changes": [],
+  "idempotent": true
+ },
+ "control: denial in the consequence": {
+  "before": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, No platform would have significant throughput at the time of the 'Traction by Apr-16' slide.",
+  "after": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, No platform would have significant throughput at the time of the 'Traction by Apr-16' slide.",
+  "changed": false,
+  "time_removed": [],
+  "funding_changes": [],
+  "basis_changes": [],
+  "idempotent": true
+ },
+ "control: unrelated consequence": {
+  "before": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, revenue would be $10M at the time of the 'Traction by Apr-16' slide.",
+  "after": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, revenue would be $10M at the time of the 'Traction by Apr-16' slide.",
+  "changed": false,
+  "time_removed": [],
+  "funding_changes": [],
+  "basis_changes": [],
+  "idempotent": true
+ },
+ "control: unknown trailing clause": {
+  "before": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide — on the footing that this holds.",
+  "after": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide — on the footing that this holds.",
+  "changed": false,
+  "time_removed": [],
+  "funding_changes": [],
+  "basis_changes": [],
+  "idempotent": true
+ },
+ "control: date stated as the hypothesis": {
+  "before": "If the 500M messages/month [S3] were measured as of the 'Traction by Apr-16' slide, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide.",
+  "after": "If the 500M messages/month [S3] were measured as of the 'Traction by Apr-16' slide, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide.",
+  "changed": false,
+  "time_removed": [],
+  "funding_changes": [],
+  "basis_changes": [],
+  "idempotent": true
+ },
+ "control: qualifier and funding attribution kept (no heading)": {
+  "before": "Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4].",
+  "after": "Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4].",
+  "changed": false,
+  "time_removed": [],
+  "funding_changes": [],
+  "basis_changes": [],
+  "idempotent": true
+ }
+}

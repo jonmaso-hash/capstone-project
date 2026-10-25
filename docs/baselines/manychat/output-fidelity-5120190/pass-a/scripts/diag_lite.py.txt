@@ -1,0 +1,38 @@
+"""Read-only diagnosis of the Lite manual sign-in (via run_ro.py with RO_DB = this run's copy, opened mode=ro).
+Prints account flags, last_login, whether the fixture accounts share one password (hash algorithm/iterations and
+a same-password check that never prints hashes or the password), recent sessions' users, and lockout state."""
+import datetime
+from django.contrib.auth import get_user_model
+from django.contrib.sessions.models import Session
+from django.utils import timezone
+U = get_user_model()
+names = ['m512mc_owner', 'm512mc_lite', 'm512mc_paid', 'm512mc_staff', 'founder2']
+for n in names:
+    u = U.objects.filter(username=n).first()
+    if not u:
+        print('USER', n, 'MISSING'); continue
+    algo = u.password.split('$')[:2]
+    print('USER', n, 'id=%s' % u.id, 'exact_username=%r' % u.username, 'active=%s' % u.is_active,
+          'usable_password=%s' % u.has_usable_password(), 'hasher=%s' % '$'.join(algo),
+          'last_login=%s' % (u.last_login.isoformat() if u.last_login else None), 'staff=%s' % u.is_staff)
+# Same password? Verify the owner's stored hash against the lite hash's own salt/iterations without exposing either:
+# Django can't invert hashes, so compare by checking that both were set in the same fixture call (code) and that the
+# hasher parameters match; a direct equality test is impossible without the plaintext, which is not read here.
+owner, lite = U.objects.get(username='m512mc_owner'), U.objects.get(username='m512mc_lite')
+print('SAME-HASHER-PARAMS', owner.password.split('$')[:2] == lite.password.split('$')[:2],
+      'hashes_differ_as_expected_with_random_salts', owner.password != lite.password)
+since = timezone.now() - datetime.timedelta(hours=2)
+for s in Session.objects.filter(expire_date__gt=timezone.now()).order_by('-expire_date')[:8]:
+    d = s.get_decoded()
+    uid = d.get('_auth_user_id')
+    who = U.objects.filter(id=uid).values_list('username', flat=True).first() if uid else None
+    print('SESSION expires=%s user=%s backend=%s' % (s.expire_date.isoformat(), who, d.get('_auth_user_backend')))
+try:
+    from axes.models import AccessAttempt
+    print('AXES attempts', list(AccessAttempt.objects.values_list('username', 'failures_since_start')))
+except Exception as e:
+    print('AXES not installed', type(e).__name__)
+from django.conf import settings
+print('AUTH_BACKENDS', settings.AUTHENTICATION_BACKENDS)
+print('ACCOUNT_LOGIN_METHODS', getattr(settings, 'ACCOUNT_LOGIN_METHODS', None), 'ACCOUNT_AUTHENTICATION_METHOD',
+      getattr(settings, 'ACCOUNT_AUTHENTICATION_METHOD', None))

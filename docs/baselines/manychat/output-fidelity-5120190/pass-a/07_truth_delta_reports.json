@@ -1,0 +1,206 @@
+[
+ {
+  "id": 98,
+  "document_id": 3146,
+  "engine_version": "td.5",
+  "overall_truth_score": null,
+  "credibility_risk": "unknown",
+  "summary": "No public data could be found to independently verify these claims (checked SEC EDGAR). This is not a confirmation the claims are accurate — only that no corroborating or contradicting external data was found for \"ManyChat\".",
+  "details": {
+   "claims": [
+    {
+     "category": "funding_raised",
+     "claimed_value": "$23.1M raised",
+     "claimed_value_numeric": 23100000.0,
+     "unit": "",
+     "currency": ""
+    },
+    {
+     "category": "usage",
+     "claimed_value": "140 000+ bots",
+     "claimed_value_numeric": 140000.0,
+     "unit": "bots",
+     "currency": ""
+    },
+    {
+     "category": "usage",
+     "claimed_value": "500M messages",
+     "claimed_value_numeric": 500000000.0,
+     "unit": "messages",
+     "currency": ""
+    },
+    {
+     "category": "usage",
+     "claimed_value": "500M messages/month",
+     "claimed_value_numeric": 500000000.0,
+     "unit": "messages/month",
+     "currency": ""
+    }
+   ],
+   "observed": [],
+   "source_diagnostics": {
+    "sec": "not_found"
+   },
+   "provider_outcomes": {
+    "dataforb2b": "unconfigured"
+   },
+   "comparison": [
+    {
+     "category": "funding_raised",
+     "claim_id": 2393,
+     "claimed_value": "$23.1M raised",
+     "claimed_value_numeric": 23100000.0,
+     "claim_currency": "",
+     "observed_value": null,
+     "observed_value_numeric": null,
+     "observed_currency": null,
+     "observed_source": null,
+     "observed_registrant": null,
+     "observed_time_period": null,
+     "discrepancy_pct": null,
+     "claim_raw_text": "$23.1M raised",
+     "observed_raw_value": null,
+     "source_credibility": null,
+     "claim_period": null,
+     "claim_period_kind": "",
+     "claim_fiscal_year": null,
+     "claim_period_end": null,
+     "observed_period_kind": "",
+     "observed_fiscal_year": null,
+     "observed_period_end": null,
+     "observed_role": null,
+     "observed_origin": null,
+     "corroboration": [],
+     "context": [],
+     "zelda_state": "no_data",
+     "zelda_reason": "no_external_evidence"
+    },
+    {
+     "category": "usage",
+     "claim_id": 2396,
+     "claimed_value": "140 000+ bots",
+     "claimed_value_numeric": 140000.0,
+     "claim_currency": "",
+     "observed_value": null,
+     "observed_value_numeric": null,
+     "observed_currency": null,
+     "observed_source": null,
+     "observed_registrant": null,
+     "observed_time_period": null,
+     "discrepancy_pct": null,
+     "claim_raw_text": "140 000+ bots",
+     "observed_raw_value": null,
+     "source_credibility": null,
+     "claim_period": null,
+     "claim_period_kind": "",
+     "claim_fiscal_year": null,
+     "claim_period_end": null,
+     "observed_period_kind": "",
+     "observed_fiscal_year": null,
+     "observed_period_end": null,
+     "observed_role": null,
+     "observed_origin": null,
+     "corroboration": [],
+     "context": [],
+     "zelda_state": "no_data",
+     "zelda_reason": "no_external_evidence"
+    },
+    {
+     "category": "usage",
+     "claim_id": 2395,
+     "claimed_value": "500M messages",
+     "claimed_value_numeric": 500000000.0,
+     "claim_currency": "",
+     "observed_value": null,
+     "observed_value_numeric": null,
+     "observed_currency": null,
+     "observed_source": null,
+     "observed_registrant": null,
+     "observed_time_period": null,
+     "discrepancy_pct": null,
+     "claim_raw_text": "500M messages",
+     "observed_raw_value": null,
+     "source_credibility": null,
+     "claim_period": null,
+     "claim_period_kind": "",
+     "claim_fiscal_year": null,
+     "claim_period_end": null,
+     "observed_period_kind": "",
+     "observed_fiscal_year": null,
+     "observed_period_end": null,
+     "observed_role": null,
+     "observed_origin": null,
+     "corroboration": [],
+     "context": [],
+     "zelda_state": "no_data",
+     "zelda_reason": "no_external_evidence"
+    },
+    {
+     "category": "usage",
+     "claim_id": 2394,
+     "claimed_value": "500M messages/month",
+     "claimed_value_numeric": 500000000.0,
+     "claim_currency": "",
+     "observed_value": null,
+     "observed_value_numeric": null,
+     "observed_currency": null,
+     "observed_source": null,
+     "observed_registrant": null,
+     "observed_time_period": null,
+     "discrepancy_pct": null,
+     "claim_raw_text": "500M messages/month",
+     "observed_raw_value": null,
+     "source_credibility": null,
+     "claim_period": null,
+     "claim_period_kind": "monthly",
+     "claim_fiscal_year": null,
+     "claim_period_end": null,
+     "observed_period_kind": "",
+     "observed_fiscal_year": null,
+     "observed_period_end": null,
+     "observed_role": null,
+     "observed_origin": null,
+     "corroboration": [],
+     "context": [],
+     "zelda_state": "no_data",
+     "zelda_reason": "no_external_evidence"
+    }
+   ],
+   "per_claim": [
+    {
+     "category": "funding_raised",
+     "claim_id": 2393,
+     "claimed": "$23.1M raised",
+     "observed": "No external data found",
+     "assessment": "No external data was found for this claim.",
+     "explanation_source": "zelda"
+    },
+    {
+     "category": "usage",
+     "claim_id": 2396,
+     "claimed": "140 000+ bots",
+     "observed": "No external data found",
+     "assessment": "No external data was found for this claim.",
+     "explanation_source": "zelda"
+    },
+    {
+     "category": "usage",
+     "claim_id": 2395,
+     "claimed": "500M messages",
+     "observed": "No external data found",
+     "assessment": "No external data was found for this claim.",
+     "explanation_source": "zelda"
+    },
+    {
+     "category": "usage",
+     "claim_id": 2394,
+     "claimed": "500M messages/month",
+     "observed": "No external data found",
+     "assessment": "No external data was found for this claim.",
+     "explanation_source": "zelda"
+    }
+   ]
+  },
+  "created_at": "2026-10-24T23:15:56.562688+00:00"
+ }
+]

@@ -1,0 +1,108 @@
+16:31:33 owner handoff 1: the manual sign-in landed as founder2 ("Test Founder Two", Founder Dashboard), not m512mc_owner (likely a saved Chrome login). /api/v1/zelda/documents/3146/ic-memo/ returned 404 at 16:32:36 for that account (expected for a non-owner; the probe's OWNER row is 200). Signed out via nav POST /accounts/logout/. Not counted as the owner walk.
+16:35 owner handoff 1 (retry): signed in manually as m512mc_owner (nav shows m512mc_owner, "Welcome back, Rerun Owner"). IC memo /api/v1/zelda/documents/3146/ic-memo/ loaded: title "AI Investment Committee Memo — ManyChat | Interlink Foundry", badge "Zelda Lite Memo", 5,420 chars; business_model_analysis shows the 'Traction by Apr-16' sentence with [S2, S3] verbatim; open_concerns_1 "as an undated total on page 10"; no scenario sections, no questions_for_management (so the "reported (per Pitch Deck Hunt)ly" line is not on the owner's Lite memo); no [C3, S3]; no canary. Screenshot browser/owner_ic_memo_business_model.jpg. Logged out via nav POST.
+16:38:58-16:39:02 Lite handoff 2, first attempt: GET /accounts/login/?next=/matchmaking/memo/profile/50/ 200; POST login 302 to next (a successful sign-in); GET /matchmaking/memo/profile/50/ 403. Read-only diagnosis (diag_lite_stdout.txt): that sign-in was m512mc_owner (owner last_login 23:39:02Z; newest session belongs to m512mc_owner), not m512mc_lite (last_login 23:18:38Z, the HTTP probe's login). 403 is the owner's expected result on the company overview (probe OWNER row C2 = 403). m512mc_lite: exact username, active, usable password, same hasher; setup_fixtures.py assigns one pw variable to all four accounts; no lockout app installed. Not counted as the Lite walk.
+
+LOW-MEMORY SHUTDOWN (after the Lite diagnosis, while waiting on the user): Claude Code's background-shell memory-pressure
+reaper stopped all three background processes: memory watchdog (pid 25828), run server (pid 20368, launcher 28472) and
+run worker (pid 20188, launcher 8720). Confirmed afterwards: all five pids gone, 127.0.0.1:8000 refusing connections,
+free RAM 0.97 GB. Nothing was restarted at that headroom. No model call, write or browser check ran while they were down.
+Recovery check (intact_check_after_shutdown.txt, read-only, query_only=ON on the copy): memo 104 present for document
+3146, all stored text fields equal to 09_memo.json, updated_at unchanged 23:16:47.939414Z; document 3146 status analyzed;
+max memo id 104, max document id 3146 (nothing generated since); Redis db 8 has only kombu bindings (no queued task).
+Call ledger model_calls.jsonl: 8 lines, all end_turn, sha256 f8f21dcf42e7438edd4324af442352890047e36f8a2a9ba12ca3495c2ba16299.
+Recovery threshold for restart: free RAM >= 1.2 GB (the un-lowered floor; the 0.9 GB floor stays the minimum during work),
+held across samples. ram_before_restart.txt: 1.86, 1.88, 1.92, 1.96 GB over 30 s. Restart: watchdog (1500 MB, unchanged),
+then the server only via the same run_r512.py at 5120190; worker left stopped.
+19:02:18 watchdog restarted (memwatch3.log, 1500 MB). 19:02 server restarted via run_r512.py server (launcher pid 23188,
+server pid 21608, log server2.log; server.log from part 1 kept unchanged). Gates in server2.log: CODE-CHECK head 5120190,
+CODE-DIFF non-pyc 0, paid keys blanked, BROKER-CHECK Memurai 8/9, DB-CHECK copy only, SCHEMA pending=0, EAGER False,
+MODEL-CALL-LOG installed. Worker NOT restarted. HTTP check from PowerShell (not the browser gate): /accounts/login/ 200,
+port 8000 owned by pid 21608. Free RAM 1.82 GB after start.
+Browser gate after restart NOT yet run: list_connected_browsers shows only 203c1a8f ("Browser 1", another machine; not
+used); b60b1997 not connected and no chrome.exe running on this PC. Waiting for the user to reopen Chrome on this PC.
+19:14:34-19:14:54 RAM with Chrome (b60b1997, 11 chrome.exe, ~1.1-1.24 GB) + server: free 0.99/1.02/1.07 GB (ram_with_chrome.txt); above the 0.9 GB floor.
+list_connected_browsers: b60b1997 connected and in use ("Browser 1"); 203c1a8f also connected, not used.
+GATE AFTER RESTART (PASS): nonce4 0a56b792ed1b2c1a (gate/nonce4.txt). Browser tool navigated tab 1840235090 to
+/home/?gate=0a56b792ed1b2c1a and read back that URL with title "Interlink Foundry"; server2.log line 15:
+19:15:23,091 "GET /home/?gate=0a56b792ed1b2c1a HTTP/1.1" 200. Nav showed m512mc_owner (part-1 session still valid).
+19:15:49 owner signed out via the account menu "Sign Out" form: POST /accounts/logout/ 302, GET /home/ 200; nav then shows Sign In.
+19:16 login page /accounts/login/?next=/matchmaking/memo/profile/50/: Chrome autofilled username m512mc_owner plus a saved
+password (screenshot observation; confirms the earlier Lite mis-sign-in cause). Both fields cleared by script (no value
+typed or read). Handed to the user for manual m512mc_lite entry.
+LITE WALK (PASS), manual sign-in by the user (username typed by hand after the autofilled fields were cleared):
+19:20:35 POST /accounts/login/?next=/matchmaking/memo/profile/50/ 302; 19:20:38 GET /matchmaking/memo/profile/50/ 200 135925 B.
+Identity verified three ways: nav "m512mc_lite"; DB m512mc_lite last_login 2026-10-25T02:20:35.673Z (owner unchanged
+23:39:02Z); newest session (expires 2026-11-08T02:20:35Z) belongs to m512mc_lite, ModelBackend.
+Page: title "Intelligence Memo: ManyChat", "Zelda Lite Report"; Investment analysis locked ("Available once you and this
+company are connected"); 0 IC-memo links; "The full IC Memo ... unlocks once you and ManyChat are connected".
+Overview text: "...profiled as Series A [P1, P2] ... Pitch Deck Hunt lists $23.1M raised [S4], though this figure is undated
+and could not be independently verified [C1]. The company's deck, contextualised under a 'Traction by Apr-16' slide heading,
+states 140,000+ bots and 500M messages as traction figures [S1, S2], neither of which has been independently confirmed."
+(funding attribution + verification qualifier kept; heading named as context, no date asserted for the figures).
+Absent from readable text: upside/downside/Base scenario, Questions for management, "reportedly", "reported (per",
+"messages/month", "[C3, S3]", "consistency note", canary, "as of April 2016". "Series B" is in the HTML but not in the
+visible text (probe LITE C2 markers also list "Series B"; observation only). Probe LITE C2: 200, 136,323 B (browser 135,925 B).
+Screenshot browser/lite_company_overview.jpg.
+19:22:11 Sign Out form: POST /accounts/logout/ 302. 19:22:12 signed out GET /api/v1/zelda/documents/3146/truth-delta/ 403
+("Authentication credentials were not provided."), matching probe ANON H_td_api 403. Free RAM 1.08 GB.
+PAID WALK (PASS), manual sign-in by the user:
+19:26:30 POST /accounts/login/?next=/api/v1/zelda/documents/3146/verification/ 302; 19:26:31 GET .../verification/ 200 54,461 B
+(identical size to probe PAID F_truthdelta_ui row, 54,461 B). Identity: DB m512mc_paid last_login 2026-10-25T02:26:30.524Z,
+newest session (expires 2026-11-08T02:26:30Z) belongs to m512mc_paid; nav on / showed "m512mc_paid" before sign-out
+(the verification page itself shows no username or logout form).
+Page: "Zelda Lite Verification" (owner is on Lite); 4 claims, 0 verified, 4 not established; "showing 3 of 4".
+"Measurement basis to clarify" block present: "Page 10 states 500M messages without an explicit interval; page 12 states
+500M messages/month. These use different measurement bases and need clarification before comparison." with the note that
+it is not a verification result and doesn't affect the score. Absent: "reportedly", "reported (per", "Apr-16",
+"as of April 2016", canary, "[C3, S3]", upside, Questions for management. Screenshot browser/paid_verification_measurement_basis.jpg.
+Sign-out via / (FF-413): 19:46:31 GET / 200 (nav m512mc_paid, 1 logout form); 19:46:52 Sign Out POST /accounts/logout/ 302;
+GET /home/ 200; nav then Sign In.
+STAFF: TEST-ACCOUNT SETUP REPAIR (staff MFA re-enrollment), at the user's instruction.
+Cause: m512mc_staff's MFA (StaffMFA row id=3, enabled 2026-10-24T23:18:55Z, 10 recovery codes) was enrolled by this run's
+HTTP probe (probe.py staff_mfa(): real setup page, random secret held only in the scratchpad .totp file, which is not read
+or committed; recovery codes were only in that response). The user has neither the authenticator nor recovery codes.
+staff_mfa_state_before_reset.txt (read-only, no secret material): StaffMFA rows 3 (rabj_staff, ramc_staff, m512mc_staff).
+20:02:15-20:03:06 free RAM 0.85 GB at first check (below the 0.9 floor: held), then 1.04-1.10 GB; reset run at 1.04 GB.
+20:03:29 reset via the app's supported command accounts/management/commands/reset_staff_mfa.py
+(call_command('reset_staff_mfa', 'm512mc_staff', confirm_username='m512mc_staff')) from reset_staff_mfa_copy.py under
+run_r512.py script mode: all gates passed (CODE 5120190, non-pyc diff 0, paid keys blank, Memurai 8/9, DB-CHECK copy only,
+pending 0), plus the script's own assert that the connection is the copy. Output: "MFA reset. Staff access stays blocked
+until the account completes new enrollment."; log line "Staff MFA reset ... user_id=324".
+staff_mfa_state_after_reset.txt: rows 2; rabj_staff and ramc_staff unchanged (same enabled_at, counter set, 10 codes);
+m512mc_staff row removed. No other account, the original DB or any historical copy touched. Staff MFA requirement
+(StaffMFAMiddleware) unchanged. Ledger still 8 lines. Worker stopped.
+Enrollment page (templates/accounts/staff_mfa.html) shows a text setup key, not a QR code; the user adds it manually.
+The browser tool does not read or screenshot the setup or recovery-code pages.
+STAFF WALK (PASS), counted only after normal sign-in + MFA:
+19:51:43 normal password sign-in by the user (POST /accounts/login/ 302; m512mc_staff last_login 2026-10-25T02:51:43.753Z);
+StaffMFAMiddleware sent the session to /accounts/staff-mfa/verify/ (old enrollment, unusable) -> setup repair above.
+20:21:35 the same signed-in session was sent to /accounts/staff-mfa/setup/ (enrollment required after the reset).
+20:34:46 POST /accounts/staff-mfa/setup/ 200 (requires current password + a fresh TOTP code; the user entered both;
+recovery codes displayed once to the user; the browser tool did not read or capture the setup/recovery pages).
+staff_mfa_state_after_enrollment.txt: m512mc_staff StaffMFA id=4 enabled_at 2026-10-25T03:34:46.771Z, counter set,
+10 recovery codes; rabj_staff/ramc_staff unchanged. Newest session (expires 2026-11-08T03:35:43Z) = m512mc_staff; nav "m512mc_staff".
+20:35:43 GET /api/v1/zelda/documents/3146/verification/ 200 61,485 B (= probe STAFF F row): "Zelda AI — Full Verification",
+Entity Integrity table, Measurement basis block (same page-10/page-12 text as paid); no "showing 3 of 4".
+Screenshot browser/staff_verification_full.jpg.
+20:39:58 GET .../truth-delta/?format=json 200 5,173 B (= probe STAFF H row): tier full, 4 claims (2393 $23.1M raised,
+2396 140 000+ bots, 2395 500M messages, 2394 500M messages/month claim_period_kind monthly), all no_data/no_external_evidence.
+20:40:09 GET /api/v1/zelda/documents/3146/ic-memo/ 200 171,854 B (= probe STAFF D row), nav m512mc_staff:
+ - Questions for Management item 5 renders the funding-guard word split verbatim: "What is the composition of the $23.1M
+   reported (per Pitch Deck Hunt)ly raised [S4] — how many rounds, at what valuations, and from which investors?"
+   (screenshot browser/staff_ic_memo_questions_reportedly.jpg). Provisional finding stands; rendered to staff.
+ - business_model_analysis heading sentence renders verbatim ("...contextualised under a slide heading 'Traction by Apr-16',
+   but these figures are undated as counts and have not been independently verified [C2, C3, C4].").
+ - Upside: "If the company's self-reported figures of 140,000+ bots and 500M messages/month [S1, S3] are accurate and the 500M
+   figure reflects a monthly recurring rate rather than a cumulative total, ..." — no date, qualifier kept (screenshot
+   browser/staff_ic_memo_upside.jpg). Base: "Taking the self-reported traction figures at face value [S1, S2, S3] and the
+   Pitch Deck Hunt-listed funding of $23.1M [S4] as directionally correct, ManyChat appears to be a Series A-stage software
+   company with a large installed base of bots and message volume." — no date, attribution kept; present-tense "large
+   installed base" (P3 observation already listed).
+ - Absent: "at the time of the", "by the period referenced", "as of April 2016", canary, "[C3, S3]". Present: "undated total
+   on page 10", "see consistency note below" (P3 wording already listed).
+20:40:58 GET /matchmaking/memo/profile/50/ 200 159,303 B (probe STAFF C2 159,701 B): "Zelda AI — Full Report", investment
+analysis unlocked, IC memo links to /api/v1/zelda/documents/3146/ic-memo/; same Overview text as Lite; "Worth investigating"
+lists "The 500M messages figure appears twice with different measurement bases — as an undated… see the IC Memo"; no
+"reportedly"/"reported (per"/date transfer/canary. Screenshot browser/staff_company_overview.jpg.
+20:41:24 Sign Out form: POST /accounts/logout/ 302, GET /home/ 200, nav Sign In. Ledger 8. Free RAM 0.80 GB (below the floor) ->
+server stopped next; no further work started below the floor.

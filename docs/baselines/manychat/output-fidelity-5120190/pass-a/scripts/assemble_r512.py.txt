@@ -1,0 +1,201 @@
+"""Assemble this run's record into the evidence directory (no DB access). Adapted from the memo-103 run's
+assemble_rc6c.py: new paths and IDs (5120190, document 3146, memo 104, Memurai dbs 8/9); memo-103 copy added to
+preservation and compared with its committed 09_memo.json (4ee3639); before-snapshots compared with the memo-103 run's
+committed after-snapshots (4ee3639); frozen-artifact checks extended to the memo-103 evidence branch (4ee3639, grade
+e967274) and PR #289's evidence folders. Browser checks were manual sign-ins by the owner of the machine in Chrome
+b60b1997 and span two server processes (server.log, then server2.log after the low-memory restart); they are written to
+15_browser_walks.json and browser/, kept apart from the automated HTTP probe (11_*) and from assessment/ (read-only
+replays, reproducers). Usage: python assemble_r512.py"""
+import os, re, json, shutil, subprocess
+HERE = os.path.dirname(os.path.abspath(__file__))
+WT = os.sep.join(['C:', 'Users', 'jonathan', 'Desktop', 'KCV-mc-512'])
+OUT = os.path.join(WT, 'docs', 'baselines', 'manychat', 'output-fidelity-5120190', 'pass-a')
+RUN = '5120190ce47708e99cff5b417baf2c565059cf7f'
+for sub in ('browser', 'browser/loopback_gate', 'process', 'scripts', 'snapshots', 'assessment'):
+    os.makedirs(os.path.join(OUT, sub), exist_ok=True)
+
+
+def read(name):
+    raw = open(os.path.join(HERE, name), 'rb').read()
+    if raw[:2] in (b'\xff\xfe', b'\xfe\xff'):
+        return raw.decode('utf-16')
+    return raw.decode('utf-8', errors='replace')
+
+
+def git(*a):
+    return subprocess.run(['git', *a], capture_output=True, text=True, cwd=WT, encoding='utf-8').stdout.strip()
+
+
+CHECK = r'^(CODE-CHECK|CODE-DIFF|BASELINE-ENV-CHECK|BROKER-CHECK|DB-CHECK|SCHEMA-CHECK|EAGER-CHECK|MODEL-CALL-LOG|WORKER-IDENTITY|REFUSING|CHECK OK|preflight ok|broker|result backend|cache|migrations)'
+lines = lambda name: [re.sub(r"tracked_changes=\d+ \[.*\]$", 'tracked_changes=<__pycache__ only; see CODE-DIFF>', l)
+                      for l in read(name).splitlines() if re.match(CHECK, l)]
+norm = lambda text: [l for l in text.replace('\r', '').splitlines() if not l.startswith('Invalid line')]
+hb, ha = json.loads(read('hashes_before.json')), json.loads(read('hashes_after.json'))
+SNAPS = ('orig', 'memo94', 'memo95', 'memo96', 'memo97', 'memo98', 'memo99', 'memo100', 'memo101', 'memo102', 'memo103')
+watch = lambda name: [l for l in read(name).replace('\x00', '').replace('﻿', '').splitlines() if l.strip()]
+
+frozen = {}
+for path in ('docs/baselines/manychat/ANSWER_KEY.md', 'docs/baselines/three-deck-audit/PROTOCOL.md',
+             'docs/baselines/nike-fy2026/PROTOCOL.md'):
+    frozen[path] = {'blob_at_c6c3d1b': git('rev-parse', 'c6c3d1b:' + path), 'blob_at_5120190': git('rev-parse', RUN + ':' + path),
+                    'blob_in_worktree': git('hash-object', path),
+                    'last_commit_touching': git('log', '-1', '--format=%h %ad %s', '--date=short', RUN, '--', path)}
+prior = {
+    'docs/baselines/manychat/output-fidelity-c6c3d1b/pass-a': ('e967274', 'origin/docs/manychat-output-fidelity-c6c3d1b'),
+    'docs/baselines/three-deck-audit/output-of1102-1103-b16d3c1': ('4ceb80d', RUN),
+    'docs/baselines/three-deck-audit/output-of1102-1103-c49cb4d': ('4ceb80d', RUN),
+    'docs/baselines/three-deck-audit/output-of1102-1103-eee2bc3': ('4ceb80d', RUN),
+    'docs/baselines/three-deck-audit/output-of1102-1103-9fd0f35': ('4ceb80d', RUN),
+    'docs/baselines/three-deck-audit/output-structural-of903-906-b040c23': ('44af018', RUN),
+    'docs/baselines/three-deck-audit/output-review-8f11844-c7d4607': ('44af018', RUN),
+    'docs/baselines/manychat/narrator-provenance-b9cddec/pass-a': ('434a701', RUN),
+    'zelda_api/data/funding_fidelity/memo102.json': ('d9f3ac7', RUN),
+}
+for path, (commit, ref) in prior.items():
+    a, b = git('rev-parse', f'{commit}:{path}'), git('rev-parse', f'{ref}:{path}')
+    frozen[path] = {'known_commit': commit, 'object_at_known_commit': a, 'compared_ref': ref, 'object_at_ref': b,
+                    'identical': bool(a) and a == b}
+
+vs_committed = {}
+for n in SNAPS[:-1]:
+    committed = git('show', f'4ee3639:docs/baselines/manychat/output-fidelity-c6c3d1b/pass-a/snapshots/{n}_snapshot_after.txt')
+    vs_committed[n] = norm(read(f'{n}_snapshot_before.txt')) == norm(committed)
+
+calls = [json.loads(l) for l in read('model_calls.jsonl').splitlines() if l.strip()]
+kind = lambda c: 'memo' if 'investment memo' in json.dumps(c['request'].get('messages', '')) else 'ask_query_extraction'
+kinds = {}
+for c in calls:
+    kinds[kind(c)] = kinds.get(kind(c), 0) + 1
+order = [{'n': i + 1, 'process': c['process'], 'started': c['started'], 'kind': kind(c),
+          'response_id': c['response']['id'], 'stop_reason': c['response']['stop_reason'], 'usage': c['response']['usage']}
+         for i, c in enumerate(calls)]
+server = read('server.log')
+ask_lines = [l for l in server.splitlines() if 'Ask Zelda pipeline error' in l or ('/api/v1/zelda/ask/' in l and 'django.server' in l)]
+setup = {
+    'code': {'worktree': WT + ' (branch docs/manychat-output-fidelity-5120190, created at 5120190)',
+             'origin_main_head_at_fetch': git('rev-parse', 'origin/main'),
+             'run_commit': RUN, 'run_commit_subject': git('log', '-1', '--format=%s', RUN),
+             'parents': git('log', '-1', '--format=%P', RUN).split(),
+             'files_differing_from_reviewed_pr_head_9fd0f35': git('diff', '--name-only', '9fd0f35', RUN).split(),
+             'non_docs_files_changed_since_memo103_run_c6c3d1b': [f for f in git('diff', '--name-only', 'c6c3d1b', RUN).split()
+                                                                   if not f.startswith('docs/')],
+             'migrations_since_c6c3d1b': git('diff', '--name-only', 'c6c3d1b', RUN, '--', '*/migrations/*.py').split(),
+             'application_code_changes_during_run': 0},
+    'database': {'original': hb['dbs']['original_dev_db']['path'], 'run_db': hb['copy']['path'],
+                 'run_db_method': hb['copy']['method'], 'run_db_sha256_at_creation': hb['copy']['sha256_at_creation'],
+                 'run_db_integrity_check': hb['copy']['integrity_check'],
+                 'historical_dbs': {k: v['path'] for k, v in hb['dbs'].items()},
+                 'refused_by_run_wrapper': 'the original and every historical copy above (FORBIDDEN_DBS in run_r512.py); DB-CHECK is_copy=True required',
+                 'source_dbs_sha256_before_after_same': {k: [hb['dbs'][k]['sha256'], ha['dbs'][k]['sha256'],
+                                                             hb['dbs'][k]['sha256'] == ha['dbs'][k]['sha256']] for k in hb['dbs']},
+                 'source_db_sidecars_after': {k: ha['dbs'][k]['sidecars'] for k in ha['dbs']},
+                 'gate_refusal_before_migrate': lines('gate_check_before_migrate.txt'),
+                 'migrate_on_copy': [l for l in read('migrate_copy.txt').splitlines() if 'Applying' in l],
+                 'id_sequences_advanced_in_copy_only': read('sequences.txt').splitlines(),
+                 'why': 'every run copy derives from the same original; counters advanced to the memo-103 run copy maxima '
+                        '(read mode=ro) so ids never repeat document 3145 or memo 103',
+                 'later_writes_to_the_copy': 'browser sign-ins (sessions, last_login) and the staff-MFA setup repair '
+                                             '(snapshots/staff_mfa_state_*.txt); no memo, document or claim row changed '
+                                             '(process/intact_check_after_shutdown.txt)'},
+    'broker': {'isolation': 'local Memurai: broker db 8; results and cache db 9. Both held only the three static '
+                            '_kombu.binding.* sets before the run; nothing was purged. Dbs 1/6 (memo-103 run) and 3/4 '
+                            '(memo-101/102 runs) were not used.',
+               'run_dbs_keys_before': read('redis_run_dbs_keys_before.txt').splitlines(),
+               'run_dbs_keys_after_grouped': read('redis_run_dbs_keys_after.txt').splitlines(),
+               'redis_before': read('redis_before.txt').splitlines(), 'redis_after': read('redis_after.txt').splitlines(),
+               'clients_before': len(read('redis_clients_before.txt').splitlines()),
+               'other_dbs_unchanged_except_6': [l for l in read('redis_before.txt').splitlines() if not re.match(r'db (6|8|9) ', l)] ==
+                                               [l for l in read('redis_after.txt').splitlines() if not re.match(r'db (6|8|9) ', l)],
+               'db6_note': "db 6 (the memo-103 run's results/cache) went 86 -> 77 keys: its cache keys carry TTLs "
+                           '(sample TTL about 504,000 s) and expire on their own; this run never addressed db 6',
+               'db8_queue_after': 'only the three _kombu.binding.* sets: no queued task at the end'},
+    'preflight_local': lines('preflight_local.txt'),
+    'server_checks': lines('server.log'), 'server_restart_checks': lines('server2.log'), 'worker_checks': lines('worker.log'),
+    'paid_keys_note': 'six paid keys blanked in os.environ (not .env); checked from os.environ inside each process',
+    'keyless_outputs': 'Truth Delta: no external data (dataforb2b unconfigured); Entity Integrity website "not applicable" and SEC EDGAR "Not found" (see 07/08)',
+    'memwatch': {'memwatch.log': watch('memwatch.log'), 'memwatch2.log': watch('memwatch2.log'), 'memwatch3.log': watch('memwatch3.log'),
+                 'note': 'threshold 1500 MB throughout; no process was killed by the watchdog. memwatch2 was stopped by '
+                         "Claude Code's low-memory reaper together with the server and worker (see README, Interruptions)"},
+    'fixtures': json.loads(read('fixtures.txt').split('FIXTURES ', 1)[1]),
+    'deck': {'path': ha['deck']['path'], 'bytes': ha['deck']['bytes'], 'sha256_on_disk': hb['deck']['sha256'],
+             'key_sha256': 'be7a7171bbc84b9895a45adfbc41f2533f3d23b3a4a561c82a8d9de6b94f3ef1'},
+    'upload': read('upload.txt').splitlines(),
+    'model_calls': {'total_successful': len(calls), 'by_kind': kinds, 'memo_model': 'claude-sonnet-4-6 (code literal)', 'order': order,
+                    'failed_calls': 'none recorded: one memo generation succeeded; Q1-Q7 ran once and all seven /ask/ requests '
+                                    'returned 200; the server log has no Ask Zelda pipeline error. The wrapper records successful '
+                                    'responses only; a failed call would appear as a task failure or a server-log error, and none did.',
+                    'ledger_sha256_after_restart_check': 'f8f21dcf42e7438edd4324af442352890047e36f8a2a9ba12ca3495c2ba16299',
+                    'ask_server_log': ask_lines},
+    'preserved': {
+        **{f'{n}_before': [l for l in norm(read(f'{n}_snapshot_before.txt')) if l.startswith('MEMO')] for n in SNAPS},
+        **{f'{n}_before_after_byte_identical': read(f'{n}_snapshot_before.txt') == read(f'{n}_snapshot_after.txt') for n in SNAPS},
+        'before_snapshots_equal_committed_4ee3639_after_snapshots': vs_committed,
+        'normalisation': 'carriage returns removed and lines starting "Invalid line" (a startup .env warning) omitted, on both sides; '
+                         "memo 103 has no committed snapshot (it was the memo-103 run's own output), so it is compared field by field instead",
+        **{f'memo{n}_vs_committed_09_memo_{c}': {'before': read(f'memo{n}_vs_committed_before.txt').strip(),
+                                                 'after': read(f'memo{n}_vs_committed_after.txt').strip()}
+           for n, c in (('97', 'ea3ab13'), ('98', '0dd8e91'), ('99', 'd821cca'), ('100', 'd8b224c'), ('101', '82771ef'),
+                        ('102', '6d131f5'), ('103', '4ee3639'))}},
+    'frozen_artifacts': frozen,
+}
+with open(os.path.join(OUT, '00_setup.json'), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump(setup, f, indent=1, ensure_ascii=False)
+chain = [l for l in read('worker.log').splitlines()
+         if re.search(r'Task .* (received|succeeded|failed|raised)|funding-source fidelity|measurement-basis|time wording', l)]
+open(os.path.join(OUT, '06_worker_chain.txt'), 'w', encoding='utf-8', newline='\n').write('\n'.join(chain) + '\n')
+with open(os.path.join(OUT, '09c_all_model_calls.json'), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump({'note': 'Every successful anthropic Messages.create call in the run processes: %d in all (%s). One memo generation '
+                       '(worker); the rest are /ask/ query-extraction calls (server) from the Q1-Q7 probe, run once.' % (len(calls), kinds),
+               'order': order, 'calls': calls}, f, indent=1, ensure_ascii=False)
+
+# Browser walks: every django.server request line of the gate and the manual walks, from both server processes.
+skip = re.compile(r'/static/|unread-count|journey-status|/badge/|favicon')
+walk_lines = ['# server.log (pid 20368): gate attempt 3 and the walks before the low-memory shutdown']
+walk_lines += [l for l in server.splitlines() if 'django.server' in l and not skip.search(l)
+               and (l[11:19] == '16:14:59' or '16:22:' <= l[11:17] <= '16:39:')]
+walk_lines += ['# server2.log (pid 21608, restarted 19:02): gate after restart and the remaining walks']
+walk_lines += [l for l in read('server2.log').splitlines() if 'django.server' in l and not skip.search(l)]
+open(os.path.join(OUT, 'browser', 'server_log_browser_walks.txt'), 'w', encoding='utf-8', newline='\n').write('\n'.join(walk_lines) + '\n')
+walks = json.loads(read('walks_r512.json'))
+with open(os.path.join(OUT, '15_browser_walks.json'), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump(walks, f, indent=1, ensure_ascii=False)
+
+for src, dst in (('server.log', 'server.log.txt'), ('server2.log', 'server2_after_restart.log.txt'), ('worker.log', 'worker.log.txt'),
+                 ('memwatch.log', 'memwatch.log.txt'), ('memwatch2.log', 'memwatch2.log.txt'), ('memwatch3.log', 'memwatch3.log.txt'),
+                 ('probe_stdout.txt', 'probe_stdout.txt'), ('md_check_stdout.txt', 'md_check_stdout.txt'),
+                 ('analyze_stdout.txt', 'analyze_stdout.txt'), ('dump.txt', 'dump_stdout.txt'), ('cmp_input_stdout.txt', 'cmp_input_stdout.txt'),
+                 ('modules_5120190.txt', 'modules_5120190.txt'), ('check_and_migrations_5120190.txt', 'check_and_migrations_5120190.txt'),
+                 ('intact_check_after_shutdown.txt', 'intact_check_after_shutdown.txt'), ('ram_before_restart.txt', 'ram_before_restart.txt'),
+                 ('ram_with_chrome.txt', 'ram_with_chrome.txt'), ('diag_lite_stdout.txt', 'diag_lite_stdout.txt'),
+                 ('reset_staff_mfa_copy.txt', 'reset_staff_mfa_copy.txt'), ('walk_notes.txt', 'walk_notes.txt')):
+    shutil.copy(os.path.join(HERE, src), os.path.join(OUT, 'process', dst))
+for n in SNAPS:
+    for p in ('before', 'after'):
+        shutil.copy(os.path.join(HERE, f'{n}_snapshot_{p}.txt'), os.path.join(OUT, 'snapshots', f'{n}_snapshot_{p}.txt'))
+for name in (['redis_before.txt', 'redis_after.txt', 'redis_clients_before.txt', 'redis_run_dbs_keys_before.txt',
+              'redis_run_dbs_keys_after.txt', 'hashes_before.json', 'hashes_after.json', 'gate_check_before_migrate.txt',
+              'migrate_copy.txt', 'sequences.txt', 'prep_before.txt', 'prep_after.txt', 'staff_mfa_state_before_reset.txt',
+              'staff_mfa_state_after_reset.txt', 'staff_mfa_state_after_enrollment.txt']
+             + [f'memo{n}_vs_committed_{p}.txt' for n in (97, 98, 99, 100, 101, 102, 103) for p in ('before', 'after')]):
+    shutil.copy(os.path.join(HERE, name), os.path.join(OUT, 'snapshots', name))
+for name in sorted(os.listdir(os.path.join(HERE, 'browser'))):
+    shutil.copy(os.path.join(HERE, 'browser', name), os.path.join(OUT, 'browser', name))
+GATE = os.path.join(HERE, 'gate')
+for name in sorted(os.listdir(GATE)):
+    if os.path.isfile(os.path.join(GATE, name)):
+        shutil.copy(os.path.join(GATE, name), os.path.join(OUT, 'browser', 'loopback_gate', name + ('' if name.endswith('.txt') else '.txt')))
+shutil.copy(os.path.join(GATE, 'www', 'index.html'), os.path.join(OUT, 'browser', 'loopback_gate', 'probe_index.html.txt'))
+for name in ('assess_replay.json', 'assess_brackets.json', 'repro_reportedly.json', 'heading_concern.json'):
+    shutil.copy(os.path.join(HERE, name), os.path.join(OUT, 'assessment', name))
+for name in ('make_scripts.py', 'make_scripts2.py', 'prep_copy.py', 'run_r512.py', 'run_ro.py', 'snapshot_ro.py',
+             'memo97_vs_committed.py', 'memo98_vs_committed.py', 'memo99_vs_committed.py', 'memo100_vs_committed.py',
+             'memo101_vs_committed.py', 'memo102_vs_committed.py', 'memo103_vs_committed.py', 'bump_sequences.py',
+             'setup_fixtures.py', 'upload.py', 'dump_r512.py', 'analyze_r512.py', 'probe.py', 'probe_cfg.json', 'md_check.py',
+             'scan_r512.py', 'assemble_r512.py', 'find_cmds.py', 'cmp_input.py', 'cmp_matrix.py', 'show_memo.py',
+             'show_refs.py', 'scan_unique.py', 'extract_excerpts.py', 'facts.py', 'note_vis.py', 'show_hashes.py',
+             'cmp_hashes.py', 'assess_replay.py', 'assess_brackets.py', 'repro_reportedly.py', 'heading_concern.py',
+             'intact_check.py', 'diag_lite.py', 'make_walks.py', 'staff_mfa_state.py', 'reset_staff_mfa_copy.py'):
+    shutil.copy(os.path.join(HERE, name), os.path.join(OUT, 'scripts', name + '.txt'))
+print('assembled', len(calls), kinds, 'ask lines', len(ask_lines), 'walk lines', len(walk_lines))
+print(json.dumps({k: v.get('identical', v.get('blob_at_c6c3d1b') == v.get('blob_at_5120190') == v.get('blob_in_worktree')) for k, v in frozen.items()}, indent=1))
+print('vs committed', vs_committed)

@@ -1,0 +1,6 @@
+READ-ONLY (1,)
+MEMO104 exists document_id=3146 fields_differing_from_09_memo=[]
+MEMO104 updated_at 2026-10-24T23:16:47.939414+00:00 evidence 2026-10-24T23:16:47.939414+00:00
+DOC3146 manychat_series_a_audit_deck.pptx status=analyzed
+MAX memo id 104 MAX doc id 3146
+REDIS8 keys ['_kombu.binding.celery', '_kombu.binding.celery.pidbox', '_kombu.binding.celeryev']

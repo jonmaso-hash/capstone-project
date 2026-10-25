@@ -1,0 +1,8 @@
+browser gate attempt 2 2026-10-24T16:12:04-07:00
+nonce=70f2857f568302f3 page=http://127.0.0.1:8765/index.html
+connected: b60b1997-c8fe-4250-82c0-9bd77a0e5dae (listed 'Browser 1'), 203c1a8f-f7f4-42f3-ae45-909ada617a59 (listed 'Browser 2', in use, chosen by the owner)
+chrome.exe processes on this computer: 13
+browser result on 203c1a8f: Chrome error page ('Frame with ID 0 is showing error page')
+probe server log (no browser request):
+Serving HTTP on 127.0.0.1 port 8765 (http://127.0.0.1:8765/) ...
+model calls so far: 0

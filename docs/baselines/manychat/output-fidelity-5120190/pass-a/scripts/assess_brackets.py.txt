@@ -1,0 +1,34 @@
+"""ASSESSMENT ONLY (no DB access): every bracket in the stored memo-104 sections that holds a ref token, in any form
+("[C3, S2]", "[C3/S2]", "[C3 vs. C2, consistency note]"), with each ref resolved to its page and statement from the
+sent payload, and the figure text written immediately before it. Usage: assess_brackets.py <evidence dir> <out json>"""
+import json, os, re, sys
+EV, OUT = sys.argv[1], sys.argv[2]
+payload = json.load(open(os.path.join(EV, '09a_grounded_context_rebuilt.json'), encoding='utf-8'))['payload']
+claims = {c['id']: c for c in json.load(open(os.path.join(EV, '04_claims.json'), encoding='utf-8'))}
+memo = json.load(open(os.path.join(EV, '09_memo.json'), encoding='utf-8'))['memo']
+items = payload.get('items') or payload.get('evidence') or []
+refmap = {}
+for it in items:
+    pages = [s.get('page') for s in it.get('sources', []) if s.get('page') is not None]
+    refmap[it['ref']] = {'statement': it.get('statement'), 'page': pages[0] if pages else None,
+                         'context': (it.get('as_of') or {}).get('context') if isinstance(it.get('as_of'), dict) else None}
+TOKEN = re.compile(r'\b([CSP]\d+)\b')
+rows = []
+for section, text in memo.items():
+    if not isinstance(text, str):
+        continue
+    for m in re.finditer(r'\[([^\[\]]*)\]', text):
+        refs = TOKEN.findall(m.group(1))
+        if not refs:
+            continue
+        before = text[max(0, m.start() - 90):m.start()]
+        rows.append({'section': section, 'bracket': m.group(0), 'standard_form': bool(re.fullmatch(r'[A-Z]\d+(?:\s*,\s*[A-Z]\d+)*', m.group(1))),
+                     'refs': {r: {'page': refmap.get(r, {}).get('page'), 'statement': refmap.get(r, {}).get('statement')} for r in refs},
+                     'text_before': before})
+json.dump({'payload_refs': refmap, 'brackets': rows}, open(OUT, 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)
+print('payload refs', {k: (v['page'], v['statement']) for k, v in refmap.items()})
+print('brackets with refs', len(rows), 'non-standard', sum(not r['standard_form'] for r in rows))
+for r in rows:
+    if not r['standard_form'] or any(k in r['refs'] for k in ('C2', 'C3', 'S2', 'S3')):
+        print('%-26s %-34s %s | ...%s' % (r['section'], r['bracket'], {k: v['page'] for k, v in r['refs'].items()},
+                                          r['text_before'][-80:].replace('\n', ' ')))

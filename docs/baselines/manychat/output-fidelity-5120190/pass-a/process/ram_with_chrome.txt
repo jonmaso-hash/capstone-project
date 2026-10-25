@@ -1,0 +1,5 @@
+Free RAM with Chrome (b60b1997, 11 chrome.exe) and the run server (pid 21608) running, worker stopped:
+2026-10-24T19:14:34 free_GB=0.99 chrome_procs=11 chrome_MB=1,238 server_MB=27
+2026-10-24T19:14:44 free_GB=1.02 chrome_procs=11 chrome_MB=1,155 server_MB=27
+2026-10-24T19:14:54 free_GB=1.07 chrome_procs=11 chrome_MB=1,108 server_MB=27
+Limits unchanged: work floor 0.9 GB free (checked before each step), watchdog 1500 MB per process.

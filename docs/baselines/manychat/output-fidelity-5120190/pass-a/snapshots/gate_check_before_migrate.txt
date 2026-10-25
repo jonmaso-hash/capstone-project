@@ -1,0 +1,12 @@
+Invalid line: Truth_Delta_3-Report_Credit_Pack =price_1UNjeJDsh22gDRCcr3XE4qHO
+CODE-CHECK [check pid=3980] head=5120190ce47708e99cff5b417baf2c565059cf7f tracked_changes=70 [' M accounts/__pycache__/__init__.cpython-314.pyc', ' M accounts/__pycache__/admin.cpython-314.pyc', ' M accounts/__pycache__/apps.cpython-314.pyc', ' M accounts/__pycache__/models.cpython-314.pyc', ' M billing/__pycache__/__init__.cpython-314.pyc']
+CODE-DIFF [check pid=3980] non_pyc_files_differing_from_5120190=0
+BASELINE-ENV-CHECK [check pid=3980] {'FILED_API_KEY': False, 'COMPANYENRICH_API_KEY': False, 'NEWS_API_KEY': False, 'DATA4B2B_API_KEY': False, 'USPTO_ODP_API_KEY': False, 'CRUNCHBASE_API_KEY': False, 'ANTHROPIC_API_KEY': True} USPTO_ODP_API_KEY_read_by_code=False (no reference in this commit; blanked in env)
+BROKER-CHECK [check pid=3980] broker (write) redis://localhost local=True redis_db=8
+BROKER-CHECK [check pid=3980] broker (read) redis://localhost local=True redis_db=8
+BROKER-CHECK [check pid=3980] result backend redis://localhost local=True redis_db=9
+BROKER-CHECK [check pid=3980] cache redis://localhost local=True redis_db=9
+DB-CHECK [check pid=3980] name=C:/Users/jonathan/AppData/Local/Temp/claude/C--Users-jonathan-Desktop-KCV-of903/76db1fe6-5688-4619-abfd-5bc2b6bec113/scratchpad/r512/db_r512_copy.sqlite3 is_copy=True is_original=False is_historical_copy=False
+SCHEMA-CHECK [check pid=3980] pending=1 ['zelda_api.0044_claim_source_context'] zelda_api.0035=True zelda_api.0044=False matchmaking.0083=True matchmaking.0095=True applied_heads={"accounts": "0017_personprofile_is_public", "billing": "0007_truth_delta_credit_wallet", "matchmaking": "0095_profile_reporting_currency", "zelda_api": "0043_structured_periods"}
+EAGER-CHECK [check pid=3980] CELERY_TASK_ALWAYS_EAGER=False
+REFUSING TO START [check pid=3980] ['1 pending migrations']

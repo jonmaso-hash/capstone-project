@@ -1,0 +1,8 @@
+"""Print the sent payload's items (ref, kind, page, statement, context) and consistency notes. Usage: show_refs.py <evidence dir>"""
+import json, sys
+p = json.load(open(sys.argv[1] + r'\09a_grounded_context_rebuilt.json', encoding='utf-8'))['payload']
+for i in p['items']:
+    print(i['ref'], i.get('kind'), i.get('category'), 'p%s' % (i.get('page') or i.get('page_number')), '|', (i.get('statement') or '')[:90],
+          '| ctx', repr(i.get('source_context')), '| status', i.get('status'), '| narr', i.get('narrator'))
+print('NOTES', json.dumps(p.get('consistency_notes'), ensure_ascii=False, indent=1))
+print('KEYS', sorted(p['items'][0].keys()))

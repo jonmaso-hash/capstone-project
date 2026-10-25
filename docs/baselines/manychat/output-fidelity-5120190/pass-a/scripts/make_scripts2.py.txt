@@ -1,0 +1,52 @@
+"""Stage 2 (after the memo): derive this run's HTTP probe, its config, the Markdown check, the replay analysis, the
+sentence scan and the comparison helpers from the memo-103 run's (rc6c/). probe.py and scan's checks are copied
+unchanged. probe_cfg.json: this run's outdir, document 3146, Entity Integrity report 45, principals m512mc_*; markers
+and the seven questions unchanged. md_check.py: principal and document id only. analyze: paths, label, fixture prefix;
+this round's review IDs added to the absent-from-input list. scan: header relabelled to memo 104. cmp_matrix: labels
+and the previous run's names/ids (memo 103). Each replacement must match. Usage: python make_scripts2.py"""
+import json, os, shutil
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+BS = chr(92)
+PREV = os.path.join(os.path.dirname(HERE), 'rc6c')
+
+
+def derive(name, reps, target=None):
+    s = open(os.path.join(PREV, name), encoding='utf-8').read()
+    for a, b in reps:
+        assert s.count(a) >= 1, (name, a)
+        s = s.replace(a, b)
+    open(os.path.join(HERE, target or name), 'w', encoding='utf-8', newline='\n').write(s)
+    print('derived', target or name)
+
+
+shutil.copy(os.path.join(PREV, 'probe.py'), os.path.join(HERE, 'probe.py'))
+cfg = json.load(open(os.path.join(PREV, 'probe_cfg.json'), encoding='utf-8-sig'))
+assert cfg['doc'] == 3145 and cfg['report'] == 44 and cfg['application_id'] == 50
+cfg['outdir'] = BS.join(['C:', 'Users', 'jonathan', 'Desktop', 'KCV-mc-512', 'docs', 'baselines', 'manychat',
+                         'output-fidelity-5120190', 'pass-a'])
+cfg['doc'], cfg['report'] = 3146, 45
+cfg['owner'] = 'm512mc_owner'
+cfg['principals'] = {'OWNER': 'm512mc_owner', 'LITE': 'm512mc_lite', 'PAID': 'm512mc_paid', 'STAFF': 'm512mc_staff', 'ANON': None}
+json.dump(cfg, open(os.path.join(HERE, 'probe_cfg.json'), 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)
+print('derived probe.py (copy), probe_cfg.json')
+derive('md_check.py', [("ns['login']('c6cmc_staff')", "ns['login']('m512mc_staff')"),
+                       ("'/api/v1/zelda/documents/3145/ic-memo/download/'", "'/api/v1/zelda/documents/3146/ic-memo/download/'")])
+derive('analyze_rc6c.py', [
+    ("HERE = r'" + PREV + "'", "HERE = r'" + HERE + "'"),
+    ("label='mcc6c.analyze (read-only rebuild)'", "label='mc512.analyze (read-only rebuild)'"),
+    ("'c6cmc', 'Rerun Owner'", "'m512mc', 'Rerun Owner'"),
+    ("'OF-1005', 'memo 102', 'unspecified-interval', ",
+     "'OF-1005', 'memo 102', 'OF-1102', 'OF-1103', 'memo 103', 'footing', 'harmless continuation', 'unspecified-interval', "),
+], 'analyze_r512.py')
+derive('scan_rc6c.py', [
+    ('Sentence-level scan of memo 103 on every captured surface', 'Sentence-level scan of memo 104 on every captured surface'),
+    ("f.write('Sentence-level scan of memo 103:", "f.write('Sentence-level scan of memo 104:"),
+], 'scan_r512.py')
+derive('cmp_matrix.py', [
+    ("vs memo 102's committed matrix (6d131f5)", "vs memo 103's committed matrix (4ee3639)"),
+    ('<memo-102 11_authorization_matrix.json>', '<memo-103 11_authorization_matrix.json>'),
+    (".replace('d0bmc', 'c6cmc').replace('3144', '3145').replace('/43/', '/44/')",
+     ".replace('c6cmc', 'm512mc').replace('3145', '3146').replace('/44/', '/45/')"),
+])
+print('stage 2 derived')

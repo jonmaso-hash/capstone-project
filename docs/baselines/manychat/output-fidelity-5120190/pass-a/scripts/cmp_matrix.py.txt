@@ -1,0 +1,22 @@
+"""Read-only: this run's authorization matrix vs memo 103's committed matrix (4ee3639), names/ids normalised; Q1-Q7 summary.
+Usage: python cmp_matrix.py <evidence dir> <memo-103 11_authorization_matrix.json>"""
+import json, sys
+E, prev = sys.argv[1], sys.argv[2]
+a = json.load(open(E + r'\11_authorization_matrix.json', encoding='utf-8'))
+b = json.load(open(prev, encoding='utf-8'))
+key = lambda r: (r['principal'], r['surface'])
+na = lambda r: (r['status'], r.get('location', ''), r.get('b2_panel'), r.get('canary_in_readable'), r.get('canary_in_raw_body'))
+nb = lambda r: (r['status'], r.get('location', '').replace('c6cmc', 'm512mc').replace('3145', '3146').replace('/44/', '/45/'),
+                r.get('b2_panel'), r.get('canary_in_readable'), r.get('canary_in_raw_body'))
+A = {key(r): na(r) for r in a['matrix']}
+B = {key(r): nb(r) for r in b['matrix']}
+print('rows', len(A), len(B), 'same keys', set(A) == set(B), 'differing', [(k, A[k], B.get(k)) for k in A if A[k] != B.get(k)])
+print('canary rows', sorted(k for k in A if A[k][3] or A[k][4]))
+print('b2 rows', sorted(k for k in A if A[k][2]))
+print('walks', all(v['logout_status'] == 302 and v['after_logout_profile_status'] == 302 for v in a['session_walks_logout'].values()))
+q = json.load(open(E + r'\10_retrieval_ask_q1_q7.json', encoding='utf-8'))
+for k, e in q.items():
+    sb = e['search']['body'] if isinstance(e['search']['body'], dict) else {}
+    ab = e['ask']['body']
+    ab = ab.get('response', '')[:70] if isinstance(ab, dict) else str(ab)[:70]
+    print(k, e['search']['status'], e['rag']['status'], [x.get('page') for x in sb.get('results', [])][:3], '| ask', e['ask']['status'], ab)

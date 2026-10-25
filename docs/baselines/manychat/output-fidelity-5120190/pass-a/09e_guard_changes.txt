@@ -1,0 +1,9 @@
+Model reply (after list-to-text) vs stored memo 104, per section, replayed through the pipeline order
+(time guard, then funding guard, then measurement-basis guard). Only changed sections are listed. Changes
+prefixed "basis:" are the measurement-basis guard (#284, revised in #285); the others are the funding guard
+("attribution" adds a narrator; "funding_not_runway" and "cash_premise" separate funding from cash).
+
+== questions_for_management  ['attribution:Pitch Deck Hunt'] 
+-- What is the composition of the $23.1M reportedly raised [S4] — how many rounds, at what valuations, and from which investors?
++- What is the composition of the $23.1M reported (per Pitch Deck Hunt)ly raised [S4] — how many rounds, at what valuations, and from which investors?
+
