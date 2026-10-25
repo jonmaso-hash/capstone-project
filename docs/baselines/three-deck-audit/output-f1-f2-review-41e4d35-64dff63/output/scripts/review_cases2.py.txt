@@ -1,0 +1,61 @@
+"""Review of 41e4d35 (F-2): the reviewer's two reproductions and variants through the full guard order with memo 104's
+payload, at 5120190, at 41e4d35 (both loaded from git) and at the working tree. No DB, no model call.
+Usage: review_cases2.py <out json>"""
+import importlib.util, json, subprocess, sys
+from zelda_api.claim_context import guard_time_wording
+from zelda_api import basis_fidelity as new_basis, funding_fidelity as new_funding
+from zelda_api import tests_output_fidelity as t
+
+
+def load(sha, name):
+    src = subprocess.run(['git', 'show', f'{sha}:zelda_api/{name}.py'], capture_output=True, text=True, encoding='utf-8',
+                         check=True).stdout
+    module = importlib.util.module_from_spec(importlib.util.spec_from_loader(f'zelda_api.{name}_{sha}', loader=None))
+    module.__package__ = 'zelda_api'
+    exec(compile(src, f'{sha}:zelda_api/{name}.py', 'exec'), module.__dict__)
+    return module
+
+
+GUARDS = {'5120190': (load('5120190', 'basis_fidelity'), load('5120190', 'funding_fidelity')),
+          '41e4d35': (load('41e4d35', 'basis_fidelity'), load('41e4d35', 'funding_fidelity')),
+          'fix': (new_basis, new_funding)}
+payload = t.memo104_payload()
+items, notes = t.items_from(payload), t.notes_from(payload)
+allowed = {i.ref: i.time_wording_allowed for i in items if i.dated}
+
+
+def run(text, basis, funding):
+    out, removed = guard_time_wording(text, allowed)
+    out, fid = funding.guard_funding_fidelity(out, funding.funding_facts(items, 'ManyChat'))
+    out, bas = basis.guard_basis_wording(out, basis.basis_facts(items, notes))
+    return out, list(removed or []) + list(fid) + list(bas)
+
+
+L23 = "500M messages or 500M messages/month [S2, S3]"
+H = t._HEAD104
+O = t._LEAD104
+CASES = {
+    'R1 140,000+ messages [S1] (metric)': f"{O}140,000+ messages [S1] and {L23}{H}.",
+    'R2 bots with no messages [S1] (qualification)': f"{O}140,000+ bots with no messages [S1] and {L23}{H}.",
+    'W1 R1, comma form': f"The company states 140,000+ messages [S1] and {L23}, contextualised under a slide heading 'Traction by Apr-16'.",
+    'W2 R2, comma form': f"The company states 140,000+ bots with no messages [S1] and {L23}, contextualised under a slide heading 'Traction by Apr-16'.",
+    'W3 500M bots [S2]': f"{O}140,000+ bots [S1] and 500M bots or 500M messages/month [S2, S3]{H}.",
+    'W4 bots with no explicit interval [S1]': f"{O}140,000+ bots with no explicit interval [S1] and {L23}{H}.",
+    'W5 two figures under [S1]': f"{O}140,000+ bots and 500M messages [S1] and 500M messages/month [S3]{H}.",
+    'W6 [S1, S2] with S2 unwritten': f"{O}140,000+ bots [S1, S2] and 500M messages/month [S3]{H}.",
+    'W7 words after the last group': f"{O}140,000+ bots [S1] and {L23} with no audit{H}.",
+}
+for i, (before, after) in enumerate(t.HEADING_FIXED, 1):
+    CASES[f'K{i} HEADING_FIXED'] = before
+CASES['K0 memo 104 stored sentence'] = t.BM_104_BEFORE
+rows = {}
+for name, text in CASES.items():
+    row = {'input': text}
+    for label, (basis, funding) in GUARDS.items():
+        out, rules = run(text, basis, funding)
+        row[label], row['rules_' + label] = out, rules
+    rows[name] = row
+    print(f"{name:48s} " + ' '.join(f"{l}={'CHANGED' if row[l] != text else 'kept':7s}" for l in GUARDS)
+          + f" fix==41e4d35:{row['fix'] == row['41e4d35']}")
+head = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
+json.dump({'head': head, 'cases': rows}, open(sys.argv[1], 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)

@@ -1,0 +1,134 @@
+F1 CAUGHT Ran 350 tests in 13.300s FAILED (failures=16) restored=True | F-1 returns: the tail alternatives end anywhere (5120190 pattern)
+    assertion failures in: test_complete_word_tails_and_longer_words, test_every_tail_alternative_ends_at_a_word_boundary, test_f1_the_attribution_keeps_reportedly_whole, test_memo_104_s_question_reads_naturally, test_the_funding_guard_alone_and_a_second_pass, test_the_stored_memo_carries_the_repairs
+    errors in: -
+    failing sub-case: word='figure'
+    failing sub-case: word='funding'
+    failing sub-case: word='listed'
+    failing sub-case: word='raised'
+    failing sub-case: word='reported'
+    failing sub-case: word='total'
+F2 CAUGHT Ran 350 tests in 12.775s FAILED (failures=10) restored=True | partial fix: only "reported" is bounded; the other five alternatives still end inside a word
+    assertion failures in: test_complete_word_tails_and_longer_words, test_every_tail_alternative_ends_at_a_word_boundary
+    errors in: -
+    failing sub-case: word='figure'
+    failing sub-case: word='funding'
+    failing sub-case: word='listed'
+    failing sub-case: word='raised'
+    failing sub-case: word='total'
+    failing sub-case: words='figures'
+H1 CAUGHT Ran 350 tests in 12.579s FAILED (failures=15) restored=True | F-2 returns: the heading rule is not applied
+    assertion failures in: test_another_pair_alike, test_f2_keeps_the_qualifier_the_intervals_and_no_date, test_f2_page_10_s_heading_covers_only_page_10_s_figures, test_only_the_expected_rules_fired, test_the_heading_is_scoped_to_the_evidence_that_carries_it, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_heading_repair
+    errors in: -
+    failing sub-case: text="The company states 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16', but neither is verified."
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [C4] and 500M messages or 500M messages/month [C3, C2] — contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction 
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', while Pitch Deck 
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — presented under the 'Traction by Apr-16' slide heading."
+H2 SURVIVED Ran 350 tests in 13.095s OK restored=True | overcorrection: any subject (no own source required; a narrator or analyst is restated as the deck's)
+    assertion failures in: -
+    errors in: -
+H3 SURVIVED Ran 350 tests in 13.051s OK restored=True | overcorrection: a hedged or denied subject is restated
+    assertion failures in: -
+    errors in: -
+H4 SURVIVED Ran 350 tests in 12.709s OK restored=True | overcorrection: a heading phrase inside a condition is acted on
+    assertion failures in: -
+    errors in: -
+H5 CAUGHT Ran 350 tests in 12.854s FAILED (failures=1) restored=True | overcorrection: a mid-clause heading phrase is acted on
+    assertion failures in: test_controls_are_kept
+    errors in: -
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16' that dates them."
+H6 SURVIVED Ran 350 tests in 13.445s OK restored=True | overcorrection: the list may hold other facts, figures, intervals or asides
+    assertion failures in: -
+    errors in: -
+H7 CAUGHT Ran 350 tests in 12.938s FAILED (failures=1) restored=True | overcorrection: a list none of whose refs carries the heading is restated
+    assertion failures in: test_another_pair_alike
+    errors in: -
+H8 CAUGHT Ran 350 tests in 12.764s FAILED (failures=1) restored=True | overcorrection: refs outside the pair (another fact) may move
+    assertion failures in: test_another_pair_alike
+    errors in: -
+H9 CAUGHT Ran 350 tests in 12.936s FAILED (failures=4) restored=True | wrong output: the memo's pointer to the note is dropped for the clarification
+    assertion failures in: test_f2_page_10_s_heading_covers_only_page_10_s_figures, test_the_heading_is_scoped_to_the_evidence_that_carries_it, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_heading_repair
+    errors in: -
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction 
+H10 CAUGHT Ran 350 tests in 12.791s FAILED (failures=6) restored=True | wrong output: the list's closing dash is not restored before the next clause
+    assertion failures in: test_another_pair_alike, test_f2_page_10_s_heading_covers_only_page_10_s_figures, test_the_heading_is_scoped_to_the_evidence_that_carries_it, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_heading_repair
+    errors in: -
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction 
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', while Pitch Deck 
+H11 CAUGHT Ran 350 tests in 12.881s FAILED (failures=14) restored=True | wrong scope: every cited ref is placed under the heading (page 12 included)
+    assertion failures in: test_another_pair_alike, test_f2_keeps_the_qualifier_the_intervals_and_no_date, test_f2_page_10_s_heading_covers_only_page_10_s_figures, test_the_heading_is_scoped_to_the_evidence_that_carries_it, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_heading_repair
+    errors in: -
+    failing sub-case: text="The company states 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16', but neither is verified."
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [C4] and 500M messages or 500M messages/month [C3, C2] — contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction 
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', while Pitch Deck 
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — presented under the 'Traction by Apr-16' slide heading."
+S1 SURVIVED Ran 350 tests in 12.783s OK restored=True | review regression returns: the slash-form check is not applied ("bots/month" is erased)
+    assertion failures in: -
+    errors in: -
+S2 CAUGHT Ran 350 tests in 12.839s FAILED (failures=2) restored=True | interval checked without its figure and noun: any stated interval licenses "bots/month"
+    assertion failures in: test_an_interval_counts_only_on_the_figure_a_statement_gives_it
+    errors in: -
+    failing sub-case: text='140,000+ bots/month [S1] and 500M messages/month [S3]'
+    failing sub-case: text='250M messages/month [S3]'
+S3 CAUGHT Ran 350 tests in 13.656s FAILED (failures=1) restored=True | a slash pair with no figure ("messages/bots" alone) passes
+    assertion failures in: test_an_interval_counts_only_on_the_figure_a_statement_gives_it
+    errors in: -
+    failing sub-case: text='messages/month [S3]'
+O1 CAUGHT Ran 350 tests in 12.854s FAILED (failures=7) restored=True | review regression returns: the own-figures subject check is not applied (analysts rewritten)
+    assertion failures in: test_controls_are_kept
+    errors in: -
+    failing sub-case: text="An analyst describes the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="An analyst reads the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="An analyst's interpretation of the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="Rival Corp's comparison with the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="Some investors think the indicators are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading
+    failing sub-case: text="The analyst's view of the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-
+O2 CAUGHT Ran 350 tests in 13.004s FAILED (failures=1) restored=True | any lead-in before the linking verb ("Some investors think the indicators are ...")
+    assertion failures in: test_controls_are_kept
+    errors in: -
+    failing sub-case: text="Some investors think the indicators are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading
+O3 SURVIVED Ran 350 tests in 12.920s OK restored=True | own source not required in the subject noun phrase ("The figures — ...")
+    assertion failures in: -
+    errors in: -
+P1 CAUGHT Ran 350 tests in 12.791s FAILED (failures=7) restored=True | review regressions return: the per-figure check is not applied (messages -> bots, "with no messages" dropped)
+    assertion failures in: test_controls_are_kept
+    errors in: -
+    failing sub-case: text="The company states 140,000+ bots with no messages [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="The company states 140,000+ messages [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1, S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M bots or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots with no explicit interval [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by 
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots with no messages [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'."
+P2 CAUGHT Ran 350 tests in 12.985s FAILED (failures=5) restored=True | only the figure compared: any noun or qualification after it passes
+    assertion failures in: test_controls_are_kept, test_each_figure_is_its_own_statement
+    errors in: -
+    failing sub-case: text="The company states 140,000+ messages [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M bots or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ messages [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text='140,000+ messages [S1]'
+    failing sub-case: text='500M bots [S2]'
+P3 SURVIVED Ran 350 tests in 12.827s OK restored=True | pooled ownership: a figure may be any cited statement, not one of its own group
+    assertion failures in: -
+    errors in: -
+P4 CAUGHT Ran 350 tests in 12.914s FAILED (failures=2) restored=True | a cited ref need not be written ("140,000+ bots [S1, S2]")
+    assertion failures in: test_controls_are_kept, test_each_figure_is_its_own_statement
+    errors in: -
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1, S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text='140,000+ bots [S1, S2]'
+P5 CAUGHT Ran 350 tests in 12.883s FAILED (failures=1) restored=True | words may follow the last citation group
+    assertion failures in: test_each_figure_is_its_own_statement
+    errors in: -
+    failing sub-case: text='140,000+ bots [S1] daily'
+P6 CAUGHT Ran 350 tests in 12.819s FAILED (failures=15) restored=True | the join splits a figure's digit-grouping comma ("140,000+" -> "140", "000+")
+    assertion failures in: test_each_figure_is_its_own_statement, test_f2_keeps_the_qualifier_the_intervals_and_no_date, test_f2_page_10_s_heading_covers_only_page_10_s_figures, test_only_the_expected_rules_fired, test_the_heading_is_scoped_to_the_evidence_that_carries_it, test_the_stored_memo_carries_the_repairs, test_the_stored_sections_get_the_heading_repair
+    errors in: -
+    failing sub-case: text="The company states 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16', but neither is verified."
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [C4] and 500M messages or 500M messages/month [C3, C2] — contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction 
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', while Pitch Deck 
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — presented under the 'Traction by Apr-16' slide heading."
+final sha matches pre-run: True {'basis': 'faa2adeabb4b842aa5ef6d097dd73293ced39db1bfe1ad6b464771c756363afc', 'funding': 'e471c4152bc052584cf490aa8359efe2a9281cb32f8c3005c8fb3dfd9562fca8'}

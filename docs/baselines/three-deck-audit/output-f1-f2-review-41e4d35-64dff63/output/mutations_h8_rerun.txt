@@ -1,0 +1,4 @@
+H8 CAUGHT Ran 350 tests in 14.311s FAILED (failures=1) restored=True | overcorrection: refs outside the pair (another fact) may move
+    assertion failures in: test_another_pair_alike
+    errors in: -
+final sha matches pre-run: True {'basis': 'faa2adeabb4b842aa5ef6d097dd73293ced39db1bfe1ad6b464771c756363afc', 'funding': 'e471c4152bc052584cf490aa8359efe2a9281cb32f8c3005c8fb3dfd9562fca8'}
