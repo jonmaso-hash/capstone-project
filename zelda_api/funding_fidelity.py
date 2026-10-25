@@ -96,8 +96,9 @@ _YEAR = re.compile(r'\b(?:19|20)\d{2}\b|\b[A-Z][a-z]{2}-\d{2}\b')
 _MONEY = re.compile(r'\$\s?(\d[\d,]*(?:\.\d+)?)\s?(thousand|million|billion|mn|bn|k|m|b)?\b', re.I)
 _UNITS = {'k': r'(?:k|thousand)', 'thousand': r'(?:k|thousand)', 'm': r'(?:m|mn|million)', 'mn': r'(?:m|mn|million)',
           'million': r'(?:m|mn|million)', 'b': r'(?:b|bn|billion)', 'bn': r'(?:b|bn|billion)', 'billion': r'(?:b|bn|billion)'}
-# Words that belong to the figure's phrase: "$23.1M raised", "$23.1M funding figure".
-_FIGURE_TAIL = re.compile(r'(?:\s+(?:in\s+)?(?:funding|raised|figure|total|listed|reported))*')
+# Words that belong to the figure's phrase: "$23.1M raised", "$23.1M funding figure". Whole words only (memo 104,
+# F-1): "$23.1M reportedly raised" ends at the figure, never inside "reportedly" ("reported (per ...)ly raised").
+_FIGURE_TAIL = re.compile(r'(?:\s+(?:in\s+)?(?:funding|raised|figure|total|listed|reported)\b)*')
 # What makes an uncited figure read as funding, near it in the same clause.
 _FUNDING_WORDS = re.compile(r'\b(?:rais\w*|fund\w*|investors?|invest\w*|capital|financ\w*|rounds?)\b', re.I)
 _METRICS = r'(?:revenue|revenues|arr|mrr|sales|valuation|market|tam|sam|gmv|profit|ebitda|income|loss|burn|bookings)'

@@ -1,0 +1,162 @@
+{
+ "head": "2d0b0e923bb63f24d1bb8f40bdf609a52e572eae",
+ "base": "5120190ce47708e99cff5b417baf2c565059cf7f",
+ "cases": {
+  "R1 unsupported interval on bots": {
+   "input": "The company's self-reported traction figures — 140,000+ bots/month [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots/month [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "changed_by_fix": true
+  },
+  "R2 analyst interpretation": {
+   "input": "An analyst's interpretation of the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "An analyst's interpretation of the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "An analyst's interpretation of the company's traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "changed_by_fix": true
+  },
+  "R3 analyst describes": {
+   "input": "An analyst describes the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "An analyst describes the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "An analyst describes the company's traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "changed_by_fix": true
+  },
+  "V1 unsupported interval on page-10 messages": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages/week or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages/week or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages/week or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "changed_by_fix": false
+  },
+  "V2 bots/month alone, comma form": {
+   "input": "The company states 140,000+ bots/month [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company states 140,000+ bots/month [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "changed_by_fix": true
+  },
+  "V3 figure/interval on bots": {
+   "input": "The company's self-reported traction figures — 140,000+/month bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+/month bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+/month bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "changed_by_fix": false
+  },
+  "V4 messages/bots word pair": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/bots [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/bots [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "changed_by_fix": true
+  },
+  "V5 an analyst reads": {
+   "input": "An analyst reads the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "An analyst reads the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "An analyst reads the company's traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "changed_by_fix": true
+  },
+  "V6 analyst possessive view": {
+   "input": "The analyst's view of the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The analyst's view of the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The analyst's view of the company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "changed_by_fix": true
+  },
+  "V7 someone thinks": {
+   "input": "Some investors think the indicators are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "Some investors think the indicators are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "Some investors think the indicators are the company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "changed_by_fix": true
+  },
+  "V8 the company per an analyst": {
+   "input": "The company's traction figures as an analyst summarises them — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's traction figures as an analyst summarises them — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's traction figures as an analyst summarises them — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "changed_by_fix": true
+  },
+  "V9 another firm": {
+   "input": "Rival Corp's comparison with the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "Rival Corp's comparison with the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "Rival Corp's comparison with the company's traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "changed_by_fix": true
+  },
+  "K1 memo 104 sentence": {
+   "input": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+   "at_5120190": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+   "rules_5120190": [],
+   "fix": "The only indicators of commercial activity are the company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (see consistency note below) — but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "changed_by_fix": true
+  },
+  "K2 company self-reported": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "changed_by_fix": true
+  },
+  "K3 company unverified": {
+   "input": "The company's unverified traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's unverified traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's unverified traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "changed_by_fix": true
+  },
+  "K4 company states, comma": {
+   "input": "The company states 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company states 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "changed_by_fix": true
+  }
+ }
+}

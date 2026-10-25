@@ -1,0 +1,62 @@
+"""Exact before/after for review (correction evidence, not live acceptance): memo 104's two finding sentences, the ten
+replay cases recorded with the run (f73bef5 assessment/assess_replay.json: memo 103's graded sentences, memo 104's
+sentences and the five controls), and the F-1 tail and F-2 heading cases, each through the full guard order
+(time -> funding -> basis) with memo 104's payload, once with the guards at 5120190 (loaded from git) and once with
+the working tree's. Every output is also checked for a second pass and reversed item order. No DB, no model call.
+Usage: exact.py <out json>"""
+import importlib.util, json, subprocess, sys
+from zelda_api.claim_context import guard_time_wording
+from zelda_api import basis_fidelity as new_basis, funding_fidelity as new_funding
+from zelda_api import tests_output_fidelity as t
+
+BASE = '5120190ce47708e99cff5b417baf2c565059cf7f'
+
+
+def show(rev, path):
+    return subprocess.run(['git', 'show', f'{rev}:{path}'], capture_output=True, text=True, encoding='utf-8', check=True).stdout
+
+
+def load(name):
+    module = importlib.util.module_from_spec(importlib.util.spec_from_loader(f'zelda_api.{name}_base', loader=None))
+    module.__package__ = 'zelda_api'
+    exec(compile(show(BASE, f'zelda_api/{name}.py'), f'5120190:zelda_api/{name}.py', 'exec'), module.__dict__)
+    return module
+
+
+old_basis, old_funding = load('basis_fidelity'), load('funding_fidelity')
+payload = t.memo104_payload()
+items, notes = t.items_from(payload), t.notes_from(payload)
+
+
+def run(text, basis, funding, its=None):
+    its = its or items
+    allowed = {i.ref: i.time_wording_allowed for i in its if i.dated}
+    out, removed = guard_time_wording(text, allowed)
+    out, fid = funding.guard_funding_fidelity(out, funding.funding_facts(its, 'ManyChat'))
+    out, bas = basis.guard_basis_wording(out, basis.basis_facts(its, notes))
+    return out, list(removed or []) + list(fid) + list(bas)
+
+
+recorded = json.loads(show('f73bef5', 'docs/baselines/manychat/output-fidelity-5120190/pass-a/assessment/assess_replay.json'))
+cases = {'memo104 business_model_analysis (F-2)': t.BM_104_BEFORE, 'memo104 questions_for_management 5 raw (F-1)': t.Q5_104_RAW}
+cases.update({f'recorded replay: {name}': case['before'] for name, case in recorded.items()})
+cases.update({f'F-1 tail: {w}': t._Q.format(w) for w, _ in t.TAIL_WORDS_KEPT_WHOLE})
+cases.update({f'F-2 fixed {i + 1}': before for i, (before, _) in enumerate(t.HEADING_FIXED)})
+cases.update({f'F-2 kept {i + 1}': text for i, text in enumerate(t.HEADING_KEPT)})
+rows = {}
+for name, text in cases.items():
+    before, before_rules = run(text, old_basis, old_funding)
+    after, after_rules = run(text, new_basis, new_funding)
+    again = run(after, new_basis, new_funding)
+    rev = run(text, new_basis, new_funding, list(reversed(items)))
+    rows[name] = {'input': text, 'at_5120190': before, 'rules_5120190': before_rules, 'fix': after, 'rules_fix': after_rules,
+                  'fix_differs_from_5120190': after != before, 'second_pass_unchanged': again == (after, []),
+                  'reversed_items_same': rev == (after, after_rules)}
+head = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
+json.dump({'head': head, 'base': BASE, 'cases': rows}, open(sys.argv[1], 'w', encoding='utf-8', newline='\n'), indent=1,
+          ensure_ascii=False)
+print('cases', len(rows), 'differing', sorted(n for n, r in rows.items() if r['fix_differs_from_5120190']))
+print('all idempotent', all(r['second_pass_unchanged'] for r in rows.values()), 'all order-free',
+      all(r['reversed_items_same'] for r in rows.values()))
+for name in ('memo104 business_model_analysis (F-2)', 'memo104 questions_for_management 5 raw (F-1)'):
+    print('==', name); print(' 5120190:', rows[name]['at_5120190']); print(' fix    :', rows[name]['fix'])

@@ -1,0 +1,14 @@
+2026-10-24 21:41:30,161 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-24 21:42:23,340 INFO zelda_api.signals - DocumentSource created: mc.pptx
+2026-10-24 21:42:23,369 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-24 21:42:23,481 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_heading_scope'] for document 1
+2026-10-24 21:42:23,514 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+......................
+----------------------------------------------------------------------
+Ran 22 tests in 1.125s
+
+OK
+Destroying test database for alias 'default'...
+Found 22 test(s).
+System check identified no issues (0 silenced).

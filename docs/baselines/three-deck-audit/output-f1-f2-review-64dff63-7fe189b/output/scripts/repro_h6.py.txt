@@ -1,0 +1,67 @@
+"""Review of 64dff63: the reviewer's H6 counterexample (an added "+" on page 10's messages) through the full guard order
+with memo 104's payload, at the committed guards (HEAD, loaded from git), the working tree, and each surviving mutant
+applied in memory to the committed source (the guard file on disk is not touched). No DB, no model call.
+Usage: repro_h6.py <out json>"""
+import importlib.util, json, subprocess, sys
+from zelda_api.claim_context import guard_time_wording
+from zelda_api import basis_fidelity as wt_basis, funding_fidelity as wt_funding
+from zelda_api import tests_output_fidelity as t
+
+HEAD = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True, check=True).stdout.strip()
+
+
+def source(sha, name):
+    return subprocess.run(['git', 'show', f'{sha}:zelda_api/{name}.py'], capture_output=True, text=True, encoding='utf-8',
+                          check=True).stdout
+
+
+def module(src, label):
+    mod = importlib.util.module_from_spec(importlib.util.spec_from_loader(f'zelda_api.basis_{label}', loader=None))
+    mod.__package__ = 'zelda_api'
+    exec(compile(src, f'{label}:zelda_api/basis_fidelity.py', 'exec'), mod.__dict__)
+    return mod
+
+
+# The surviving mutants, with the same anchors as mutate_f12.py (read from it so they cannot drift).
+text = open(sys.argv[2], encoding='utf-8').read()
+defs = text[text.index('M = ['):text.index('\n]\n') + 3]
+scope = {}
+exec(defs, scope)
+SURVIVORS = ['H2', 'H3', 'H4', 'H6', 'O3', 'P3', 'S1']
+base_src = source(HEAD, 'basis_fidelity')
+GUARDS = {'committed': module(base_src, 'committed'), 'working_tree': wt_basis}
+for mid, which, desc, old, new in scope['M']:
+    if mid in SURVIVORS:
+        assert base_src.count(old) == 1, (mid, base_src.count(old))
+        GUARDS[mid] = module(base_src.replace(old, new), mid)
+
+payload = t.memo104_payload()
+items, notes = t.items_from(payload), t.notes_from(payload)
+allowed = {i.ref: i.time_wording_allowed for i in items if i.dated}
+
+
+def run(text, basis):
+    out, removed = guard_time_wording(text, allowed)
+    out, fid = wt_funding.guard_funding_fidelity(out, wt_funding.funding_facts(items, 'ManyChat'))
+    out, bas = basis.guard_basis_wording(out, basis.basis_facts(items, notes))
+    return out, list(removed or []) + list(fid) + list(bas)
+
+
+CASES = {
+    'X1 reviewer: added "+" on 500M messages (dash)': "The company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+    'X2 comma form': "The company states 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+    'X3 added "+" on page 12 500M messages/month (dash)': "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+    'X4 X3, comma form': "The company states 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+}
+rows = {}
+for name, text in CASES.items():
+    row = {'input': text}
+    for label, basis in GUARDS.items():
+        row[label], row['rules_' + label] = run(text, basis)
+    rows[name] = row
+    print(name)
+    for label in GUARDS:
+        print(f"   {label:13s} {'kept' if row[label] == text else 'CHANGED'} {row['rules_' + label]}")
+        if row[label] != text:
+            print('      ->', row[label])
+json.dump({'head': HEAD, 'cases': rows}, open(sys.argv[1], 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)

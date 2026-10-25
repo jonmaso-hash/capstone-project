@@ -1,0 +1,8 @@
+H4 CAUGHT Ran 348 tests in 13.696s FAILED (failures=1) restored=True | overcorrection: a heading phrase inside a condition is acted on
+    assertion failures in: test_controls_are_kept
+    errors in: -
+    failing sub-case: text="If the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', and the basis 
+H8 CAUGHT Ran 348 tests in 13.639s FAILED (failures=1) restored=True | overcorrection: refs outside the pair (another fact) may move
+    assertion failures in: test_another_pair_alike
+    errors in: -
+final sha matches pre-run: True {'basis': 'ac1502a9a7df2076a98c39937316a3878ef16a996283c1a8e8d6d4ecbe11c772', 'funding': 'e471c4152bc052584cf490aa8359efe2a9281cb32f8c3005c8fb3dfd9562fca8'}

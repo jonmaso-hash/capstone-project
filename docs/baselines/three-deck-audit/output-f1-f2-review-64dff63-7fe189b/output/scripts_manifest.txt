@@ -1,0 +1,28 @@
+# Reproduction scripts promised by each F-1/F-2 evidence README -> the path actually committed (all stored with a .txt suffix,
+# so the repo tests that walk .py source files do not scan them). Columns: README name | committed path | blob | folder commit
+t.sh | docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/t.sh.txt | 90633b765c927809c283edaa493b9bdd6c9e7269 | 2d0b0e9
+py.sh | docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/py.sh.txt | 013fc3f10ffb2d4a37917d2355b8fa06cce78793 | 2d0b0e9
+m104.py | docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/m104.py.txt | 38b8f8789185f1917a73409e1581308e6631c814 | 2d0b0e9
+replay.py | docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/replay.py.txt | c6e6955cdc1c3c8ec697f722a2857a123ae21e2f | 2d0b0e9
+carried_probe.py | docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/carried_probe.py.txt | da285bbed5d11e4992b48b39b5200906272a4b66 | 2d0b0e9
+cmp_probes.py | docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/cmp_probes.py.txt | 1abee529765aad08035163699f6a8c36fb78b7c2 | 2d0b0e9
+exact.py | docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/exact.py.txt | 9b29dd1da891d8d63923237d0d1a1ebb8c58984c | 2d0b0e9
+cases.py | docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/cases.py.txt | cfe79489b2671bd2a6a6a94f928a3311e90bb6b5 | 2d0b0e9
+mutate_f12.py | docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/mutate_f12.py.txt | d232b2aa1499d5e8aa12f7eeaef9936542dda04c | 2d0b0e9
+probe_words.py | docs/baselines/three-deck-audit/output-f1-f2-ff25de1/output/scripts/probe_words.py.txt | 7bdda9747969967e074653ba1bf7285061604cbf | 2d0b0e9
+review_cases.py | docs/baselines/three-deck-audit/output-f1-f2-review-ff25de1-41e4d35/output/scripts/review_cases.py.txt | 9153518516daaa304202bc27c6dc2858c67bc368 | 0a51dd9
+t.sh | docs/baselines/three-deck-audit/output-f1-f2-review-ff25de1-41e4d35/output/scripts/t.sh.txt | 90633b765c927809c283edaa493b9bdd6c9e7269 | 0a51dd9
+py.sh | docs/baselines/three-deck-audit/output-f1-f2-review-ff25de1-41e4d35/output/scripts/py.sh.txt | 013fc3f10ffb2d4a37917d2355b8fa06cce78793 | 0a51dd9
+mutate_f12.py | docs/baselines/three-deck-audit/output-f1-f2-review-ff25de1-41e4d35/output/scripts/mutate_f12.py.txt | 3227349d2570667b1bdff0ccb7ef80f55f3a0746 | 0a51dd9
+replay.py | docs/baselines/three-deck-audit/output-f1-f2-review-ff25de1-41e4d35/output/scripts/replay.py.txt | c6e6955cdc1c3c8ec697f722a2857a123ae21e2f | 0a51dd9
+carried_probe.py | docs/baselines/three-deck-audit/output-f1-f2-review-ff25de1-41e4d35/output/scripts/carried_probe.py.txt | da285bbed5d11e4992b48b39b5200906272a4b66 | 0a51dd9
+cmp_probes.py | docs/baselines/three-deck-audit/output-f1-f2-review-ff25de1-41e4d35/output/scripts/cmp_probes.py.txt | 1abee529765aad08035163699f6a8c36fb78b7c2 | 0a51dd9
+exact.py | docs/baselines/three-deck-audit/output-f1-f2-review-ff25de1-41e4d35/output/scripts/exact.py.txt | 9b29dd1da891d8d63923237d0d1a1ebb8c58984c | 0a51dd9
+review_cases2.py | docs/baselines/three-deck-audit/output-f1-f2-review-41e4d35-64dff63/output/scripts/review_cases2.py.txt | 47780915955749ad5f1d6ce92e18452f799ad943 | 94e6f59
+t.sh | docs/baselines/three-deck-audit/output-f1-f2-review-41e4d35-64dff63/output/scripts/t.sh.txt | 90633b765c927809c283edaa493b9bdd6c9e7269 | 94e6f59
+py.sh | docs/baselines/three-deck-audit/output-f1-f2-review-41e4d35-64dff63/output/scripts/py.sh.txt | 013fc3f10ffb2d4a37917d2355b8fa06cce78793 | 94e6f59
+mutate_f12.py | docs/baselines/three-deck-audit/output-f1-f2-review-41e4d35-64dff63/output/scripts/mutate_f12.py.txt | 6c66c474b28ea318e7fc986129e699e3b678b6dc | 94e6f59
+replay.py | docs/baselines/three-deck-audit/output-f1-f2-review-41e4d35-64dff63/output/scripts/replay.py.txt | c6e6955cdc1c3c8ec697f722a2857a123ae21e2f | 94e6f59
+carried_probe.py | docs/baselines/three-deck-audit/output-f1-f2-review-41e4d35-64dff63/output/scripts/carried_probe.py.txt | da285bbed5d11e4992b48b39b5200906272a4b66 | 94e6f59
+cmp_probes.py | docs/baselines/three-deck-audit/output-f1-f2-review-41e4d35-64dff63/output/scripts/cmp_probes.py.txt | 1abee529765aad08035163699f6a8c36fb78b7c2 | 94e6f59
+exact.py | docs/baselines/three-deck-audit/output-f1-f2-review-41e4d35-64dff63/output/scripts/exact.py.txt | 9b29dd1da891d8d63923237d0d1a1ebb8c58984c | 94e6f59

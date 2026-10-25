@@ -1,0 +1,11 @@
+# Validated working-copy bytes at 7fe189b (CRLF, core.autocrlf=true): sha256, checked before and after every run
+faa2adeabb4b842aa5ef6d097dd73293ced39db1bfe1ad6b464771c756363afc *zelda_api/basis_fidelity.py
+e471c4152bc052584cf490aa8359efe2a9281cb32f8c3005c8fb3dfd9562fca8 *zelda_api/funding_fidelity.py
+2779f9005a69d837c4edfc640aafc6c336fb5989cf4e2c8501a26e53aebbdb74 *zelda_api/tests_output_fidelity.py
+# git diff --quiet 7fe189b on these files: clean before and after the validation chain; blobs are LF
+blob 13bbce7d6a95b491c9736c3a3ead0e7f5706bbe0  working-copy hash-object 13bbce7d6a95b491c9736c3a3ead0e7f5706bbe0  zelda_api/basis_fidelity.py
+blob 12c53d2adb92fd47bb60ebabb3cae3ad7659eb95  working-copy hash-object 12c53d2adb92fd47bb60ebabb3cae3ad7659eb95  zelda_api/funding_fidelity.py
+blob 32d06db0c413347d24cd972666d25582ff157b4b  working-copy hash-object 32d06db0c413347d24cd972666d25582ff157b4b  zelda_api/tests_output_fidelity.py
+# basis_fidelity.py and funding_fidelity.py blobs are identical at 64dff63 and 7fe189b:
+zelda_api/basis_fidelity.py 64dff63=13bbce7d6a95b491c9736c3a3ead0e7f5706bbe0 7fe189b=13bbce7d6a95b491c9736c3a3ead0e7f5706bbe0
+zelda_api/funding_fidelity.py 64dff63=12c53d2adb92fd47bb60ebabb3cae3ad7659eb95 7fe189b=12c53d2adb92fd47bb60ebabb3cae3ad7659eb95

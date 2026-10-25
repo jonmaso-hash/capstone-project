@@ -1,0 +1,14 @@
+head 7fe189b7d1056529f1998d2c733f85d6c0d17347 | sentences 20000 | rewritten by committed 570
+H2: 0 differing sentences
+H3: 0 differing sentences
+H4: 0 differing sentences
+H6: 101 differing sentences
+   in : The company's self-reported, unverified traction figures — 140,000+ bots and 500M+ messages [S1, S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'.
+   cmt: kept
+   mut: ['basis_heading_scope'] The company's self-reported, unverified traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/mont
+   in : The company's own self-reported traction figures — 140 000+ bots [S1] and 500M messages and 500M messages/month [S2, S3] — presented under the 'Traction by Apr-16' slide heading.
+   cmt: kept
+   mut: ['basis_heading_scope'] The company's own self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] o
+S1: 0 differing sentences
+O3: 0 differing sentences
+P3: 0 differing sentences

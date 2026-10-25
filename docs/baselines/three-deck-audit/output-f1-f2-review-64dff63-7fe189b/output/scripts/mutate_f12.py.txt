@@ -1,0 +1,123 @@
+"""Targeted mutations for F-1 / F-2 (memo 104; extended for the review of ff25de1): each removes the repair (the memo-104 defect returns) or a protection of
+the new rule (harmful overcorrection). Same harness as the earlier rounds: one mutant at a time on the worktree's
+guard module, the affected test modules run against it, the original bytes restored and SHA-256 checked before the
+next. A mutant counts as CAUGHT only by assertion failures; errors alone are CRASH-ONLY; no test run is NO-RUN.
+Usage: python mutate_f12.py <worktree> [ID ...]"""
+import hashlib, os, re, subprocess, sys
+
+WT = sys.argv[1]
+ONLY = set(sys.argv[2:])
+FILES = {'basis': os.path.join(WT, 'zelda_api', 'basis_fidelity.py'),
+         'funding': os.path.join(WT, 'zelda_api', 'funding_fidelity.py')}
+T = os.path.join(os.path.dirname(os.path.abspath(__file__)), 't.sh')
+LABELS = ['zelda_api.tests_output_fidelity', 'zelda_api.tests_funding_fidelity']
+M = [
+    # --- F-1: whole-word figure tail
+    ('F1', 'funding', 'F-1 returns: the tail alternatives end anywhere (5120190 pattern)',
+     r"(?:funding|raised|figure|total|listed|reported)\b)*')", r"(?:funding|raised|figure|total|listed|reported))*')"),
+    ('F2', 'funding', 'partial fix: only "reported" is bounded; the other five alternatives still end inside a word',
+     r"(?:funding|raised|figure|total|listed|reported)\b)*')", r"(?:funding|raised|figure|total|listed|reported\b))*')"),
+    # --- F-2: heading scope
+    ('H1', 'basis', 'F-2 returns: the heading rule is not applied',
+     "        sentence = _heading_scope(sentence, facts, changes)\n", ""),
+    ('H2', 'basis', 'overcorrection: any subject (no own source required; a narrator or analyst is restated as the deck\'s)',
+     "        if (not _OWN_SOURCE.search(subject) or any(name.lower() in subject.lower() for name in facts.narrators)\n"
+     "                or _ATTRIBUTION.search(subject) or set(words) & _DENIAL or _UNCERTAIN.search(' '.join(words))):",
+     "        if (set(words) & _DENIAL or _UNCERTAIN.search(' '.join(words))):"),
+    ('H3', 'basis', 'overcorrection: a hedged or denied subject is restated',
+     " or set(words) & _DENIAL or _UNCERTAIN.search(' '.join(words))):\n            continue                           # only the company's",
+     "):\n            continue                           # only the company's"),
+    ('H4', 'basis', 'overcorrection: a heading phrase inside a condition is acted on',
+     "        if sentence[:at].count('(') != sentence[:at].count(')') or _conditional(sentence, at):",
+     "        if sentence[:at].count('(') != sentence[:at].count(')'):"),
+    ('H5', 'basis', 'overcorrection: a mid-clause heading phrase is acted on',
+     "        if not _CLAUSE_END.match(sentence, end):\n            continue                           # mid-clause",
+     "        if False:\n            continue                           # mid-clause"),
+    ('H6', 'basis', 'overcorrection: the list may hold other facts, figures, intervals or asides',
+     "        if not _placing_words(listed, vocabulary, False):", "        if False:"),
+    ('H7', 'basis', 'overcorrection: a list none of whose refs carries the heading is restated',
+     "        if not outside or len(outside) == len(cited):", "        if not outside:"),
+    ('H8', 'basis', 'overcorrection: refs outside the pair (another fact) may move',
+     "        both = next((pair for pair in facts.pairs if len(pair.sides) == 2 and set(outside) <= pair.members",
+     "        both = next((pair for pair in facts.pairs if len(pair.sides) == 2"),
+    ('H9', 'basis', 'wrong output: the memo\'s pointer to the note is dropped for the clarification',
+     "        body += ''.join(' ' + pointer for pointer in pointers) or f' ({both", "        body += '' or f' ({both"),
+    ('H10', 'basis', 'wrong output: the list\'s closing dash is not restored before the next clause',
+     "        if dash and re.match(r'\\s*,', rest):", "        if False:"),
+    ('H11', 'basis', 'wrong scope: every cited ref is placed under the heading (page 12 included)',
+     "        outside = [ref for ref in cited if places[ref][1] != claimed]\n        if not outside",
+     "        outside = [ref for ref in cited if places[ref][1] != claimed]\n        places = {r: (p, claimed, f) for r, (p, _c, f) in places.items()}\n        if not outside"),
+    # --- review of ff25de1: intervals owned by their figure; the list's subject is the company's own figures
+    ('S1', 'basis', 'review regression returns: the slash-form check is not applied ("bots/month" is erased)',
+     "        if not _slash_forms_stated(bare, statements):\n            continue", "        if False:\n            continue"),
+    ('S2', 'basis', 'interval checked without its figure and noun: any stated interval licenses "bots/month"',
+     "        if (key, match.group(2)) not in stated and (key.rstrip('+'), match.group(2)) not in stated:",
+     "        if match.group(2).split('/')[1] not in {pair.split('/')[1] for _, pair in stated}:"),
+    ('S3', 'basis', 'a slash pair with no figure ("messages/bots" alone) passes',
+     "    return all(any(a <= hit.start() and hit.end() <= b for a, b in covered) for hit in _SLASH_PAIR.finditer(text))",
+     "    return True"),
+    ('O1', 'basis', 'review regression returns: the own-figures subject check is not applied (analysts rewritten)',
+     "            if own is None or not (own.group('own') or re.search(r'self-reported', own.group('adjectives'), re.I)):",
+     "            if False:"),
+    ('O2', 'basis', 'any lead-in before the linking verb ("Some investors think the indicators are ...")',
+     'r"(?:(?P<lead>(?:(?:the|an?|only|', 'r"(?:(?P<lead>(?:(?:[\\w\']+|the|an?|only|'),
+    ('O3', 'basis', 'own source not required in the subject noun phrase ("The figures — ...")',
+     "            if own is None or not (own.group('own') or re.search(r'self-reported', own.group('adjectives'), re.I)):",
+     "            if own is None:"),
+    # --- review of 41e4d35: each figure is its own statement (metric and qualification kept)
+    ('P1', 'basis', 'review regressions return: the per-figure check is not applied (messages -> bots, "with no messages" dropped)',
+     "        if not _items_own_statements(written, {ref: _DIGIT_GROUP.sub('', places[ref][2].lower()) for ref in cited}):\n            continue",
+     "        if False:\n            continue"),
+    ('P2', 'basis', 'only the figure compared: any noun or qualification after it passes',
+     "                        and words[1:] == stated[1:len(words)]):", "                        ):"),
+    ('P3', 'basis', 'pooled ownership: a figure may be any cited statement, not one of its own group',
+     "            for ref in refs:\n                stated = statements[ref].split()",
+     "            for ref in statements:\n                stated = statements[ref].split()"),
+    ('P4', 'basis', 'a cited ref need not be written ("140,000+ bots [S1, S2]")',
+     "        if written != set(refs):\n            return False", "        if False:\n            return False"),
+    ('P5', 'basis', 'words may follow the last citation group',
+     "    if parts[-1].strip(' ,.'):\n        return False", "    if False:\n        return False"),
+    ('P6', 'basis', 'the join splits a figure\'s digit-grouping comma ("140,000+" -> "140", "000+")',
+     r"_ITEM_JOIN = re.compile(r'\s*,(?!\d)\s*", r"_ITEM_JOIN = re.compile(r'\s*,\s*"),
+]
+
+
+def sha(path):
+    return hashlib.sha256(open(path, 'rb').read()).hexdigest()
+
+
+originals = {k: open(p, 'rb').read() for k, p in FILES.items()}
+before = {k: sha(p) for k, p in FILES.items()}
+for mid, which, desc, old, new in M:
+    if ONLY and mid not in ONLY:
+        continue
+    path, original = FILES[which], originals[which]
+    text = original.decode('utf-8')
+    if '\r\n' in text:                         # the working copy's line endings (core.autocrlf)
+        old, new = old.replace('\n', '\r\n'), new.replace('\n', '\r\n')
+    count = text.count(old)
+    if count != 1:
+        print(f'{mid} NOT-APPLIED anchor count {count} | {desc}', flush=True)
+        continue
+    open(path, 'wb').write(text.replace(old, new).encode('utf-8'))
+    try:
+        run = subprocess.run(['sh', T, WT] + LABELS, capture_output=True, text=True, encoding='utf-8', errors='replace')
+        out = run.stdout + run.stderr
+    finally:
+        open(path, 'wb').write(original)
+    restored = all(sha(p) == before[k] for k, p in FILES.items())
+    summary = (re.findall(r'^(?:OK.*|FAILED \(.*\))$', out, re.M) or ['?'])[-1]
+    ran = (re.findall(r'^Ran \d+ tests.*$', out, re.M) or ['?'])[-1]
+    fails = sorted({m for m in re.findall(r'^FAIL: (\w+)', out, re.M)})
+    errors = sorted({m for m in re.findall(r'^ERROR: (\w+)', out, re.M)})
+    verdict = 'CAUGHT' if fails else ('CRASH-ONLY' if errors else 'SURVIVED')
+    if ran == '?':
+        verdict = 'NO-RUN'
+    print(f'{mid} {verdict} {ran} {summary} restored={restored} | {desc}', flush=True)
+    print(f'    assertion failures in: {", ".join(fails) or "-"}', flush=True)
+    print(f'    errors in: {", ".join(errors) or "-"}', flush=True)
+    for case in sorted(set(re.findall(r'^FAIL: \w+ \([^)]*\) \((.*)\)$', out, re.M)))[:6]:
+        print(f'    failing sub-case: {case[:200]}', flush=True)
+    if not restored:
+        sys.exit('STOP: restore hash mismatch after ' + mid)
+print('final sha matches pre-run:', all(sha(p) == before[k] for k, p in FILES.items()), {k: sha(p) for k, p in FILES.items()})

@@ -1,0 +1,870 @@
+{
+ "head": "0a51dd9ab67b781eb99724531b387ec325f4341f",
+ "base": "5120190ce47708e99cff5b417baf2c565059cf7f",
+ "cases": {
+  "memo104 business_model_analysis (F-2)": {
+   "input": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+   "at_5120190": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+   "rules_5120190": [],
+   "fix": "The only indicators of commercial activity are the company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (see consistency note below) — but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "memo104 questions_for_management 5 raw (F-1)": {
+   "input": "- What is the composition of the $23.1M reportedly raised [S4] — how many rounds, at what valuations, and from which investors?",
+   "at_5120190": "- What is the composition of the $23.1M reported (per Pitch Deck Hunt)ly raised [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_5120190": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix": "- What is the composition of the $23.1M (per Pitch Deck Hunt) reportedly raised [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_fix": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "recorded replay: memo103_base_scenario (OF-1102, stored at 4ee3639)": {
+   "input": "Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4].",
+   "at_5120190": "Taking the self-reported traction at face value without independent verification [S1, S2], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4]; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_5120190": [
+    "basis_source_context"
+   ],
+   "fix": "Taking the self-reported traction at face value without independent verification [S1, S2], the company had deployed a meaningful bot platform by the period referenced in the 'Traction by Apr-16' slide context, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4]; the deck separately states 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_source_context"
+   ],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "recorded replay: memo103_upside_scenario_sentence1 (OF-1103, stored at 4ee3639)": {
+   "input": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide — consistent with a network-effect-driven software business approaching scale.",
+   "at_5120190": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — consistent with a network-effect-driven software business approaching scale.",
+   "rules_5120190": [
+    "basis_consequence_context"
+   ],
+   "fix": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide ('Traction by Apr-16' heads page 10, which states 140 000+ bots [S1]; the deck states 500M messages/month [S3] on page 12, with no date context) — consistent with a network-effect-driven software business approaching scale.",
+   "rules_fix": [
+    "basis_consequence_context"
+   ],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "recorded replay: memo104_business_model_analysis_s2 (stored)": {
+   "input": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+   "at_5120190": "The only indicators of commercial activity are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+   "rules_5120190": [],
+   "fix": "The only indicators of commercial activity are the company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (see consistency note below) — but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "recorded replay: memo104_questions_for_management_5 (raw reply)": {
+   "input": "- What is the composition of the $23.1M reportedly raised [S4] — how many rounds, at what valuations, and from which investors?",
+   "at_5120190": "- What is the composition of the $23.1M reported (per Pitch Deck Hunt)ly raised [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_5120190": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix": "- What is the composition of the $23.1M (per Pitch Deck Hunt) reportedly raised [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_fix": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "recorded replay: memo104_base_scenario_s1 (stored)": {
+   "input": "Taking the self-reported traction figures at face value [S1, S2, S3] and the Pitch Deck Hunt-listed funding of $23.1M [S4] as directionally correct, ManyChat appears to be a Series A-stage software company with a large installed base of bots and message volume.",
+   "at_5120190": "Taking the self-reported traction figures at face value [S1, S2, S3] and the Pitch Deck Hunt-listed funding of $23.1M [S4] as directionally correct, ManyChat appears to be a Series A-stage software company with a large installed base of bots and message volume.",
+   "rules_5120190": [],
+   "fix": "Taking the self-reported traction figures at face value [S1, S2, S3] and the Pitch Deck Hunt-listed funding of $23.1M [S4] as directionally correct, ManyChat appears to be a Series A-stage software company with a large installed base of bots and message volume.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "recorded replay: control: denial in the consequence": {
+   "input": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, No platform would have significant throughput at the time of the 'Traction by Apr-16' slide.",
+   "at_5120190": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, No platform would have significant throughput at the time of the 'Traction by Apr-16' slide.",
+   "rules_5120190": [],
+   "fix": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, No platform would have significant throughput at the time of the 'Traction by Apr-16' slide.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "recorded replay: control: unrelated consequence": {
+   "input": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, revenue would be $10M at the time of the 'Traction by Apr-16' slide.",
+   "at_5120190": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, revenue would be $10M at the time of the 'Traction by Apr-16' slide.",
+   "rules_5120190": [],
+   "fix": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, revenue would be $10M at the time of the 'Traction by Apr-16' slide.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "recorded replay: control: unknown trailing clause": {
+   "input": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide — on the footing that this holds.",
+   "at_5120190": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide — on the footing that this holds.",
+   "rules_5120190": [],
+   "fix": "If the company's self-reported 140,000+ bots [S1] and 500M messages/month [S3] are accurate and the per-month figure is the correct basis, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide — on the footing that this holds.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "recorded replay: control: date stated as the hypothesis": {
+   "input": "If the 500M messages/month [S3] were measured as of the 'Traction by Apr-16' slide, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide.",
+   "at_5120190": "If the 500M messages/month [S3] were measured as of the 'Traction by Apr-16' slide, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide.",
+   "rules_5120190": [],
+   "fix": "If the 500M messages/month [S3] were measured as of the 'Traction by Apr-16' slide, ManyChat would represent a platform with significant throughput at the time of the 'Traction by Apr-16' slide.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "recorded replay: control: qualifier and funding attribution kept (no heading)": {
+   "input": "Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4].",
+   "at_5120190": "Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4].",
+   "rules_5120190": [],
+   "fix": "Taking the self-reported traction at face value without independent verification [S1, S2, S3], the company had deployed a meaningful bot platform, with Pitch Deck Hunt listing $23.1M in prior funding [C1, S4].",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-1 tail: raised": {
+   "input": "- What is the composition of the $23.1M raised [S4] — how many rounds, at what valuations, and from which investors?",
+   "at_5120190": "- What is the composition of the $23.1M raised (per Pitch Deck Hunt) [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_5120190": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix": "- What is the composition of the $23.1M raised (per Pitch Deck Hunt) [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_fix": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-1 tail: in funding": {
+   "input": "- What is the composition of the $23.1M in funding [S4] — how many rounds, at what valuations, and from which investors?",
+   "at_5120190": "- What is the composition of the $23.1M in funding (per Pitch Deck Hunt) [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_5120190": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix": "- What is the composition of the $23.1M in funding (per Pitch Deck Hunt) [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_fix": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-1 tail: funding figure": {
+   "input": "- What is the composition of the $23.1M funding figure [S4] — how many rounds, at what valuations, and from which investors?",
+   "at_5120190": "- What is the composition of the $23.1M funding figure (per Pitch Deck Hunt) [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_5120190": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix": "- What is the composition of the $23.1M funding figure (per Pitch Deck Hunt) [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_fix": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-1 tail: total": {
+   "input": "- What is the composition of the $23.1M total [S4] — how many rounds, at what valuations, and from which investors?",
+   "at_5120190": "- What is the composition of the $23.1M total (per Pitch Deck Hunt) [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_5120190": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix": "- What is the composition of the $23.1M total (per Pitch Deck Hunt) [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_fix": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-1 tail: listed": {
+   "input": "- What is the composition of the $23.1M listed [S4] — how many rounds, at what valuations, and from which investors?",
+   "at_5120190": "- What is the composition of the $23.1M listed (per Pitch Deck Hunt) [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_5120190": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix": "- What is the composition of the $23.1M listed (per Pitch Deck Hunt) [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_fix": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-1 tail: reported": {
+   "input": "- What is the composition of the $23.1M reported [S4] — how many rounds, at what valuations, and from which investors?",
+   "at_5120190": "- What is the composition of the $23.1M reported (per Pitch Deck Hunt) [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_5120190": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix": "- What is the composition of the $23.1M reported (per Pitch Deck Hunt) [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_fix": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-1 tail: reported raised": {
+   "input": "- What is the composition of the $23.1M reported raised [S4] — how many rounds, at what valuations, and from which investors?",
+   "at_5120190": "- What is the composition of the $23.1M reported raised (per Pitch Deck Hunt) [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_5120190": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix": "- What is the composition of the $23.1M reported raised (per Pitch Deck Hunt) [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_fix": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-1 tail: reportedly raised": {
+   "input": "- What is the composition of the $23.1M reportedly raised [S4] — how many rounds, at what valuations, and from which investors?",
+   "at_5120190": "- What is the composition of the $23.1M reported (per Pitch Deck Hunt)ly raised [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_5120190": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix": "- What is the composition of the $23.1M (per Pitch Deck Hunt) reportedly raised [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_fix": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-1 tail: reporters": {
+   "input": "- What is the composition of the $23.1M reporters [S4] — how many rounds, at what valuations, and from which investors?",
+   "at_5120190": "- What is the composition of the $23.1M (per Pitch Deck Hunt) reporters [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_5120190": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix": "- What is the composition of the $23.1M (per Pitch Deck Hunt) reporters [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_fix": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-1 tail: figures": {
+   "input": "- What is the composition of the $23.1M figures [S4] — how many rounds, at what valuations, and from which investors?",
+   "at_5120190": "- What is the composition of the $23.1M figure (per Pitch Deck Hunt)s [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_5120190": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix": "- What is the composition of the $23.1M (per Pitch Deck Hunt) figures [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_fix": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-1 tail: totalling": {
+   "input": "- What is the composition of the $23.1M totalling [S4] — how many rounds, at what valuations, and from which investors?",
+   "at_5120190": "- What is the composition of the $23.1M total (per Pitch Deck Hunt)ling [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_5120190": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix": "- What is the composition of the $23.1M (per Pitch Deck Hunt) totalling [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_fix": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-1 tail: fundings": {
+   "input": "- What is the composition of the $23.1M fundings [S4] — how many rounds, at what valuations, and from which investors?",
+   "at_5120190": "- What is the composition of the $23.1M funding (per Pitch Deck Hunt)s [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_5120190": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix": "- What is the composition of the $23.1M (per Pitch Deck Hunt) fundings [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_fix": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-1 tail: listedness": {
+   "input": "- What is the composition of the $23.1M listedness [S4] — how many rounds, at what valuations, and from which investors?",
+   "at_5120190": "- What is the composition of the $23.1M listed (per Pitch Deck Hunt)ness [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_5120190": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix": "- What is the composition of the $23.1M (per Pitch Deck Hunt) listedness [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_fix": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-1 tail: raisedness": {
+   "input": "- What is the composition of the $23.1M raisedness [S4] — how many rounds, at what valuations, and from which investors?",
+   "at_5120190": "- What is the composition of the $23.1M raised (per Pitch Deck Hunt)ness [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_5120190": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix": "- What is the composition of the $23.1M (per Pitch Deck Hunt) raisedness [S4] — how many rounds, at what valuations, and from which investors?",
+   "rules_fix": [
+    "attribution:Pitch Deck Hunt"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 fixed 1": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (see consistency note below) — but these figures are undated as counts and have not been independently verified [C2, C3, C4].",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 fixed 2": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 fixed 3": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', while Pitch Deck Hunt lists $23.1M raised [C1, S4].",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', while Pitch Deck Hunt lists $23.1M raised [C1, S4].",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on) — while Pitch Deck Hunt lists $23.1M raised [C1, S4].",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 fixed 4": {
+   "input": "The company's unverified traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's unverified traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's unverified traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 fixed 5": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — presented under the 'Traction by Apr-16' slide heading.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — presented under the 'Traction by Apr-16' slide heading.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 fixed 6": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — shown on a slide headed 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — shown on a slide headed 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 fixed 7": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [C4] and 500M messages or 500M messages/month [C3, C2] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [C4] and 500M messages or 500M messages/month [C3, C2] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140 000+ bots [C4] and 500M messages with no explicit interval [C3] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [C2] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 fixed 8": {
+   "input": "The company's self-reported traction figures — 500M messages/month [S3] and 140,000+ bots and 500M messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 500M messages/month [S3] and 140,000+ bots and 500M messages [S1, S2] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 500M messages/month [S3] on page 12, and separately 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16' (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 fixed 9": {
+   "input": "The company states 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+   "at_5120190": "The company states 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16', but neither is verified.",
+   "rules_5120190": [],
+   "fix": "The company states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on), but neither is verified.",
+   "rules_fix": [
+    "basis_heading_scope"
+   ],
+   "fix_differs_from_5120190": true,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 1": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages [S2] — contextualised under a slide heading 'Traction by Apr-16', but page 12 states 500M messages/month [S3].",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages [S2] — contextualised under a slide heading 'Traction by Apr-16', but page 12 states 500M messages/month [S3].",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages [S2] — contextualised under a slide heading 'Traction by Apr-16', but page 12 states 500M messages/month [S3].",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 2": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages [S2] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages [S2] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages [S2] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 3": {
+   "input": "The deck states 500M messages/month [S3] on page 12, apart from the slide heading 'Traction by Apr-16' that covers 140,000+ bots [S1] and 500M messages [S2].",
+   "at_5120190": "The deck states 500M messages/month [S3] on page 12, apart from the slide heading 'Traction by Apr-16' that covers 140,000+ bots [S1] and 500M messages [S2].",
+   "rules_5120190": [],
+   "fix": "The deck states 500M messages/month [S3] on page 12, apart from the slide heading 'Traction by Apr-16' that covers 140,000+ bots [S1] and 500M messages [S2].",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 4": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — not all contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — not all contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — not all contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 5": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and not 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and not 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots [S1] and not 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 6": {
+   "input": "The company does not state 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company does not state 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company does not state 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 7": {
+   "input": "If the figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', and the basis is monthly, ManyChat would be large.",
+   "at_5120190": "If the figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', and the basis is monthly, ManyChat would be large.",
+   "rules_5120190": [],
+   "fix": "If the figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', and the basis is monthly, ManyChat would be large.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 8": {
+   "input": "If the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', and the basis is monthly, ManyChat would be large.",
+   "at_5120190": "If the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', and the basis is monthly, ManyChat would be large.",
+   "rules_5120190": [],
+   "fix": "If the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', and the basis is monthly, ManyChat would be large.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 9": {
+   "input": "The company's self-reported traction figures — possibly 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — possibly 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — possibly 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 10": {
+   "input": "The company's self-reported traction figures may be — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures may be — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures may be — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 11": {
+   "input": "Were 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'?",
+   "at_5120190": "Were 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'?",
+   "rules_5120190": [],
+   "fix": "Were 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'?",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 12": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1], revenue of $10M and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1], revenue of $10M and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots [S1], revenue of $10M and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 13": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 250M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 250M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots [S1] and 250M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 14": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages/day [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages/day [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages/day [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 15": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3, S4] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3, S4] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3, S4] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 16": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (unaudited) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (unaudited) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (unaudited) [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 17": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16' that dates them.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16' that dates them.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16' that dates them.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 18": {
+   "input": "Pitch Deck Hunt's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "Pitch Deck Hunt's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "Pitch Deck Hunt's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 19": {
+   "input": "Pitch Deck Hunt states 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "Pitch Deck Hunt states 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "Pitch Deck Hunt states 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 20": {
+   "input": "According to an analyst, the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "According to an analyst, the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "According to an analyst, the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 21": {
+   "input": "The figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 22": {
+   "input": "The company's self-reported traction figures — 140,000+ bots/month [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots/month [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots/month [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 23": {
+   "input": "The company states 140,000+ bots/month [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company states 140,000+ bots/month [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company states 140,000+ bots/month [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 24": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages/week or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages/week or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages/week or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 25": {
+   "input": "The company's self-reported traction figures — 140,000+/month bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+/month bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+/month bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 26": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/bots [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/bots [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/bots [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 27": {
+   "input": "An analyst's interpretation of the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "An analyst's interpretation of the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "An analyst's interpretation of the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 28": {
+   "input": "An analyst describes the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "An analyst describes the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "An analyst describes the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 29": {
+   "input": "An analyst reads the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "An analyst reads the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "An analyst reads the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 30": {
+   "input": "The analyst's view of the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The analyst's view of the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The analyst's view of the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 31": {
+   "input": "Some investors think the indicators are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "Some investors think the indicators are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "Some investors think the indicators are the company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 32": {
+   "input": "The company's traction figures as an analyst summarises them — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's traction figures as an analyst summarises them — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's traction figures as an analyst summarises them — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 33": {
+   "input": "Rival Corp's comparison with the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "Rival Corp's comparison with the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "Rival Corp's comparison with the company's traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 34": {
+   "input": "The company's self-reported traction figures — 140,000+ messages [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ messages [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ messages [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 35": {
+   "input": "The company's self-reported traction figures — 140,000+ bots with no messages [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots with no messages [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots with no messages [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 36": {
+   "input": "The company states 140,000+ messages [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company states 140,000+ messages [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company states 140,000+ messages [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 37": {
+   "input": "The company states 140,000+ bots with no messages [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company states 140,000+ bots with no messages [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company states 140,000+ bots with no messages [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 38": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M bots or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M bots or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M bots or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 39": {
+   "input": "The company's self-reported traction figures — 140,000+ bots with no explicit interval [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots with no explicit interval [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots with no explicit interval [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 40": {
+   "input": "The company's self-reported traction figures — 140,000+ bots and 500M messages [S1] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots and 500M messages [S1] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots and 500M messages [S1] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 41": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1, S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1, S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots [S1, S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  },
+  "F-2 kept 42": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] with no audit — contextualised under a slide heading 'Traction by Apr-16'.",
+   "at_5120190": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] with no audit — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_5120190": [],
+   "fix": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] with no audit — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_fix": [],
+   "fix_differs_from_5120190": false,
+   "second_pass_unchanged": true,
+   "reversed_items_same": true
+  }
+ }
+}

@@ -1,0 +1,67 @@
+"""Review of ff25de1 (F-2): the reviewer's three reproduced regressions and nearby variants through the full guard
+order with memo 104's payload, at the working tree's guards and at 5120190's (loaded from git). No DB, no model call.
+Usage: review_cases.py <out json>"""
+import importlib.util, json, subprocess, sys
+from zelda_api.claim_context import guard_time_wording
+from zelda_api import basis_fidelity as new_basis, funding_fidelity as new_funding
+from zelda_api import tests_output_fidelity as t
+
+BASE = '5120190ce47708e99cff5b417baf2c565059cf7f'
+
+
+def load(name):
+    src = subprocess.run(['git', 'show', f'{BASE}:zelda_api/{name}.py'], capture_output=True, text=True, encoding='utf-8',
+                         check=True).stdout
+    module = importlib.util.module_from_spec(importlib.util.spec_from_loader(f'zelda_api.{name}_base', loader=None))
+    module.__package__ = 'zelda_api'
+    exec(compile(src, f'5120190:zelda_api/{name}.py', 'exec'), module.__dict__)
+    return module
+
+
+old_basis, old_funding = load('basis_fidelity'), load('funding_fidelity')
+payload = t.memo104_payload()
+items, notes = t.items_from(payload), t.notes_from(payload)
+
+
+def run(text, basis, funding, its=None):
+    its = its or items
+    allowed = {i.ref: i.time_wording_allowed for i in its if i.dated}
+    out, removed = guard_time_wording(text, allowed)
+    out, fid = funding.guard_funding_fidelity(out, funding.funding_facts(its, 'ManyChat'))
+    out, bas = basis.guard_basis_wording(out, basis.basis_facts(its, notes))
+    return out, list(removed or []) + list(fid) + list(bas)
+
+
+H = " — contextualised under a slide heading 'Traction by Apr-16'"
+L = "140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3]"
+CASES = {
+    # The reviewer's three reproductions (expected: preserved).
+    'R1 unsupported interval on bots': f"The company's self-reported traction figures — 140,000+ bots/month [S1] and 500M messages or 500M messages/month [S2, S3]{H}.",
+    'R2 analyst interpretation': f"An analyst's interpretation of the company's traction figures — {L}{H}.",
+    'R3 analyst describes': f"An analyst describes the company's traction figures — {L}{H}.",
+    # Nearby variants (expected: preserved).
+    'V1 unsupported interval on page-10 messages': f"The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages/week or 500M messages/month [S2, S3]{H}.",
+    'V2 bots/month alone, comma form': f"The company states 140,000+ bots/month [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+    'V3 figure/interval on bots': f"The company's self-reported traction figures — 140,000+/month bots [S1] and 500M messages or 500M messages/month [S2, S3]{H}.",
+    'V4 messages/bots word pair': f"The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M messages/bots [S2, S3]{H}.",
+    'V5 an analyst reads': f"An analyst reads the company's traction figures — {L}{H}.",
+    'V6 analyst possessive view': f"The analyst's view of the company's self-reported traction figures — {L}{H}.",
+    'V7 someone thinks': f"Some investors think the indicators are the company's self-reported traction figures — {L}{H}.",
+    'V8 the company per an analyst': f"The company's traction figures as an analyst summarises them — {L}{H}.",
+    'V9 another firm': f"Rival Corp's comparison with the company's traction figures — {L}{H}.",
+    # Must still be corrected (memo 104 and the earlier repaired forms).
+    'K1 memo 104 sentence': t.BM_104_BEFORE,
+    'K2 company self-reported': f"The company's self-reported traction figures — {L}{H}.",
+    'K3 company unverified': f"The company's unverified traction figures — {L}{H}.",
+    'K4 company states, comma': f"The company states {L}, contextualised under a slide heading 'Traction by Apr-16'.",
+}
+rows = {}
+for name, text in CASES.items():
+    base, base_rules = run(text, old_basis, old_funding)
+    fix, fix_rules = run(text, new_basis, new_funding)
+    rows[name] = {'input': text, 'at_5120190': base, 'rules_5120190': base_rules, 'fix': fix, 'rules_fix': fix_rules,
+                  'changed_by_fix': fix != base}
+    print(f"{name:45s} 5120190={'changed' if base != text else 'kept':7s} fix={'CHANGED' if fix != text else 'kept'} {fix_rules}")
+head = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
+json.dump({'head': head, 'base': BASE, 'cases': rows}, open(sys.argv[1], 'w', encoding='utf-8', newline='\n'), indent=1,
+          ensure_ascii=False)

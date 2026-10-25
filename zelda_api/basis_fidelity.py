@@ -122,6 +122,32 @@ and one rule about where figures are stated (memo 99, OF-705; review of d30a022)
                 separately states 500M messages/month [S3] on page 12 (clarification)"). Any other predicate
                 ("reflects a monthly run-rate", "all fall under"), "whether", a question, a denial, a hedge, a
                 narrator, another speaker or another metric keeps the sentence
+    heading     a heading phrase closing a list of figures (memo 104, F-2): "the company's self-reported traction
+                figures — 140,000+ bots [S1] and 500M messages or 500M messages/month (see consistency note below)
+                [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but these figures are undated
+                ..." puts page 10's heading over page 12's S3, dated or not. When the list cites both sides of one
+                pair and only some of its refs carry the named heading, the list is restated fact by fact like the
+                location rule ("— 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10,
+                under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (see consistency note
+                below) — but these figures ..."): each figure keeps its own ref, page 10's side says it has no
+                explicit interval, page 12's keeps its monthly one, and nothing makes either cumulative or dated. A
+                pointer to the note in the list is kept word for word; without one the pair's clarification follows.
+                The participle ("contextualised", "presented", "shown", ...) must open the phrase straight after the
+                list's closing dash, or after the comma ending "the company states <list>"; the phrase must end its
+                clause; the list must hold nothing but the cited statements' words and figures, and an interval
+                only on the figure a cited statement gives it ("500M messages/month"; "140,000+ bots/month",
+                "500M messages/week" or "messages/bots" keeps the sentence for review; review of ff25de1). Each
+                figure must be one of its own citation group's statements, word for word from the figure on: it
+                may stop early (the restatement gives the rest back), never take another statement's noun or
+                qualification ("140,000+ messages [S1]" or "140,000+ bots with no messages [S1]" keeps the
+                sentence; review of 41e4d35). The
+                list's subject must be the company's own figures, named as the last noun phrase before the dash
+                ("the company's self-reported traction figures", "the self-reported figures"), after at most an
+                allowlisted lead-in ending in a linking verb ("The only indicators of commercial activity are"); in
+                the comma form, "the company" (or the deck, ...) right before its reporting verb. Another speaker's
+                reading ("An analyst describes the company's ...", "An analyst's interpretation of the company's
+                ..."), a narrator, a denial, a hedge, a condition, a question, an aside or another figure keeps the
+                sentence, as does a list whose refs all carry the heading (or none does)
     cumulative  "the cumulative and monthly presentations" (memo 101, OF-906) presupposes that one side is
     presupposed cumulative. For the pair its own following citation group belongs to (or else the pair the
                 sentence resolved to), when that pair admits no cumulative fact, "cumulative" becomes
@@ -1050,6 +1076,169 @@ def _context_aside(sentence, facts, changes):
     return sentence
 
 
+# A heading phrase closing a list of figures (memo 104, F-2): "... — 140,000+ bots [S1] and 500M messages or 500M
+# messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16', but ...". The participle opens
+# the phrase straight after the list's closing dash (or comma), so it describes every figure in the list. A denial or
+# any other word there ("— not shown under ...", "— none of them under ...") is not this phrase.
+_HEADING_SCOPE = re.compile(
+    r"(?P<sep>\s+—\s*|\s*,\s*)(?:contextuali[sz]ed|presented|shown|listed|stated|placed|grouped|framed|given)\s+"
+    r"(?:under|in|on|within|beneath)\s+(?:an?\s+|the\s+)?(?:(?:(?:slide|page)\s+)?(?:heading|header)\s*:?\s*'(?P<ctx>[^']+)'"
+    r"|(?:slide|page)\s+(?:context\s+)?(?:headed|titled)\s*:?\s*'(?P<ctx2>[^']+)'"
+    r"|'(?P<ctx3>[^']+)'\s+(?:(?:slide|page)\s+)?(?:heading|header|context))", re.I)
+# A pointer to the note an aside may hold in such a list: kept, word for word, after the restated figures.
+_NOTE_POINTER = re.compile(r"\(\s*see\s+(?:the\s+)?(?:consistency|measurement[-\s]basis)\s+note(?:\s+(?:below|above))?\s*\)",
+                           re.I)
+# A figure written with its noun and an interval ("500M messages/month"), and any word pair joined by a slash.
+_NOUN_INTERVAL = re.compile(r"(?<![\w.$])(\$?\d[\d,]*(?:\.\d+)?[kmb]?\+?)\s+([a-z]+/[a-z]+)\b")
+_SLASH_PAIR = re.compile(r"[a-z]+/[a-z]+")
+# The appositive list's subject (review of ff25de1): the company's own figures, named as the clause's last noun
+# phrase ("the company's self-reported traction figures", "the self-reported figures"), after at most a short lead-in
+# of allowlisted words ending in a linking verb ("The only indicators of commercial activity are"). Any other lead-in
+# ("An analyst describes", "An analyst's interpretation of", "Some investors think the indicators are") keeps the
+# sentence: whose reading the list is, is then unknown.
+_OWN_FIGURES = re.compile(
+    r"(?:(?P<lead>(?:(?:the|an?|only|main|key|sole|principal|clearest|available|indicators?|signs?|evidence|measures?|"
+    r"of|commercial|activity|traction|usage|adoption|scale|demand)\s+)+)(?:are|is|were|was|include|includes)\s+)?"
+    r"(?:the\s+)?(?P<own>(?:company|deck|pitch\s+deck|presentation|founders?|management)['’]s\s+)?(?:own\s+)?"
+    r"(?P<adjectives>(?:(?:self-reported|stated|reported|unverified|disclosed|headline),?\s+)*)"
+    r"(?:(?:traction|usage)\s+)?(?:figures|metrics|numbers|counts|data)", re.I)
+
+
+def _slash_forms_stated(text, statements):
+    """Every "<noun>/<interval>" in the list belongs to a figure that one cited statement states with exactly that
+    noun and interval (review of ff25de1): "500M messages/month" when a statement says so, never "140,000+ bots/month"
+    (no statement gives the bots an interval), "500M messages/week" or "500M messages/bots"; and no other word pair
+    joined by a slash. A statement's form may leave out a "+" the list writes, never add one."""
+    stated = {(_figure_key(m.group(1)), m.group(2)) for fact in statements for m in _NOUN_INTERVAL.finditer(fact)}
+    text = _DIGIT_GROUP.sub('', _REF.sub(' ', text).lower())
+    covered = []
+    for match in _NOUN_INTERVAL.finditer(text):
+        key = _figure_key(match.group(1))
+        if (key, match.group(2)) not in stated and (key.rstrip('+'), match.group(2)) not in stated:
+            return False
+        covered.append(match.span(2))
+    return all(any(a <= hit.start() and hit.end() <= b for a, b in covered) for hit in _SLASH_PAIR.finditer(text))
+
+
+# The joins between a list's figures ("140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3]"); never
+# the comma grouping a figure's digits ("140,000+").
+_ITEM_JOIN = re.compile(r'\s*,(?!\d)\s*(?:(?:and|or)\s+)?|\s+(?:and|or)\s+', re.I)
+
+
+def _items_own_statements(listed, statements):
+    """Each figure the list writes is its own cited statement, word for word from the figure on (review of 41e4d35):
+    `statements` maps each citation group's refs to their statements. A figure may stop before what its statement
+    goes on to say, which the restatement gives back ("500M messages" for "500M messages with no explicit
+    interval"), and may write or leave out the "+", but every word it writes is its statement's own, in place:
+    "140,000+ messages [S1]" (S1 states bots) and "140,000+ bots with no messages [S1]" keep the sentence, although
+    another cited statement has "messages" and "with no". Every ref of a group must be written, and nothing may follow
+    the last group."""
+    parts = _REF.split(listed)
+    if parts[-1].strip(' ,.'):
+        return False
+    for segment, group in zip(parts[0::2], parts[1::2]):
+        refs = _split_refs(group)
+        written = set()
+        items = [item for item in _ITEM_JOIN.split(_DIGIT_GROUP.sub('', segment.lower()).strip(' ,.')) if item]
+        items[:1] = [re.sub(r'^(?:and|or)\s+', '', items[0])] if items else []
+        if not items:
+            return False
+        for item in items:
+            words = item.split()
+            if len(words) < 2 or not _FIGURE_TOKEN.fullmatch(words[0]):
+                return False                   # a figure and its noun, nothing before the figure
+            owners = []
+            for ref in refs:
+                stated = statements[ref].split()
+                if (len(words) <= len(stated) and _FIGURE_TOKEN.fullmatch(stated[0])
+                        and _figure_key(words[0]).rstrip('+') == _figure_key(stated[0]).rstrip('+')
+                        and words[1:] == stated[1:len(words)]):
+                    owners.append(ref)
+            if not owners:
+                return False                   # another metric, qualification or wording than its statement's
+            written.update(owners)
+        if written != set(refs):
+            return False
+    return True
+
+
+def _heading_scope(sentence, facts, changes):
+    """A heading phrase closing a list that also cites the other side of a pair, from another page or context:
+    the list is restated fact by fact under each item's own page and context, so the heading covers only the refs
+    whose items carry it (memo 104, F-2; see the docstring)."""
+    if _asks(sentence) or not facts.pairs:
+        return sentence
+    places = {ref: (page, context, fact) for ref, page, context, fact in facts.places}
+    for match in _HEADING_SCOPE.finditer(sentence):
+        at, end = match.start(), match.end()
+        claimed = match.group('ctx') or match.group('ctx2') or match.group('ctx3')
+        if sentence[:at].count('(') != sentence[:at].count(')') or _conditional(sentence, at):
+            continue
+        if not _CLAUSE_END.match(sentence, end):
+            continue                           # mid-clause ("... under 'X' is the headline figure"): left alone
+        dash = match.group('sep').strip() == '—'
+        start = (sentence.rfind('—', 0, at) + 1) if dash else _place_clause_start(sentence, at)
+        if dash and (start == 0 or sentence[:start - 1].count('(') != sentence[:start - 1].count(')')):
+            continue                           # no opening dash: the list's extent is unknown
+        span = sentence[start:at]
+        cited = [ref for group in _REF.finditer(span) for ref in _split_refs(group.group(1))]
+        if not cited or any(ref not in places for ref in cited) or set(cited) & facts.narrated:
+            continue
+        outside = [ref for ref in cited if places[ref][1] != claimed]
+        if not outside or len(outside) == len(cited):
+            continue                           # every cited figure carries the heading, or none does
+        both = next((pair for pair in facts.pairs if len(pair.sides) == 2 and set(outside) <= pair.members
+                     and all(set(cited) & side for side in pair.sides)), None)
+        if both is None:
+            continue                           # the other figure is not the other side of one pair
+        pointers = _NOTE_POINTER.findall(span)
+        bare = _NOTE_POINTER.sub(' ', span)
+        statements = [_DIGIT_GROUP.sub('', fact.lower()) for ref, *_, fact in facts.places if ref in cited]
+        vocabulary = (_PLACING_WORDS | {word for fact in statements for word in re.findall(r'[a-z]+', fact)}
+                      | {form for fact in statements for form in _stated_forms(fact)})
+        if not _slash_forms_stated(bare, statements):
+            continue                           # an interval no cited statement gives that figure: kept for review
+        written = bare                         # the list as written, slashes included
+        bare = re.sub(r'(?<=[a-z])/(?=[a-z])', ' ', bare)    # "messages/month": checked above, now two plain words
+        if dash:                               # an appositive list: its subject is the clause before the dash
+            subject = sentence[_place_clause_start(sentence, start - 1):start - 1]
+            own = _OWN_FIGURES.fullmatch(subject[_LEAD.match(subject).end():].strip())
+            if own is None or not (own.group('own') or re.search(r'self-reported', own.group('adjectives'), re.I)):
+                continue                       # another speaker's reading, or no own source: kept
+            listed = bare
+            head = sentence[:start] + ' '
+        else:                                  # "the company states <list>, contextualised under ..."
+            verb = _reporting_verb(bare)
+            if verb is None or not _OWN_SUBJECT.fullmatch(bare[_LEAD.match(bare).end():verb.start()].strip()):
+                continue
+            subject, listed = bare[:verb.start()], bare[verb.end():]
+            written = written[verb.end():]     # same offsets: a slash became one space
+            head = sentence[:start] + span[:verb.end()] + ' '
+        if not _placing_words(listed, vocabulary, False):
+            continue                           # another fact, figure, aside, denial or hedge in the list
+        if not _items_own_statements(written, {ref: _DIGIT_GROUP.sub('', places[ref][2].lower()) for ref in cited}):
+            continue                           # a figure with another's metric or qualification: kept for review
+        words = re.findall(r"[\w']+", _VERIFICATION_QUALIFIER.sub(' ', subject).lower())
+        if (not _OWN_SOURCE.search(subject) or any(name.lower() in subject.lower() for name in facts.narrators)
+                or _ATTRIBUTION.search(subject) or set(words) & _DENIAL or _UNCERTAIN.search(' '.join(words))):
+            continue                           # only the company's own figures, stated outright
+        runs = []                              # adjacent refs on one page and context share a run
+        for ref in cited:
+            if runs and runs[-1][0] == places[ref][:2]:
+                runs[-1][1].append(ref)
+            else:
+                runs.append((places[ref][:2], [ref]))
+        body = ', and separately '.join(' and '.join(f'{places[ref][2]} [{ref}]' for ref in refs) + f' on page {page}'
+                                        + (f", under '{context}'" if context else '') for (page, context), refs in runs)
+        body += ''.join(' ' + pointer for pointer in pointers) or f' ({both.clarification[0].lower()}{both.clarification[1:]})'
+        rest = sentence[end:]
+        if dash and re.match(r'\s*,', rest):   # the list's closing dash, before the clause-linking word
+            rest = ' — ' + re.sub(r'^\s*,\s*', '', rest)
+        changes.append('basis_heading_scope')
+        return head + body + rest
+    return sentence
+
+
 def _trailing_clause(sentence, end, pair, facts):
     """Where the moved fact goes when the context phrase is followed by a closing "with ..." clause: before the
     sentence's final punctuation (memo 103, OF-1102). Only a clause about something else: no ref of any pair, no
@@ -1613,6 +1802,7 @@ def guard_basis_wording(text, facts):
         sentence = _citation_identity(sentence, facts, changes)
         sentence = _location(sentence, facts, changes)
         sentence = _context_aside(sentence, facts, changes)
+        sentence = _heading_scope(sentence, facts, changes)
         sentence = _condition_context(sentence, facts, changes)
         sentence = _consequence_context(sentence, facts, changes)
         sentence = _condition_attribution(sentence, before, facts, changes)

@@ -1,0 +1,97 @@
+{
+ "head": "7fe189b7d1056529f1998d2c733f85d6c0d17347",
+ "cases": {
+  "X1 reviewer: added \"+\" on 500M messages (dash)": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "committed": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_committed": [],
+   "working_tree": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_working_tree": [],
+   "H2": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_H2": [],
+   "H3": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_H3": [],
+   "H4": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_H4": [],
+   "H6": "The company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_H6": [
+    "basis_heading_scope"
+   ],
+   "S1": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_S1": [],
+   "O3": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_O3": [],
+   "P3": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_P3": []
+  },
+  "X2 comma form": {
+   "input": "The company states 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "committed": "The company states 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_committed": [],
+   "working_tree": "The company states 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_working_tree": [],
+   "H2": "The company states 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_H2": [],
+   "H3": "The company states 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_H3": [],
+   "H4": "The company states 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_H4": [],
+   "H6": "The company states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_H6": [
+    "basis_heading_scope"
+   ],
+   "S1": "The company states 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_S1": [],
+   "O3": "The company states 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_O3": [],
+   "P3": "The company states 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_P3": []
+  },
+  "X3 added \"+\" on page 12 500M messages/month (dash)": {
+   "input": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "committed": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_committed": [],
+   "working_tree": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_working_tree": [],
+   "H2": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_H2": [],
+   "H3": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_H3": [],
+   "H4": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_H4": [],
+   "H6": "The company's self-reported traction figures — 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_H6": [
+    "basis_heading_scope"
+   ],
+   "S1": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_S1": [],
+   "O3": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_O3": [],
+   "P3": "The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_P3": []
+  },
+  "X4 X3, comma form": {
+   "input": "The company states 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "committed": "The company states 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_committed": [],
+   "working_tree": "The company states 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_working_tree": [],
+   "H2": "The company states 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_H2": [],
+   "H3": "The company states 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_H3": [],
+   "H4": "The company states 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_H4": [],
+   "H6": "The company states 140 000+ bots [S1] and 500M messages with no explicit interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M messages/month [S3] on page 12 (how the figure stated without an explicit interval relates to the monthly figure needs clarification before either is relied on).",
+   "rules_H6": [
+    "basis_heading_scope"
+   ],
+   "S1": "The company states 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_S1": [],
+   "O3": "The company states 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_O3": [],
+   "P3": "The company states 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.",
+   "rules_P3": []
+  }
+ }
+}

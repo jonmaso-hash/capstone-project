@@ -1,0 +1,15 @@
+"""Memo 104's raw reply (fixture) through the pipeline's post-generation steps with the working tree's guards; prints
+every section that differs from the stored memo, with the rules that fired. No DB, no model call."""
+import sys
+from zelda_api.tests_output_fidelity import items_from, notes_from, replay
+import json, os, re
+D = 'zelda_api/data/funding_fidelity'
+data = json.load(open(os.path.join(D, 'memo104.json'), encoding='utf-8'))
+raw = json.loads(re.search(r'\{.*\}', data['model_reply_text'], re.S).group(0)); stored = data['stored']
+payload = json.load(open(os.path.join(D, 'memo104_payload.json'), encoding='utf-8'))['payload']
+items, notes = items_from(payload), notes_from(payload)
+out, changes = replay(raw, items, notes)
+print('CHANGES', json.dumps(changes))
+for k in stored:
+    if k in out and out[k] != stored[k]:
+        print('==', k); print('-', stored[k]); print('+', out[k])

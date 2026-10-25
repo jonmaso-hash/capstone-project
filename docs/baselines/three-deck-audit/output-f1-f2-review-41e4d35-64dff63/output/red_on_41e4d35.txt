@@ -1,0 +1,139 @@
+2026-10-25 02:00:16,456 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+..FFFFFFFE...
+======================================================================
+ERROR: test_each_figure_is_its_own_statement (zelda_api.tests_output_fidelity.F2HeadingScopeTests.test_each_figure_is_its_own_statement)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4875, in test_each_figure_is_its_own_statement
+    from .basis_fidelity import _items_own_statements
+ImportError: cannot import name '_items_own_statements' from 'zelda_api.basis_fidelity' (C:\Users\jonathan\Desktop\KCV-f12\zelda_api\basis_fidelity.py)
+
+======================================================================
+FAIL: test_controls_are_kept (zelda_api.tests_output_fidelity.F2HeadingScopeTests.test_controls_are_kept) (text="The company's self-reported traction figures — 140,000+ messages [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4839, in test_controls_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[42 chars]— 140 000+ bots [S1] and 500M messages with no[267 chars]pe']) != ("The[42 chars]— 140,000+ messages [S1] and 500M messages or [90 chars], [])
+
+First differing element 0:
+"The [41 chars]— 140 000+ bots [S1] and 500M messages with no[241 chars]on)."
+"The [41 chars]— 140,000+ messages [S1] and 500M messages or [85 chars]16'."
+
+Diff is 752 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_controls_are_kept (zelda_api.tests_output_fidelity.F2HeadingScopeTests.test_controls_are_kept) (text="The company's self-reported traction figures — 140,000+ bots with no messages [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4839, in test_controls_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[42 chars]— 140 000+ bots [S1] and 500M messages with no[267 chars]pe']) != ("The[42 chars]— 140,000+ bots with no messages [S1] and 500M[103 chars], [])
+
+First differing element 0:
+"The [41 chars]— 140 000+ bots [S1] and 500M messages with no[241 chars]on)."
+"The [41 chars]— 140,000+ bots with no messages [S1] and 500M[98 chars]16'."
+
+Diff is 768 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_controls_are_kept (zelda_api.tests_output_fidelity.F2HeadingScopeTests.test_controls_are_kept) (text="The company states 140,000+ messages [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4839, in test_controls_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[14 chars]s 140 000+ bots [S1] and 500M messages with no[267 chars]pe']) != ("The[14 chars]s 140,000+ messages [S1] and 500M messages or [89 chars], [])
+
+First differing element 0:
+"The [13 chars]s 140 000+ bots [S1] and 500M messages with no[241 chars]on)."
+"The [13 chars]s 140,000+ messages [S1] and 500M messages or [84 chars]16'."
+
++ ('The company states 140,000+ messages [S1] and 500M messages or 500M '
++  "messages/month [S2, S3], contextualised under a slide heading 'Traction by "
++  "Apr-16'.",
++  [])
+- ('The company states 140 000+ bots [S1] and 500M messages with no explicit '
+-  "interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M "
+-  'messages/month [S3] on page 12 (how the figure stated without an explicit '
+-  'interval relates to the monthly figure needs clarification before either is '
+-  'relied on).',
+-  ['basis_heading_scope'])
+
+======================================================================
+FAIL: test_controls_are_kept (zelda_api.tests_output_fidelity.F2HeadingScopeTests.test_controls_are_kept) (text="The company states 140,000+ bots with no messages [S1] and 500M messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4839, in test_controls_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[14 chars]s 140 000+ bots [S1] and 500M messages with no[267 chars]pe']) != ("The[14 chars]s 140,000+ bots with no messages [S1] and 500M[102 chars], [])
+
+First differing element 0:
+"The [13 chars]s 140 000+ bots [S1] and 500M messages with no[241 chars]on)."
+"The [13 chars]s 140,000+ bots with no messages [S1] and 500M[97 chars]16'."
+
++ ('The company states 140,000+ bots with no messages [S1] and 500M messages or '
++  "500M messages/month [S2, S3], contextualised under a slide heading 'Traction "
++  "by Apr-16'.",
++  [])
+- ('The company states 140 000+ bots [S1] and 500M messages with no explicit '
+-  "interval [S2] on page 10, under 'Traction by Apr-16', and separately 500M "
+-  'messages/month [S3] on page 12 (how the figure stated without an explicit '
+-  'interval relates to the monthly figure needs clarification before either is '
+-  'relied on).',
+-  ['basis_heading_scope'])
+
+======================================================================
+FAIL: test_controls_are_kept (zelda_api.tests_output_fidelity.F2HeadingScopeTests.test_controls_are_kept) (text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M bots or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4839, in test_controls_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[42 chars]— 140 000+ bots [S1] and 500M messages with no[267 chars]pe']) != ("The[42 chars]— 140,000+ bots [S1] and 500M bots or 500M mes[82 chars], [])
+
+First differing element 0:
+"The [41 chars]— 140 000+ bots [S1] and 500M messages with no[241 chars]on)."
+"The [41 chars]— 140,000+ bots [S1] and 500M bots or 500M mes[77 chars]16'."
+
+Diff is 707 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_controls_are_kept (zelda_api.tests_output_fidelity.F2HeadingScopeTests.test_controls_are_kept) (text="The company's self-reported traction figures — 140,000+ bots with no explicit interval [S1] and 500M messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4839, in test_controls_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[42 chars]— 140 000+ bots [S1] and 500M messages with no[267 chars]pe']) != ("The[42 chars]— 140,000+ bots with no explicit interval [S1][112 chars], [])
+
+First differing element 0:
+"The [41 chars]— 140 000+ bots [S1] and 500M messages with no[241 chars]on)."
+"The [41 chars]— 140,000+ bots with no explicit interval [S1][107 chars]16'."
+
+Diff is 777 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_controls_are_kept (zelda_api.tests_output_fidelity.F2HeadingScopeTests.test_controls_are_kept) (text="The company's self-reported traction figures — 140,000+ bots [S1, S2] and 500M messages/month [S3] — contextualised under a slide heading 'Traction by Apr-16'.")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-f12\zelda_api\tests_output_fidelity.py", line 4839, in test_controls_are_kept
+    self.assertEqual(self.full(text), (text, []))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ("The[42 chars]— 140 000+ bots [S1] and 500M messages with no[267 chars]pe']) != ("The[42 chars]— 140,000+ bots [S1, S2] and 500M messages/mon[69 chars], [])
+
+First differing element 0:
+"The [41 chars]— 140 000+ bots [S1] and 500M messages with no[241 chars]on)."
+"The [41 chars]— 140,000+ bots [S1, S2] and 500M messages/mon[64 chars]16'."
+
+Diff is 735 characters long. Set self.maxDiff to None to see it.
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.575s
+
+FAILED (failures=7, errors=1)
+Found 7 test(s).
+System check identified no issues (0 silenced).

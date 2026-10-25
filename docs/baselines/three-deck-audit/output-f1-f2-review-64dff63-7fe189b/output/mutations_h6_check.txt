@@ -1,0 +1,8 @@
+H6 CAUGHT Ran 350 tests in 13.899s FAILED (failures=4) restored=True | overcorrection: the list may hold other facts, figures, intervals or asides
+    assertion failures in: test_controls_are_kept
+    errors in: -
+    failing sub-case: text="The company states 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="The company states 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3], contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M messages or 500M+ messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'."
+    failing sub-case: text="The company's self-reported traction figures — 140,000+ bots [S1] and 500M+ messages or 500M messages/month [S2, S3] — contextualised under a slide heading 'Traction by Apr-16'."
+final sha matches pre-run: True {'basis': 'faa2adeabb4b842aa5ef6d097dd73293ced39db1bfe1ad6b464771c756363afc', 'funding': 'e471c4152bc052584cf490aa8359efe2a9281cb32f8c3005c8fb3dfd9562fca8'}
