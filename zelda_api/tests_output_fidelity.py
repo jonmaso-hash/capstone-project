@@ -4799,6 +4799,19 @@ HEADING_KEPT = (
     f"Some investors think the indicators are the company's self-reported traction figures — {_LIST104}{_HEAD104}.",
     f"The company's traction figures as an analyst summarises them — {_LIST104}{_HEAD104}.",
     f"Rival Corp's comparison with the company's traction figures — {_LIST104}{_HEAD104}.",
+    # Review of 41e4d35: each figure keeps its own metric and qualification; another cited statement's words do not
+    # license them ("messages" is S2's noun, "with no" is S2's qualification, not S1's).
+    f"{_LEAD104}140,000+ messages [S1] and 500M messages or 500M messages/month [S2, S3]{_HEAD104}.",
+    f"{_LEAD104}140,000+ bots with no messages [S1] and 500M messages or 500M messages/month [S2, S3]{_HEAD104}.",
+    "The company states 140,000+ messages [S1] and 500M messages or 500M messages/month [S2, S3], contextualised "
+    "under a slide heading 'Traction by Apr-16'.",
+    "The company states 140,000+ bots with no messages [S1] and 500M messages or 500M messages/month [S2, S3], "
+    "contextualised under a slide heading 'Traction by Apr-16'.",
+    f"{_LEAD104}140,000+ bots [S1] and 500M bots or 500M messages/month [S2, S3]{_HEAD104}.",
+    f"{_LEAD104}140,000+ bots with no explicit interval [S1] and 500M messages or 500M messages/month [S2, S3]{_HEAD104}.",
+    f"{_LEAD104}140,000+ bots and 500M messages [S1] and 500M messages/month [S3]{_HEAD104}.",
+    f"{_LEAD104}140,000+ bots [S1, S2] and 500M messages/month [S3]{_HEAD104}.",
+    f"{_LEAD104}140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3] with no audit{_HEAD104}.",
 )
 
 
@@ -4857,6 +4870,27 @@ class F2HeadingScopeTests(SimpleTestCase):
             with self.subTest(text=text):
                 self.assertEqual(_slash_forms_stated(text, statements), ok)
 
+    def test_each_figure_is_its_own_statement(self):
+        # Review of 41e4d35: pooled words let "140,000+ messages [S1]" become "bots" and dropped "with no messages".
+        from .basis_fidelity import _items_own_statements
+        statements = {'S1': '140000+ bots', 'S2': '500m messages with no explicit interval', 'S3': '500m messages/month'}
+        for text, ok in (("140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3]", True),
+                         ("500M messages/month [S3] and 140 000+ bots and 500M messages [S1, S2]", True),
+                         ("140000 bots [S1] and 500M messages with no explicit interval [S2]", True),
+                         ("500M+ messages/month [S3]", True),
+                         ("140,000+ messages [S1]", False),          # another statement's metric
+                         ("140,000+ bots with no messages [S1]", False),
+                         ("140,000+ bots with no explicit interval [S1]", False),   # another statement's qualifier
+                         ("500M bots [S2]", False),
+                         ("250M messages [S2]", False),
+                         ("140,000+ bots and 500M messages [S1]", False),           # a figure its group does not cite
+                         ("140,000+ bots [S1, S2]", False),                         # a cited ref not written
+                         ("the 140,000+ bots [S1]", False),
+                         ("140,000+ [S1]", False),                                  # no noun
+                         ("140,000+ bots [S1] daily", False)):                      # words after the last group
+            with self.subTest(text=text):
+                self.assertEqual(_items_own_statements(text, statements), ok)
+
     def test_another_pair_alike(self):
         from .basis_fidelity import basis_facts, guard_basis_wording
         facts = basis_facts(OTHER_PAIR_ITEMS(), (OTHER_PAIR_NOTE,))
@@ -4868,6 +4902,10 @@ class F2HeadingScopeTests(SimpleTestCase):
         self.assertEqual(guard_basis_wording(before, facts), (after, ['basis_heading_scope']))
         self.assertEqual(guard_basis_wording(before, facts_rev), (after, ['basis_heading_scope']))
         self.assertEqual(guard_basis_wording(after, facts), (after, []))
+        # Another fact written and cited in the list (S9, outside the pair) is not moved to its own page either.
+        written_other = ("The self-reported usage figures — 3M bots or 3M bots/week [S7, S8] and 40 staff [S9] — "
+                         "contextualised under a slide heading 'Growth by Q3-19'.")
+        self.assertEqual(guard_basis_wording(written_other, facts), (written_other, []))
         kept = ("The self-reported usage figures — 3M bots or 3M bots/week [S7, S8] — contextualised under a slide "
                 "heading 'Traction by Apr-16'.")             # not this pair's heading: neither figure carries it
         self.assertEqual(guard_basis_wording(kept, facts), (kept, []))

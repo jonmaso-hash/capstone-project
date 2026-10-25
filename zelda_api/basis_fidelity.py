@@ -136,7 +136,11 @@ and one rule about where figures are stated (memo 99, OF-705; review of d30a022)
                 list's closing dash, or after the comma ending "the company states <list>"; the phrase must end its
                 clause; the list must hold nothing but the cited statements' words and figures, and an interval
                 only on the figure a cited statement gives it ("500M messages/month"; "140,000+ bots/month",
-                "500M messages/week" or "messages/bots" keeps the sentence for review; review of ff25de1). The
+                "500M messages/week" or "messages/bots" keeps the sentence for review; review of ff25de1). Each
+                figure must be one of its own citation group's statements, word for word from the figure on: it
+                may stop early (the restatement gives the rest back), never take another statement's noun or
+                qualification ("140,000+ messages [S1]" or "140,000+ bots with no messages [S1]" keeps the
+                sentence; review of 41e4d35). The
                 list's subject must be the company's own figures, named as the last noun phrase before the dash
                 ("the company's self-reported traction figures", "the self-reported figures"), after at most an
                 allowlisted lead-in ending in a linking verb ("The only indicators of commercial activity are"); in
@@ -1116,6 +1120,48 @@ def _slash_forms_stated(text, statements):
     return all(any(a <= hit.start() and hit.end() <= b for a, b in covered) for hit in _SLASH_PAIR.finditer(text))
 
 
+# The joins between a list's figures ("140,000+ bots [S1] and 500M messages or 500M messages/month [S2, S3]"); never
+# the comma grouping a figure's digits ("140,000+").
+_ITEM_JOIN = re.compile(r'\s*,(?!\d)\s*(?:(?:and|or)\s+)?|\s+(?:and|or)\s+', re.I)
+
+
+def _items_own_statements(listed, statements):
+    """Each figure the list writes is its own cited statement, word for word from the figure on (review of 41e4d35):
+    `statements` maps each citation group's refs to their statements. A figure may stop before what its statement
+    goes on to say, which the restatement gives back ("500M messages" for "500M messages with no explicit
+    interval"), and may write or leave out the "+", but every word it writes is its statement's own, in place:
+    "140,000+ messages [S1]" (S1 states bots) and "140,000+ bots with no messages [S1]" keep the sentence, although
+    another cited statement has "messages" and "with no". Every ref of a group must be written, and nothing may follow
+    the last group."""
+    parts = _REF.split(listed)
+    if parts[-1].strip(' ,.'):
+        return False
+    for segment, group in zip(parts[0::2], parts[1::2]):
+        refs = _split_refs(group)
+        written = set()
+        items = [item for item in _ITEM_JOIN.split(_DIGIT_GROUP.sub('', segment.lower()).strip(' ,.')) if item]
+        items[:1] = [re.sub(r'^(?:and|or)\s+', '', items[0])] if items else []
+        if not items:
+            return False
+        for item in items:
+            words = item.split()
+            if len(words) < 2 or not _FIGURE_TOKEN.fullmatch(words[0]):
+                return False                   # a figure and its noun, nothing before the figure
+            owners = []
+            for ref in refs:
+                stated = statements[ref].split()
+                if (len(words) <= len(stated) and _FIGURE_TOKEN.fullmatch(stated[0])
+                        and _figure_key(words[0]).rstrip('+') == _figure_key(stated[0]).rstrip('+')
+                        and words[1:] == stated[1:len(words)]):
+                    owners.append(ref)
+            if not owners:
+                return False                   # another metric, qualification or wording than its statement's
+            written.update(owners)
+        if written != set(refs):
+            return False
+    return True
+
+
 def _heading_scope(sentence, facts, changes):
     """A heading phrase closing a list that also cites the other side of a pair, from another page or context:
     the list is restated fact by fact under each item's own page and context, so the heading covers only the refs
@@ -1152,6 +1198,7 @@ def _heading_scope(sentence, facts, changes):
                       | {form for fact in statements for form in _stated_forms(fact)})
         if not _slash_forms_stated(bare, statements):
             continue                           # an interval no cited statement gives that figure: kept for review
+        written = bare                         # the list as written, slashes included
         bare = re.sub(r'(?<=[a-z])/(?=[a-z])', ' ', bare)    # "messages/month": checked above, now two plain words
         if dash:                               # an appositive list: its subject is the clause before the dash
             subject = sentence[_place_clause_start(sentence, start - 1):start - 1]
@@ -1165,9 +1212,12 @@ def _heading_scope(sentence, facts, changes):
             if verb is None or not _OWN_SUBJECT.fullmatch(bare[_LEAD.match(bare).end():verb.start()].strip()):
                 continue
             subject, listed = bare[:verb.start()], bare[verb.end():]
+            written = written[verb.end():]     # same offsets: a slash became one space
             head = sentence[:start] + span[:verb.end()] + ' '
         if not _placing_words(listed, vocabulary, False):
             continue                           # another fact, figure, aside, denial or hedge in the list
+        if not _items_own_statements(written, {ref: _DIGIT_GROUP.sub('', places[ref][2].lower()) for ref in cited}):
+            continue                           # a figure with another's metric or qualification: kept for review
         words = re.findall(r"[\w']+", _VERIFICATION_QUALIFIER.sub(' ', subject).lower())
         if (not _OWN_SOURCE.search(subject) or any(name.lower() in subject.lower() for name in facts.narrators)
                 or _ATTRIBUTION.search(subject) or set(words) & _DENIAL or _UNCERTAIN.search(' '.join(words))):
