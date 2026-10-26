@@ -186,8 +186,7 @@ class EndpointParityTests(_Decks):
         extract.assert_not_called()
 
 
-class SyntheticDeckTests(TestCase):
-    """The same rules on a deck with another name and other words."""
+class _Synthetic(TestCase):
 
     def setUp(self):
         self.owner = get_user_model().objects.create_user('synthetic_owner', password='x')
@@ -202,6 +201,10 @@ class SyntheticDeckTests(TestCase):
 
     def pages(self, doc, question):
         return [r['page'] for r in VectorRetriever(top_k=5).retrieve(self.principal, question, doc)]
+
+
+class SyntheticDeckTests(_Synthetic):
+    """The same rules on a deck with another name and other words."""
 
     def test_a_footer_name_on_every_page_selects_nothing(self):
         doc = self.deck('Brightline Robotics', ['Brightline Robotics | brightline.io | Our team',
@@ -238,3 +241,56 @@ class SyntheticDeckTests(TestCase):
     def test_a_one_chunk_document_still_answers(self):
         doc = self.deck('Solo', ['Solo has revenue of $2M.'])
         self.assertEqual(self.pages(doc, 'revenue'), [1])
+
+
+class SubjectNameTests(_Synthetic):
+    """Review of 8d08fe5, finding 1: only the company's full name is set aside, never a topic word in it."""
+
+    def revenue_labs(self):
+        return self.deck('Revenue Labs', ['Revenue Labs | revenuelabs.io | Our team',
+                                          'Revenue Labs | revenuelabs.io | Revenue: $2M ARR'])
+
+    def test_a_topic_word_in_the_name_still_counts_on_its_own(self):
+        doc = self.revenue_labs()
+        self.assertEqual(self.pages(doc, 'What is the revenue?'), [2])
+        self.assertEqual(self.pages(doc, "What is Revenue Labs' revenue?"), [2])
+
+    def test_the_full_name_alone_still_selects_nothing(self):
+        doc = self.revenue_labs()
+        self.assertEqual(self.pages(doc, 'Tell me about Revenue Labs.'), [])
+        self.assertEqual(self.pages(doc, 'Who founded Revenue Labs?'), [])
+
+    def test_a_legal_suffix_and_punctuation_in_the_name(self):
+        doc = self.deck('Ben & Jerry’s, Inc.', ["Ben & Jerry's | Our team", "Ben & Jerry's | Revenue: $1B"])
+        self.assertEqual(self.pages(doc, "What is Ben & Jerry's revenue?"), [2])
+        self.assertEqual(self.pages(doc, "Who runs Ben & Jerry's?"), [])
+
+
+class FallbackPathTests(_Decks):
+    """Review of 8d08fe5, finding 2: without vectors, or when the question cannot be embedded, the ranking is the
+    same one, not the old substring match (which let "many" in "ManyChat" match every footer)."""
+
+    def ranked(self):
+        return {q: [(r['id'], r['relevance']) for r in self.results(text)] for q, text in QUESTIONS.items()}
+
+    def test_no_stored_vectors_ranks_the_same(self):
+        with_vectors = self.ranked()
+        DocumentChunk.objects.update(embedding_vector=None)
+        self.assertEqual(self.ranked(), with_vectors)
+        self.assertEqual(self.pages(QUESTIONS['Q2']), [10])
+        self.assertEqual(self.pages(QUESTIONS['Q4']), [])
+
+    def test_a_question_that_cannot_be_embedded_ranks_the_same(self):
+        with_vectors = self.ranked()
+        with mock.patch('zelda_api.retrieval.embedding_engine.embed_text', return_value=None):
+            self.assertEqual(self.ranked(), with_vectors)
+            self.assertEqual(self.pages(QUESTIONS['Q2']), [10])
+
+    def test_some_chunks_without_vectors_are_still_ranked(self):
+        DocumentChunk.objects.filter(document=self.doc, page_number=10).update(embedding_vector=None)
+        self.assertEqual(self.pages(QUESTIONS['Q2']), [10])
+
+    def test_the_fallback_stays_inside_the_document(self):
+        DocumentChunk.objects.update(embedding_vector=None)
+        for text in QUESTIONS.values():
+            self.assertNotIn(self.other_text, [r['text'] for r in self.results(text)])

@@ -1137,9 +1137,14 @@
     // quoted passages. With no document chosen the request is the marketplace
     // search's {q}, unchanged.
     let zeldaAskDocument = null;
+    // The newest Ask. An answer to any earlier one -- an older question, or one
+    // asked before the document context changed -- is stale and never shown
+    // (review of 8d08fe5: Deck A's excerpts rendered under Deck B).
+    let zeldaAskRequest = 0;
     const ZELDA_ASK_PLACEHOLDER = document.getElementById('zeldaAskQuery').placeholder;
 
     function setZeldaAskDocument(documentId, name) {
+        zeldaAskRequest += 1;
         const id = Number(documentId);
         zeldaAskDocument = Number.isInteger(id) && id > 0 ? {id, name: String(name || `Document ${id}`)} : null;
         document.getElementById('zelda-ask-document').style.display = zeldaAskDocument ? 'block' : 'none';
@@ -1172,11 +1177,8 @@
         card.style.display = 'block';
     }
 
-    document.getElementById('zelda-ask-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const question = document.getElementById('zeldaAskQuery').value.trim();
-        if (!question) return;
-
+    async function submitZeldaAsk(question) {
+        const request = ++zeldaAskRequest;
         const asked = zeldaAskDocument;
         addLogEntry(asked ? `Asking about ${asked.name}: "${question}"` : `Asking Zelda: "${question}"`, 'info');
 
@@ -1192,6 +1194,10 @@
             });
 
             const data = await response.json();
+            if (request !== zeldaAskRequest) {
+                addLogEntry('An earlier question was answered after you moved on; its answer is not shown.', 'info');
+                return;
+            }
 
             if (data.status === 'error') {
                 addLogEntry(data.message || `Error: HTTP ${response.status}`, 'error');
@@ -1208,10 +1214,18 @@
             }
 
         } catch (err) {
+            if (request !== zeldaAskRequest) return;
             addLogEntry(`Error: ${err.message}`, 'error');
         }
 
         document.getElementById('zeldaAskQuery').value = '';
+    }
+
+    document.getElementById('zelda-ask-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const question = document.getElementById('zeldaAskQuery').value.trim();
+        if (!question) return;
+        submitZeldaAsk(question);
     });
 
     // ──────────────────────────────────────────────────────────────────────────
