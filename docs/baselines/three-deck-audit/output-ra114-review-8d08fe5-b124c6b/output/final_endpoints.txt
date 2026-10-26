@@ -1,0 +1,255 @@
+2026-10-26 02:58:18,811 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-26 02:59:11,871 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:11,901 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:11,922 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:11,940 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:11,980 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:12,003 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:12,042 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:12,061 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:12,089 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:12,106 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:12,125 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:12,147 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-26 02:59:12,374 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/chunks/
+2026-10-26 02:59:12,397 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/chunks/
+2026-10-26 02:59:12,415 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/chunks/
+2026-10-26 02:59:12,431 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/chunks/
+.2026-10-26 02:59:12,474 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:12,491 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:12,508 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:12,524 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:12,553 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:12,570 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:12,591 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:12,609 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-26 02:59:12,676 WARNING django.request - Bad Request: /api/v1/zelda/documents/1/search/
+2026-10-26 02:59:12,688 WARNING django.request - Bad Request: /api/v1/zelda/documents/1/rag/
+.2026-10-26 02:59:12,695 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:12,713 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:12,730 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:12,746 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:12,838 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:12,855 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:12,872 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:12,889 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:12,965 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:12,982 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:12,999 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:13,018 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-26 02:59:13,083 WARNING django.request - Bad Request: /api/v1/zelda/documents/1/rag/
+2026-10-26 02:59:13,092 WARNING django.request - Bad Request: /api/v1/zelda/documents/1/rag/
+2026-10-26 02:59:13,100 WARNING django.request - Bad Request: /api/v1/zelda/documents/1/rag/
+2026-10-26 02:59:13,111 WARNING django.request - Bad Request: /api/v1/zelda/documents/1/rag/
+2026-10-26 02:59:13,121 WARNING django.request - Bad Request: /api/v1/zelda/documents/1/rag/
+2026-10-26 02:59:13,131 WARNING django.request - Bad Request: /api/v1/zelda/documents/1/rag/
+.2026-10-26 02:59:13,138 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:13,157 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:13,175 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:13,192 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-26 02:59:13,310 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/search/
+2026-10-26 02:59:13,325 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/search/
+2026-10-26 02:59:13,343 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/search/
+2026-10-26 02:59:13,358 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/search/
+2026-10-26 02:59:13,364 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/search/
+2026-10-26 02:59:13,434 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/rag/
+2026-10-26 02:59:13,450 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/rag/
+2026-10-26 02:59:13,467 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/rag/
+2026-10-26 02:59:13,484 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/rag/
+2026-10-26 02:59:13,491 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/rag/
+.2026-10-26 02:59:13,497 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:13,515 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:13,532 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:13,548 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-26 02:59:13,668 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/search/
+2026-10-26 02:59:13,674 WARNING django.request - Forbidden: /api/v1/zelda/documents/1/rag/
+.2026-10-26 02:59:13,682 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:13,702 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:13,721 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:13,738 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:13,763 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:13,782 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:13,800 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:13,819 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:13,850 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:13,867 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:13,888 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:13,906 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:13,965 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:13,982 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:13,999 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:14,018 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:14,050 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:14,066 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:14,082 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:14,098 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-26 02:59:14,120 WARNING zelda_api.retrieval - Failed to embed query: text
+2026-10-26 02:59:14,123 WARNING zelda_api.retrieval - Failed to embed query: text
+2026-10-26 02:59:14,126 WARNING zelda_api.retrieval - Failed to embed query: text
+.2026-10-26 02:59:14,134 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:14,156 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:14,176 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:14,193 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:14,237 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:14,256 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:14,274 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:14,292 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:14,328 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:14,349 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:14,368 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:14,392 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:14,439 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:14,460 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:14,482 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:14,499 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:14,525 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:14,542 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:14,558 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:14,578 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:14,612 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-26 02:59:14,658 WARNING django.request - Forbidden: /api/v1/zelda/analyze/founder/closeout_owner/
+.2026-10-26 02:59:14,664 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-26 02:59:14,696 WARNING django.request - Forbidden: /api/v1/zelda/analyze/founder/closeout_owner/
+.2026-10-26 02:59:14,702 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-26 02:59:14,738 WARNING django.request - Forbidden: /api/v1/zelda/analyze/founder/closeout_owner/confirm/
+.2026-10-26 02:59:14,745 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-26 02:59:14,752 INFO zelda_api.intelligence_pipeline - Embedded 2 chunks
+.2026-10-26 02:59:14,759 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-26 02:59:14,761 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+.2026-10-26 02:59:14,766 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-26 02:59:14,775 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-26 02:59:14,785 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-26 02:59:14,798 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-26 02:59:14,809 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-26 02:59:14,905 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-26 02:59:14,912 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-26 02:59:14,915 WARNING zelda_api.retrieval - Failed to embed query: on the a
+2026-10-26 02:59:14,921 WARNING zelda_api.retrieval - Failed to embed query: revenue
+.2026-10-26 02:59:14,930 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-26 02:59:14,949 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:14,967 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:14,984 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:15,000 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:15,031 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:15,051 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:15,073 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:15,091 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:15,120 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:15,137 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:15,159 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:15,178 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:15,211 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:15,229 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:15,246 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:15,264 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:15,295 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:15,313 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:15,330 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:15,349 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:15,379 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:15,401 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:15,420 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:15,436 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:15,469 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:15,499 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:15,517 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:15,534 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:15,562 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:15,578 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:15,596 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:15,618 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:15,650 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:15,669 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:15,690 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:15,711 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:16,015 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:16,033 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:16,051 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:16,072 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:16,098 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:16,115 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:16,136 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:16,162 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:16,202 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:16,218 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:16,235 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:16,251 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:16,303 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:16,319 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:16,337 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:16,354 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:16,386 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:16,408 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:16,425 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:16,443 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:16,468 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:16,485 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:16,508 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:16,526 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:16,555 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:16,572 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:16,589 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:16,609 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-26 02:59:16,636 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-26 02:59:16,654 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-26 02:59:16,670 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-26 02:59:16,686 INFO zelda_api.signals - DocumentSource created: h.pdf
+..................................2026-10-26 02:59:16,982 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-26 02:59:17,326 INFO zelda_api.signals - DocumentSource created: deck.pdf
+......2026-10-26 02:59:17,677 INFO zelda_api.signals - DocumentSource created: d.pdf
+.2026-10-26 02:59:17,795 INFO zelda_api.signals - DocumentSource created: d.pdf
+.2026-10-26 02:59:17,875 INFO zelda_api.signals - DocumentSource created: d.pdf
+.2026-10-26 02:59:17,993 ERROR django.request - Service Unavailable: /api/v1/zelda/ask/
+.2026-10-26 02:59:18,057 WARNING django.request - Too Many Requests: /api/v1/zelda/ask/
+.2026-10-26 02:59:51,223 INFO sentence_transformers.base.model - No device provided, using cpu
+2026-10-26 02:59:51,227 INFO sentence_transformers.base.model - Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+Found 156 test(s).
+System check identified no issues (0 silenced).
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 1364.98it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  3.21it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  3.20it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  8.72it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  8.69it/s]
+...Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 68.74it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 73.90it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 27.03it/s]
+.Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 56.54it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 49.23it/s]
+...Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 52.84it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 68.22it/s]
+..2026-10-26 02:59:53,867 WARNING django.request - Forbidden: /api/v1/zelda/ask/
+.....Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 66.55it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 69.38it/s]
+...2026-10-26 02:59:55,923 WARNING django.request - Forbidden: /api/v1/zelda/analyze/founder/zelda_action_target/
+2026-10-26 02:59:56,061 WARNING django.request - Forbidden: /api/v1/zelda/analyze/founder/zelda_action_target/
+2026-10-26 02:59:56,123 WARNING django.request - Forbidden: /api/v1/zelda/analyze/founder/zelda_action_target/
+...2026-10-26 02:59:56,489 WARNING django.request - Not Found: /api/v1/zelda/analyze/founder/zelda_action_private/
+...Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 53.06it/s]
+2026-10-26 02:59:57,022 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[8aefee57-cb0c-4e1c-a6eb-715cfa10b3af] succeeded in 0.012566799996420741s: None
+2026-10-26 02:59:57,033 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[385e865f-ba3a-4364-833a-42b978421506] succeeded in 0.004593900055624545s: None
+2026-10-26 02:59:57,046 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[d17d8a28-4e14-4fe6-bbba-3c9dbf651db7] succeeded in 0.004380499944090843s: None
+2026-10-26 02:59:57,055 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[28eeaf98-69c2-4e56-8128-b599e6dae298] succeeded in 0.005184900015592575s: None
+.2026-10-26 02:59:57,142 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[226e0b78-bbd5-4b0c-9e1a-007c16f8da44] succeeded in 0.004822599934414029s: None
+2026-10-26 02:59:57,153 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[952068d3-147f-4155-970c-dee64c9d3703] succeeded in 0.00505059992428869s: None
+2026-10-26 02:59:57,164 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[b2b0b831-1a01-4fa9-9709-60f83ae9ad0d] succeeded in 0.004282600013539195s: None
+2026-10-26 02:59:57,173 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[2d5076e3-5b0a-47df-84ef-7523ef336f90] succeeded in 0.0045770000433549285s: None
+.2026-10-26 02:59:57,259 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[0bcea33e-6099-475f-9ede-10a8ed669a20] succeeded in 0.0042709000408649445s: None
+2026-10-26 02:59:57,269 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[f7fcda0e-df8a-43fd-8d88-31e71cd66b95] succeeded in 0.004433299996890128s: None
+2026-10-26 02:59:57,281 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[6c895692-887e-47c4-b423-6e23b42980c5] succeeded in 0.0046845999313518405s: None
+2026-10-26 02:59:57,290 INFO celery.app.trace - Task matchmaking.tasks.refresh_matches_for_investor_task[25a48655-6777-4969-9158-62d99f3bb4dd] succeeded in 0.005057299975305796s: None
+.2026-10-26 02:59:57,366 INFO zelda_api.signals - DocumentSource created: nike.pptx
+2026-10-26 02:59:58,069 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-26 02:59:58,077 INFO zelda_api.intelligence_pipeline - Created 10 chunks
+2026-10-26 02:59:58,193 INFO zelda_api.intelligence_pipeline - Extracted 6 insights with dynamic confidence
+2026-10-26 02:59:58,216 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-26 02:59:58,235 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 2 claims from insights
+.2026-10-26 02:59:58,242 INFO zelda_api.signals - DocumentSource created: nike.pptx
+2026-10-26 02:59:58,288 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 1
+2026-10-26 02:59:58,296 INFO zelda_api.intelligence_pipeline - Created 10 chunks
+.2026-10-26 02:59:58,350 INFO zelda_api.signals - DocumentSource created: nike.pptx
+2026-10-26 02:59:58,597 INFO zelda_api.signals - DocumentSource created: nike_zelda_adversarial_test_deck.pptx
+.................................
+----------------------------------------------------------------------
+Ran 156 tests in 49.752s
+
+OK
+Destroying test database for alias 'default'...

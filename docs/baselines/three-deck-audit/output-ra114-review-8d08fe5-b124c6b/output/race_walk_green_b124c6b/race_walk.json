@@ -1,0 +1,85 @@
+{
+ "base": "http://127.0.0.1:8767",
+ "document_a": 1,
+ "document_b": 2,
+ "steps": [
+  {
+   "name": "library ask buttons",
+   "buttons": [
+    "Northwind",
+    "ManyChat"
+   ]
+  },
+  {
+   "name": "switched to B while A is pending",
+   "contextName": "Northwind",
+   "contextShown": true,
+   "resultsShown": false,
+   "results": [],
+   "log": [
+    "\n                    [Ready] Awaiting input... Search, product analysis, or memo retrieval\n                ",
+    "Zelda Intelligence initialized",
+    "Asking about ManyChat: \"How much has ManyChat raised?\""
+   ]
+  },
+  {
+   "name": "after A answered, context B",
+   "contextName": "Northwind",
+   "contextShown": true,
+   "resultsShown": false,
+   "results": [],
+   "log": [
+    "Zelda Intelligence initialized",
+    "Asking about ManyChat: \"How much has ManyChat raised?\"",
+    "An earlier question was answered after you moved on; its answer is not shown."
+   ],
+   "answered": [
+    {
+     "document_id": 1,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "name": "two questions on B, newer answered first",
+   "contextName": "Northwind",
+   "contextShown": true,
+   "resultsShown": true,
+   "results": [
+    "Page 2 Northwind | Revenue: $3M ARR"
+   ],
+   "log": [
+    "Asking about Northwind: \"What is the revenue?\"",
+    "1 passage from this document may bear on that (page 2). They are the document's own words, shown as excerpts: what it states, not a verified answer.",
+    "An earlier question was answered after you moved on; its answer is not shown."
+   ],
+   "answered": [
+    {
+     "q": "How much has ManyChat raised?",
+     "status": 200
+    },
+    {
+     "q": "What is the revenue?",
+     "status": 200
+    },
+    {
+     "q": "How much has Northwind raised?",
+     "status": 200
+    }
+   ]
+  },
+  {
+   "name": "cleared to marketplace while pending",
+   "contextName": "",
+   "contextShown": false,
+   "resultsShown": false,
+   "results": [],
+   "log": [
+    "An earlier question was answered after you moved on; its answer is not shown.",
+    "Asking about Northwind: \"How much has Northwind raised?\"",
+    "An earlier question was answered after you moved on; its answer is not shown."
+   ]
+  }
+ ],
+ "console_errors": []
+}

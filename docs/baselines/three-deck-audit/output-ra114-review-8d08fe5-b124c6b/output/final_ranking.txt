@@ -1,0 +1,63 @@
+2026-10-26 02:57:12,486 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-26 02:58:04,933 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 02:58:04,952 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 02:58:04,966 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 02:58:04,984 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 02:58:05,099 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 02:58:05,116 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 02:58:05,147 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 02:58:05,168 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 02:58:05,522 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 02:58:05,541 INFO zelda_api.signals - DocumentSource created: other.pdf
+2026-10-26 02:58:05,589 WARNING zelda_api.retrieval - Failed to embed query: How much has ManyChat raised?
+2026-10-26 02:58:05,595 WARNING zelda_api.retrieval - Failed to embed query: How many users does ManyChat have?
+2026-10-26 02:58:05,602 WARNING zelda_api.retrieval - Failed to embed query: How many messages does ManyChat send?
+2026-10-26 02:58:05,608 WARNING zelda_api.retrieval - Failed to embed query: Is ManyChat registered with the SEC?
+2026-10-26 02:58:05,614 WARNING zelda_api.retrieval - Failed to embed query: What is ManyChat's current revenue?
+2026-10-26 02:58:05,620 WARNING zelda_api.retrieval - Failed to embed query: When did ManyChat raise its Series A?
+2026-10-26 02:58:05,626 WARNING zelda_api.retrieval - Failed to embed query: Should I invest in ManyChat?
+2026-10-26 02:58:05,632 WARNING zelda_api.retrieval - Failed to embed query: How many users does ManyChat have?
+.2026-10-26 02:58:05,640 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 02:58:05,658 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 02:58:05,764 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 02:58:05,783 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 02:58:05,797 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 02:58:05,818 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 02:58:05,880 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 02:58:05,898 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 02:58:05,909 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 02:58:05,930 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 02:58:05,944 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 02:58:05,963 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 02:58:05,975 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 02:58:05,996 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 02:58:06,007 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 02:58:06,027 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 02:58:06,046 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 02:58:06,064 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 02:58:06,115 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 02:58:06,133 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 02:58:06,186 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 02:58:06,204 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 02:58:06,211 INFO zelda_api.signals - DocumentSource created: s.pdf
+.2026-10-26 02:58:06,227 INFO zelda_api.signals - DocumentSource created: s.pdf
+.2026-10-26 02:58:06,243 INFO zelda_api.signals - DocumentSource created: s.pdf
+.2026-10-26 02:58:06,259 INFO zelda_api.signals - DocumentSource created: s.pdf
+.2026-10-26 02:58:06,286 INFO zelda_api.signals - DocumentSource created: s.pdf
+.2026-10-26 02:58:06,299 INFO zelda_api.signals - DocumentSource created: s.pdf
+.2026-10-26 02:58:06,310 INFO zelda_api.signals - DocumentSource created: s.pdf
+.2026-10-26 02:58:06,322 INFO zelda_api.signals - DocumentSource created: s.pdf
+.2026-10-26 02:58:06,337 INFO zelda_api.signals - DocumentSource created: s.pdf
+.2026-10-26 02:58:06,359 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 02:58:06,378 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 02:58:06,434 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 02:58:06,453 INFO zelda_api.signals - DocumentSource created: other.pdf
+.
+----------------------------------------------------------------------
+Ran 27 tests in 1.558s
+
+OK
+Destroying test database for alias 'default'...
+Found 27 test(s).
+System check identified no issues (0 silenced).

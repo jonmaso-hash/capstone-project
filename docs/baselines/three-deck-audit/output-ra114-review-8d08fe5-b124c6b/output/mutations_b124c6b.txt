@@ -1,0 +1,33 @@
+R1   views.py      document_id ignored (no routing)                 caught fails=22 errors=6 ran=15
+R2   views.py      routes on key presence (null document_id too)    caught fails=1 errors=0 ran=15
+A1   views.py      no authorization check before retrieval          caught fails=1 errors=0 ran=15
+A2   views.py      refused retrieval returns 200 with nothing       caught fails=1 errors=0 ran=15
+I1   views.py      retrieval over every authorized document         caught fails=1 errors=0 ran=15
+E1   views.py      no_relevant_evidence never true                  caught fails=1 errors=0 ran=15
+E2   views.py      empty evidence worded as found                   caught fails=1 errors=0 ran=15
+V1   views.py      bool accepted as a document id                   caught fails=2 errors=0 ran=15
+V2   views.py      empty question accepted                          caught fails=2 errors=0 ran=15
+X1   views.py      model extraction still called                    caught fails=2 errors=0 ran=15
+X2   views.py      marketplace cards added to a document answer     caught fails=1 errors=0 ran=15
+S1   retrieval.py  subject name not set aside                       caught fails=2 errors=0 ran=75
+S2   retrieval.py  subject name set aside across documents too      caught fails=1 errors=0 ran=75
+N1   retrieval.py  each word of the name set aside on its own       caught fails=1 errors=0 ran=75
+N2   retrieval.py  name set aside in the question only              caught fails=1 errors=0 ran=75
+N3   retrieval.py  legal suffix kept in the name                    caught fails=1 errors=0 ran=75
+F1   retrieval.py  chunks without a vector skipped                  caught fails=7 errors=0 ran=75
+F2   retrieval.py  a question that cannot be embedded gets nothing  caught fails=4 errors=0 ran=75
+W1   retrieval.py  question words count                             caught fails=3 errors=0 ran=75
+ST1  retrieval.py  no word forms at all                             caught fails=3 errors=0 ran=75
+ST2  retrieval.py  no -ed form                                      caught fails=3 errors=0 ran=75
+ST3  retrieval.py  -ing folded too                                  caught fails=2 errors=0 ran=75
+T1   retrieval.py  no topic headings                                caught fails=7 errors=1 ran=75
+T2   retrieval.py  a heading counts as much as a stated word        caught fails=1 errors=0 ran=75
+T3   retrieval.py  headings the question already uses double-count  caught fails=1 errors=0 ran=75
+P1   zelda_ai_assistant_enhanced.html document excerpt rendered unescaped              caught fails=1 errors=0 ran=22
+P2   zelda_ai_assistant_enhanced.html library ask button name unescaped                caught fails=1 errors=0 ran=22
+G1   zelda_ai_assistant_enhanced.html stale answers shown                              caught fails=5 errors=0 ran=22
+G2   zelda_ai_assistant_enhanced.html choosing a document leaves pending answers current caught fails=3 errors=0 ran=22
+G3   zelda_ai_assistant_enhanced.html a new question leaves the older one current      caught fails=2 errors=0 ran=22
+G4   zelda_ai_assistant_enhanced.html stale failures reported                          caught fails=1 errors=0 ran=22
+Z1   retrieval.py  zero-relevance chunks returned                   caught fails=26 errors=0 ran=75
+32/32 caught | restored sha256 zelda_api/views.py=6c9714b2cf28ba7aa10fa9096287aafa680b1a8cb50cf707f933118c6c9169f9 zelda_api/retrieval.py=731704c155dcd84e1dfb72f1311f42ced917420eae419ffcc7dc9454f6e9d81b templates/includes/zelda_ai_assistant_enhanced.html=afa3aac549fadd7cf4547ef39ff59192981cefb108afb743b08079dc4f8a430a

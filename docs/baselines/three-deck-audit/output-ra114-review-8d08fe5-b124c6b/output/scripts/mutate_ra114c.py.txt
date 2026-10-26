@@ -1,0 +1,68 @@
+"""Targeted mutations of the RA-114 changes, one on disk at a time, original bytes restored and SHA-256 checked after
+each. views.py mutants (the 11 of round 1) run against tests_ask_document; retrieval.py mutants against the ranking,
+ask-document, retrieval and boundary tests. A mutant is caught only by assertion failures (FAIL), not errors.
+Usage: python mutate_ra114c.py <worktree> <t.sh> [mutant ids ...]"""
+import hashlib, re, subprocess, sys
+
+W, T = sys.argv[1], sys.argv[2]
+VIEWS = 'zelda_api/views.py'
+RET = 'zelda_api/retrieval.py'
+TPL = 'templates/includes/zelda_ai_assistant_enhanced.html'
+PANEL = ['zelda_api.tests_assistant_panel_escaping', 'zelda_api.tests_assistant_panel_ask', 'pages.tests_zelda_panel_markup']
+ASK = ['zelda_api.tests_ask_document']
+RANK = ['zelda_api.tests_document_retrieval_ranking', 'zelda_api.tests_ask_document', 'zelda_api.tests_retrieval',
+        'zelda_api.tests_boundary_closeout']
+M = [
+    ('R1', 'document_id ignored (no routing)', VIEWS, "        if request.data.get('document_id') is not None:\n            return self._document_question(request)\n", '', ASK),
+    ('R2', 'routes on key presence (null document_id too)', VIEWS, "if request.data.get('document_id') is not None:", "if 'document_id' in request.data:", ASK),
+    ('A1', 'no authorization check before retrieval', VIEWS, "        if not authorize(principal).text_permitted(doc):\n            return Response({'status': 'error', 'message': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)\n        try:", "        try:", ASK),
+    ('A2', 'refused retrieval returns 200 with nothing', VIEWS, "        except RetrievalRefused:\n            return Response({'status': 'error', 'message': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)", "        except RetrievalRefused:\n            results = []", ASK),
+    ('I1', 'retrieval over every authorized document', VIEWS, "VectorRetriever().retrieve(principal, question.strip(), doc)", "VectorRetriever().retrieve(principal, question.strip())", ASK),
+    ('E1', 'no_relevant_evidence never true', VIEWS, "'no_relevant_evidence': not evidence,", "'no_relevant_evidence': False,", ASK),
+    ('E2', 'empty evidence worded as found', VIEWS, "            response_text = \"No relevant evidence was found in this document for that question.\"", "            response_text = \"0 passages from this document may bear on that.\"", ASK),
+    ('V1', 'bool accepted as a document id', VIEWS, "if not isinstance(document_id, int) or isinstance(document_id, bool):", "if not isinstance(document_id, int):", ASK),
+    ('V2', 'empty question accepted', VIEWS, "if not isinstance(question, str) or not question.strip():", "if not isinstance(question, str):", ASK),
+    ('X1', 'model extraction still called', VIEWS, "        evidence = [{'chunk_id'", "        from zelda_api.intelligence_pipeline import _call_claude_for_query_extraction\n        _call_claude_for_query_extraction(question, target='founder')\n        evidence = [{'chunk_id'", ASK),
+    ('X2', 'marketplace cards added to a document answer', VIEWS, "            'results': [],\n        }, status=status.HTTP_200_OK)\n", "            'results': [{'username': 'x'}],\n        }, status=status.HTTP_200_OK)\n", ASK),
+    ('S1', 'subject name not set aside', RET, "        question = without_subject(query, document_source)\n", "        question = query\n", RANK),
+    ('S2', 'subject name set aside across documents too', RET, "    pattern = subject_pattern(document_source) if document_source is not None else None", "    pattern = subject_pattern(document_source if document_source is not None else DocumentSource(source_entity='Other Co'))", RANK),
+    ('N1', 'each word of the name set aside on its own', RET, "r'[^a-z0-9]+'.join(map(re.escape, words))", "'|'.join(map(re.escape, words))", RANK),
+    ('N2', 'name set aside in the question only', RET, "self._keyword_boost(question, without_subject(chunk.raw_text, document_source))", "self._keyword_boost(question, chunk.raw_text)", RANK),
+    ('N3', 'legal suffix kept in the name', RET, "    while len(words) > 1 and words[-1] in LEGAL_SUFFIXES:\n        words.pop()\n", "", RANK),
+    ('F1', 'chunks without a vector skipped', RET, "            try:\n                similarity = 0.0\n", "            try:\n                if not chunk.embedding_vector:\n                    continue\n                similarity = 0.0\n", RANK),
+    ('F2', 'a question that cannot be embedded gets nothing', RET, "            logger.warning(f\"Failed to embed query: {query}\")\n", "            logger.warning(f\"Failed to embed query: {query}\")\n            return []\n", RANK),
+    ('W1', 'question words count', RET, "return {word_stem(w) for w in meaningful_terms(text) if w not in QUESTION_WORDS}", "return {word_stem(w) for w in meaningful_terms(text)}", RANK),
+    ('ST1', 'no word forms at all', RET, "return {word_stem(w) for w in meaningful_terms(text) if w not in QUESTION_WORDS}", "return {w for w in meaningful_terms(text) if w not in QUESTION_WORDS}", RANK),
+    ('ST2', 'no -ed form', RET, "    if len(word) > 5 and word.endswith('ed'):\n        word = word[:-2]\n", "", RANK),
+    ('ST3', '-ing folded too', RET, "    if len(word) > 5 and word.endswith('ed'):\n        word = word[:-2]\n", "    if len(word) > 5 and word.endswith('ed'):\n        word = word[:-2]\n    elif len(word) > 5 and word.endswith('ing'):\n        word = word[:-3]\n", RANK),
+    ('T1', 'no topic headings', RET, " + RELATED_WEIGHT * len(related_terms(query_words) & text_words)", "", RANK),
+    ('T2', 'a heading counts as much as a stated word', RET, "RELATED_WEIGHT = 0.5", "RELATED_WEIGHT = 1.0", RANK),
+    ('T3', 'headings the question already uses double-count', RET, "if query_terms & words} - query_terms", "if query_terms & words}", RANK),
+    ('P1', 'document excerpt rendered unescaped', TPL, '${zeldaEscape(item.text)}', '${item.text}', PANEL),
+    ('P2', 'library ask button name unescaped', TPL, 'data-document-name="${zeldaEscape(name)}"', 'data-document-name="${name}"', PANEL),
+    ('G1', 'stale answers shown', TPL, "            if (request !== zeldaAskRequest) {\n                addLogEntry('An earlier", "            if (false) {\n                addLogEntry('An earlier", PANEL),
+    ('G2', 'choosing a document leaves pending answers current', TPL, "        zeldaAskRequest += 1;\n", "", PANEL),
+    ('G3', 'a new question leaves the older one current', TPL, "const request = ++zeldaAskRequest;", "const request = zeldaAskRequest;", PANEL),
+    ('G4', 'stale failures reported', TPL, "            if (request !== zeldaAskRequest) return;\n", "", PANEL),
+    ('Z1', 'zero-relevance chunks returned', RET, "                if final_score <= 0:", "                if final_score < 0:", RANK),
+]
+ONLY = set(sys.argv[3:])
+M = [m for m in M if not ONLY or m[0] in ONLY]
+originals = {p: open(f'{W}/{p}', 'rb').read() for p in (VIEWS, RET, TPL)}
+digests = {p: hashlib.sha256(b).hexdigest() for p, b in originals.items()}
+caught = 0
+for mid, desc, path, old, new, labels in M:
+    text = originals[path].decode('utf-8').replace('\r\n', '\n')
+    assert text.count(old) == 1, (mid, text.count(old))
+    open(f'{W}/{path}', 'wb').write(text.replace(old, new).encode('utf-8'))
+    try:
+        out = subprocess.run(['sh', T, W, *labels], capture_output=True, text=True, encoding='utf-8', errors='replace').stdout
+    finally:
+        open(f'{W}/{path}', 'wb').write(originals[path])
+    assert hashlib.sha256(open(f'{W}/{path}', 'rb').read()).hexdigest() == digests[path], 'restore failed'
+    fails = len(re.findall(r'^FAIL:', out, re.M))
+    errors = len(re.findall(r'^ERROR:', out, re.M))
+    ran = re.search(r'^Ran (\d+)', out, re.M)
+    caught += fails > 0
+    print(f"{mid:4s} {path.split('/')[-1]:13s} {desc:48s} {'caught' if fails else 'SURVIVED'} fails={fails} errors={errors} ran={ran.group(1) if ran else '?'}", flush=True)
+print(f'{caught}/{len(M)} caught | restored sha256 ' + ' '.join(f'{p}={d}' for p, d in digests.items()))

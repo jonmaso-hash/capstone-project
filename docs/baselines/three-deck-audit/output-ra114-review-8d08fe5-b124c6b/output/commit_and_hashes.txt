@@ -1,0 +1,49 @@
+branch fix/ask-document-routing-ra114
+base origin/main b27836439ca0e6aa9acc1ca6feaeae1be80b6415
+reviewed head 8d08fe54045bc1b875bc5c4102e48c773a7e80ee (code 9ee8d3d)
+validation head b124c6b67ae44eb8f305e729b56663a9f03f8c28
+
+b124c6b67ae44eb8f305e729b56663a9f03f8c28 Keep topic words in company names, one ranking path, and only the current Ask answer (review of 8d08fe5)
+
+code diff 9ee8d3d..HEAD (this round; docs excluded):
+ .../includes/zelda_ai_assistant_enhanced.html      |  24 +++-
+ zelda_api/js_tests/assistant_panel_ask.js          | 124 +++++++++++++++++++++
+ zelda_api/js_tests/assistant_panel_escaping.js     |  70 +-----------
+ zelda_api/js_tests/panel_source.js                 |  80 +++++++++++++
+ zelda_api/retrieval.py                             |  98 +++++++---------
+ zelda_api/tests_assistant_panel_ask.py             |  77 +++++++++++++
+ zelda_api/tests_assistant_panel_escaping.py        |   9 +-
+ zelda_api/tests_document_retrieval_ranking.py      |  60 +++++++++-
+ zelda_api/tests_retrieval.py                       |   4 +-
+ 9 files changed, 409 insertions(+), 137 deletions(-)
+
+diff origin/main...HEAD (code and tests):
+ .../includes/zelda_ai_assistant_enhanced.html      |  95 ++++++-
+ .../data/document_retrieval/memo104_chunks.json    |  96 +++++++
+ zelda_api/js_tests/assistant_panel_ask.js          | 124 +++++++++
+ zelda_api/js_tests/assistant_panel_escaping.js     |  70 +----
+ zelda_api/js_tests/panel_source.js                 |  80 ++++++
+ zelda_api/retrieval.py                             | 195 +++++++++-----
+ zelda_api/tests_ask_document.py                    | 185 +++++++++++++
+ zelda_api/tests_assistant_panel_ask.py             |  77 ++++++
+ zelda_api/tests_assistant_panel_escaping.py        |   7 +
+ zelda_api/tests_document_retrieval_ranking.py      | 296 +++++++++++++++++++++
+ zelda_api/tests_retrieval.py                       |   4 +-
+ zelda_api/views.py                                 |  59 ++++
+ 12 files changed, 1140 insertions(+), 148 deletions(-)
+
+blobs at HEAD:
+  2453f351ee23f39b110708240d1ce2d446a6114f zelda_api/views.py
+  508b5d5a53fd95c1c6f9ceab47064ad4d2e4a020 zelda_api/retrieval.py
+  6e4d2a9e29466298814ba3a1f1976dcbf92f4d9b templates/includes/zelda_ai_assistant_enhanced.html
+  db3d506ee3b868416020dbcb3aaa24038da22610 zelda_api/js_tests/panel_source.js
+  f06a6a22ed234389dbbf32cc5fc4ed778073a17d zelda_api/js_tests/assistant_panel_ask.js
+  828d350c657d8f9257f5fa0b47952692f2f89bc4 zelda_api/js_tests/assistant_panel_escaping.js
+  92b794a17aae4b9e5a43edb69bc079d14826ee44 zelda_api/tests_assistant_panel_ask.py
+  658ba2e30d5e3d5202a059abf7428d6c4b7d1336 zelda_api/tests_document_retrieval_ranking.py
+  dbddf109254cfd03af201e42047bab9cd41884c5 zelda_api/tests_retrieval.py
+  a86977b2194e94b479b3b7f6c20c798909a656de zelda_api/tests_assistant_panel_escaping.py
+
+views.py 9ee8d3d vs HEAD: same
+zelda_api/basis_fidelity.py vs b278364: same
+zelda_api/funding_fidelity.py vs b278364: same
