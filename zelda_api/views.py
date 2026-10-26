@@ -524,11 +524,18 @@ class ZeldaAskAPIView(APIView):
     results always come from a real Django query, so nothing here can be
     hallucinated (same discipline as the memo/valuation prompts: only
     claims grounded in real data ever reach the screen).
+
+    A question sent with a `document_id` is about that document, not the
+    marketplace (RA-114): it is answered from the document's own text
+    through the same principal-scoped retrieval and authorization as
+    /documents/<id>/search/, with no model call (see _document_question).
     """
     permission_classes = [IsAuthenticated]
     authentication_classes = [SessionAuthentication, TokenAuthentication]
 
     def post(self, request):
+        if request.data.get('document_id') is not None:
+            return self._document_question(request)
         question = request.data.get('q', '').strip()
         is_buyer = getattr(request.user, 'match_buyer_profile', None) is not None
         target = 'seller' if is_buyer else 'founder'
@@ -635,6 +642,58 @@ class ZeldaAskAPIView(APIView):
                 {'status': 'error', 'message': "Something went wrong processing that question."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+    def _document_question(self, request):
+        """A question about one document (RA-114). The same rule as
+        /documents/<id>/search/ decides who may ask (text_permitted: the owner
+        and staff), before anything is retrieved; the evidence is that
+        document's own chunks, returned as excerpts with their pages, never
+        composed into an answer; "nothing in this document bears on it" is
+        said outright. No query extraction, so no model call."""
+        from zelda_api.authorization import authorize
+        from zelda_api.principal import Principal
+        from zelda_api.retrieval import RetrievalRefused, VectorRetriever
+
+        document_id, question = request.data.get('document_id'), request.data.get('q')
+        if not isinstance(document_id, int) or isinstance(document_id, bool):
+            return Response({'status': 'error', 'message': 'document_id must be a document number.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if not isinstance(question, str) or not question.strip():
+            return Response({'status': 'error', 'message': 'Ask a question about this document.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        try:
+            doc = DocumentSource.objects.get(id=document_id)
+        except DocumentSource.DoesNotExist:
+            return Response({'status': 'error', 'message': 'Document not found.'}, status=status.HTTP_404_NOT_FOUND)
+        principal = Principal.from_request(request, label='zelda_api:ask_document')
+        if not authorize(principal).text_permitted(doc):
+            return Response({'status': 'error', 'message': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            results = VectorRetriever().retrieve(principal, question.strip(), doc)
+        except RetrievalRefused:
+            return Response({'status': 'error', 'message': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
+
+        evidence = [{'chunk_id': r['id'], 'page': r['page'], 'section': r['section'], 'text': r['text'],
+                     'relevance': r['relevance']} for r in results]
+        if evidence:
+            pages = sorted({e['page'] for e in evidence if e['page'] is not None})
+            where = f" (page{'s' if len(pages) != 1 else ''} {', '.join(map(str, pages))})" if pages else ''
+            response_text = (f"{len(evidence)} passage{'s' if len(evidence) != 1 else ''} from this document "
+                             f"may bear on that{where}. They are the document's own words, shown as excerpts: "
+                             f"what it states, not a verified answer.")
+        else:
+            response_text = "No relevant evidence was found in this document for that question."
+        return Response({
+            'status': 'success',
+            'document_id': doc.id,
+            'response': response_text,
+            'evidence': evidence,
+            # Said explicitly, as in /documents/<id>/search/, so "nothing in
+            # this document bears on the question" is never inferred from an
+            # empty list.
+            'no_relevant_evidence': not evidence,
+            'results': [],
+        }, status=status.HTTP_200_OK)
 
 
 class WebExplorationAPIView(APIView):
