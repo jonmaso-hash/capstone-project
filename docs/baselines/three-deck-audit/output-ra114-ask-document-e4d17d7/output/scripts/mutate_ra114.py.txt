@@ -1,0 +1,39 @@
+"""Targeted mutations of the RA-114 fix (zelda_api/views.py), one on disk at a time against tests_ask_document,
+original bytes restored and SHA-256 checked after each. A mutant is caught only by assertion failures (FAIL), not errors.
+Usage: python mutate_ra114.py <worktree> <t.sh> [mutant ids ...]"""
+import hashlib, re, subprocess, sys
+
+W, T = sys.argv[1], sys.argv[2]
+PATH = f'{W}/zelda_api/views.py'
+M = [
+    ('R1', 'document_id ignored (no routing)', "        if request.data.get('document_id') is not None:\n            return self._document_question(request)\n", ''),
+    ('R2', 'routes on key presence (null document_id too)', "if request.data.get('document_id') is not None:", "if 'document_id' in request.data:"),
+    ('A1', 'no authorization check before retrieval', "        if not authorize(principal).text_permitted(doc):\n            return Response({'status': 'error', 'message': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)\n        try:", "        try:"),
+    ('A2', 'refused retrieval returns 200 with nothing', "        except RetrievalRefused:\n            return Response({'status': 'error', 'message': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)", "        except RetrievalRefused:\n            results = []"),
+    ('I1', 'retrieval over every authorized document', "VectorRetriever().retrieve(principal, question.strip(), doc)", "VectorRetriever().retrieve(principal, question.strip())"),
+    ('E1', 'no_relevant_evidence never true', "'no_relevant_evidence': not evidence,", "'no_relevant_evidence': False,"),
+    ('E2', 'empty evidence worded as found', "            response_text = \"No relevant evidence was found in this document for that question.\"", "            response_text = \"0 passages from this document may bear on that.\""),
+    ('V1', 'bool accepted as a document id', "if not isinstance(document_id, int) or isinstance(document_id, bool):", "if not isinstance(document_id, int):"),
+    ('V2', 'empty question accepted', "if not isinstance(question, str) or not question.strip():", "if not isinstance(question, str):"),
+    ('X1', 'model extraction still called', "        evidence = [{'chunk_id'", "        from zelda_api.intelligence_pipeline import _call_claude_for_query_extraction\n        _call_claude_for_query_extraction(question, target='founder')\n        evidence = [{'chunk_id'"),
+    ('X2', 'marketplace cards added to a document answer', "            'results': [],\n        }, status=status.HTTP_200_OK)\n", "            'results': [{'username': 'x'}],\n        }, status=status.HTTP_200_OK)\n"),
+]
+original = open(PATH, 'rb').read()
+digest = hashlib.sha256(original).hexdigest()
+caught = 0
+ONLY = set(sys.argv[3:])
+M = [m for m in M if not ONLY or m[0] in ONLY]
+for mid, desc, old, new in M:
+    text = original.decode('utf-8').replace('\r\n', '\n')
+    assert text.count(old) == 1, (mid, text.count(old))
+    open(PATH, 'wb').write(text.replace(old, new).encode('utf-8'))
+    try:
+        out = subprocess.run(['sh', T, W, 'zelda_api.tests_ask_document'], capture_output=True, text=True, encoding='utf-8', errors='replace').stdout
+    finally:
+        open(PATH, 'wb').write(original)
+    assert hashlib.sha256(open(PATH, 'rb').read()).hexdigest() == digest, 'restore failed'
+    fails = len(re.findall(r'^FAIL:', out, re.M))
+    errors = len(re.findall(r'^ERROR:', out, re.M))
+    caught += fails > 0
+    print(f"{mid} {desc:50s} {'caught' if fails else 'SURVIVED'} fails={fails} errors={errors}", flush=True)
+print(f'{caught}/{len(M)} caught | views.py restored sha256 {digest}')

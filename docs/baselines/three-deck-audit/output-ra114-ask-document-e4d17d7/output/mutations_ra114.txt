@@ -1,0 +1,12 @@
+R1 document_id ignored (no routing)                   caught fails=17 errors=5
+R2 routes on key presence (null document_id too)      caught fails=1 errors=0
+A1 no authorization check before retrieval            caught fails=1 errors=0
+A2 refused retrieval returns 200 with nothing         SURVIVED fails=0 errors=0
+I1 retrieval over every authorized document           SURVIVED fails=0 errors=0
+E1 no_relevant_evidence never true                    caught fails=1 errors=0
+E2 empty evidence worded as found                     caught fails=1 errors=0
+V1 bool accepted as a document id                     caught fails=2 errors=0
+V2 empty question accepted                            caught fails=2 errors=0
+X1 model extraction still called                      caught fails=2 errors=0
+X2 marketplace cards added to a document answer       caught fails=1 errors=0
+9/11 caught | views.py restored sha256 6c9714b2cf28ba7aa10fa9096287aafa680b1a8cb50cf707f933118c6c9169f9

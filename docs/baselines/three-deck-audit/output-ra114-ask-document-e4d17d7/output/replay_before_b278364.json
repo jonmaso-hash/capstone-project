@@ -1,0 +1,516 @@
+{
+ "head": "1aab9e345af13dc79c69680a373f50f2c5c32c04",
+ "views_py_uncommitted_change": false,
+ "document_chunks": 12,
+ "questions": {
+  "Q1": {
+   "question": "How much has ManyChat raised?",
+   "search_pages_now": [
+    [
+     2,
+     0.19999999999999998
+    ],
+    [
+     1,
+     0.09999999999999999
+    ],
+    [
+     3,
+     0.09999999999999999
+    ],
+    [
+     4,
+     0.09999999999999999
+    ],
+    [
+     5,
+     0.09999999999999999
+    ]
+   ],
+   "search_pages_recorded": [
+    [
+     2,
+     0.19999999999999998
+    ],
+    [
+     1,
+     0.09999999999999999
+    ],
+    [
+     3,
+     0.09999999999999999
+    ],
+    [
+     4,
+     0.09999999999999999
+    ],
+    [
+     5,
+     0.09999999999999999
+    ]
+   ],
+   "ask_as_run": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_recorded": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_with_document": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "evidence_equals_search": false
+  },
+  "Q2": {
+   "question": "How many users does ManyChat have?",
+   "search_pages_now": [
+    [
+     1,
+     0.06
+    ],
+    [
+     2,
+     0.06
+    ],
+    [
+     3,
+     0.06
+    ],
+    [
+     4,
+     0.06
+    ],
+    [
+     5,
+     0.06
+    ]
+   ],
+   "search_pages_recorded": [
+    [
+     1,
+     0.06
+    ],
+    [
+     2,
+     0.06
+    ],
+    [
+     3,
+     0.06
+    ],
+    [
+     4,
+     0.06
+    ],
+    [
+     5,
+     0.06
+    ]
+   ],
+   "ask_as_run": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_recorded": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_with_document": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "evidence_equals_search": false
+  },
+  "Q3": {
+   "question": "How many messages does ManyChat send?",
+   "search_pages_now": [
+    [
+     10,
+     0.12
+    ],
+    [
+     12,
+     0.12
+    ],
+    [
+     1,
+     0.06
+    ],
+    [
+     2,
+     0.06
+    ],
+    [
+     3,
+     0.06
+    ]
+   ],
+   "search_pages_recorded": [
+    [
+     10,
+     0.12
+    ],
+    [
+     12,
+     0.12
+    ],
+    [
+     1,
+     0.06
+    ],
+    [
+     2,
+     0.06
+    ],
+    [
+     3,
+     0.06
+    ]
+   ],
+   "ask_as_run": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_recorded": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_with_document": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "evidence_equals_search": false
+  },
+  "Q4": {
+   "question": "Is ManyChat registered with the SEC?",
+   "search_pages_now": [
+    [
+     2,
+     0.19999999999999998
+    ],
+    [
+     1,
+     0.09999999999999999
+    ],
+    [
+     3,
+     0.09999999999999999
+    ],
+    [
+     4,
+     0.09999999999999999
+    ],
+    [
+     5,
+     0.09999999999999999
+    ]
+   ],
+   "search_pages_recorded": [
+    [
+     2,
+     0.19999999999999998
+    ],
+    [
+     1,
+     0.09999999999999999
+    ],
+    [
+     3,
+     0.09999999999999999
+    ],
+    [
+     4,
+     0.09999999999999999
+    ],
+    [
+     5,
+     0.09999999999999999
+    ]
+   ],
+   "ask_as_run": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_recorded": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_with_document": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "evidence_equals_search": false
+  },
+  "Q5": {
+   "question": "What is ManyChat's current revenue?",
+   "search_pages_now": [
+    [
+     2,
+     0.15
+    ],
+    [
+     1,
+     0.075
+    ],
+    [
+     3,
+     0.075
+    ],
+    [
+     4,
+     0.075
+    ],
+    [
+     5,
+     0.075
+    ]
+   ],
+   "search_pages_recorded": [
+    [
+     2,
+     0.15
+    ],
+    [
+     1,
+     0.075
+    ],
+    [
+     3,
+     0.075
+    ],
+    [
+     4,
+     0.075
+    ],
+    [
+     5,
+     0.075
+    ]
+   ],
+   "ask_as_run": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_recorded": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_with_document": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "evidence_equals_search": false
+  },
+  "Q6": {
+   "question": "When did ManyChat raise its Series A?",
+   "search_pages_now": [
+    [
+     1,
+     0.15
+    ],
+    [
+     2,
+     0.15
+    ],
+    [
+     3,
+     0.075
+    ],
+    [
+     4,
+     0.075
+    ],
+    [
+     5,
+     0.075
+    ]
+   ],
+   "search_pages_recorded": [
+    [
+     1,
+     0.15
+    ],
+    [
+     2,
+     0.15
+    ],
+    [
+     3,
+     0.075
+    ],
+    [
+     4,
+     0.075
+    ],
+    [
+     5,
+     0.075
+    ]
+   ],
+   "ask_as_run": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_recorded": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_with_document": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "evidence_equals_search": false
+  },
+  "Q7": {
+   "question": "Should I invest in ManyChat?",
+   "search_pages_now": [
+    [
+     1,
+     0.09999999999999999
+    ],
+    [
+     2,
+     0.09999999999999999
+    ],
+    [
+     3,
+     0.09999999999999999
+    ],
+    [
+     4,
+     0.09999999999999999
+    ],
+    [
+     5,
+     0.09999999999999999
+    ]
+   ],
+   "search_pages_recorded": [
+    [
+     1,
+     0.09999999999999999
+    ],
+    [
+     2,
+     0.09999999999999999
+    ],
+    [
+     3,
+     0.09999999999999999
+    ],
+    [
+     4,
+     0.09999999999999999
+    ],
+    [
+     5,
+     0.09999999999999999
+    ]
+   ],
+   "ask_as_run": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_recorded": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_with_document": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "evidence_equals_search": false
+  }
+ },
+ "extraction_calls_mocked": 14,
+ "stranger_with_document": {
+  "status": 200,
+  "body": "{\"status\":\"success\",\"response\":\"I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.\",\"results\":[]}"
+ }
+}

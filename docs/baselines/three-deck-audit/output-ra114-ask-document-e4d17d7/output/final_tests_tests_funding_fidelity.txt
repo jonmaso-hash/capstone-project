@@ -1,0 +1,51 @@
+2026-10-25 17:31:45,196 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-25 17:32:33,061 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-25 17:32:33,101 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-25 17:32:33,132 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-25 17:32:33,151 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-25 17:32:33,334 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=1, output_tokens=1
+2026-10-25 17:32:33,346 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-25 17:32:33,347 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt', 'raise_premise'] for document 1
+2026-10-25 17:32:33,348 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-25 17:32:33,349 INFO zelda_api.intelligence_pipeline - Memo base_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt', 'profile_undated'] for document 1
+2026-10-25 17:32:33,350 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['funding_as_event', 'attribution:Pitch Deck Hunt'] for document 1
+2026-10-25 17:32:33,350 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt', 'raise_premise', 'raise_premise'] for document 1
+2026-10-25 17:32:33,487 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-25 17:32:36,954 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-25 17:32:36,997 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-25 17:32:36,998 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-25 17:32:37,015 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-25 17:32:37,031 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=1, output_tokens=1
+2026-10-25 17:32:37,041 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-25 17:32:37,042 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt', 'cash_premise'] for document 1
+2026-10-25 17:32:37,044 INFO zelda_api.intelligence_pipeline - Memo base_scenario: funding-source fidelity ['mixed_self_reported:Pitch Deck Hunt'] for document 1
+2026-10-25 17:32:37,044 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-25 17:32:37,073 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-25 17:32:37,243 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-25 17:32:37,271 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-25 17:32:37,272 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-25 17:32:37,288 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-25 17:32:37,314 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=1, output_tokens=1
+2026-10-25 17:32:37,318 INFO zelda_api.intelligence_pipeline - Memo zelda_advantage: funding-source fidelity ['provenance:Pitch Deck Hunt', 'provenance:Pitch Deck Hunt', 'provenance:Pitch Deck Hunt'] for document 1
+2026-10-25 17:32:37,347 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-25 17:32:37,515 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-25 17:32:37,542 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-25 17:32:37,543 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-25 17:32:37,559 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-25 17:32:37,573 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=1, output_tokens=1
+2026-10-25 17:32:37,575 INFO zelda_api.intelligence_pipeline - Memo information_readiness: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-25 17:32:37,576 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt', 'raise_premise'] for document 1
+2026-10-25 17:32:37,577 INFO zelda_api.intelligence_pipeline - Memo what_would_change_the_picture: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-25 17:32:37,578 INFO zelda_api.intelligence_pipeline - Memo base_scenario: funding-source fidelity ['attribution:Pitch Deck Hunt', 'profile_undated'] for document 1
+2026-10-25 17:32:37,579 INFO zelda_api.intelligence_pipeline - Memo downside_scenario: funding-source fidelity ['funding_as_event', 'attribution:Pitch Deck Hunt'] for document 1
+2026-10-25 17:32:37,579 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt', 'raise_premise', 'raise_premise'] for document 1
+2026-10-25 17:32:37,608 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+................................................................
+----------------------------------------------------------------------
+Ran 67 tests in 5.449s
+
+OK
+Destroying test database for alias 'default'...
+Found 67 test(s).
+System check identified no issues (0 silenced).

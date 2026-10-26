@@ -1,0 +1,73 @@
+"""RA-114 offline before/after (evidence script, never committed as a test): memo 104's own deck chunks (document 3146,
+f73bef5 pass-a/02_chunks.json) loaded into the throwaway TEST database, embedded the way the run's processes did (the
+semantic-hash scheme, because the run had a key), and memo 104's Q1-Q7 sent to /api/v1/zelda/ask/ exactly as the run
+sent them ({'q'}), and with the run's document ({'q', 'document_id'}); /search/ alongside. The marketplace extraction
+is mocked to the run's recorded result ({'constraints': []}), so no model is called. Copied into a worktree as
+zelda_api/tests_tmp_ra114_replay.py, run, then deleted. Writes RA114_REPLAY_OUT (a JSON path)."""
+import json, os, subprocess
+from unittest import mock
+
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+from django.urls import reverse
+
+from zelda_api import retrieval
+from zelda_api.intelligence_pipeline import ZeldaIntelligencePipelineV2
+from zelda_api.vector_models import DocumentChunk, DocumentSource
+
+RUN = 'f73bef5'
+FOLDER = 'docs/baselines/manychat/output-fidelity-5120190/pass-a'
+
+
+def show(path):
+    return subprocess.run(['git', 'show', f'{RUN}:{FOLDER}/{path}'], capture_output=True, text=True, encoding='utf-8',
+                          check=True).stdout
+
+
+class Replay(TestCase):
+
+    def test_replay(self):
+        owner = get_user_model().objects.create_user('ra114_owner', password='x')
+        investor = get_user_model().objects.create_user('ra114_stranger', password='x')
+        doc = DocumentSource.objects.create(uploaded_by=owner, filename='manychat.pdf', source_entity='ManyChat',
+                                            document_type='pitch_deck', status='analyzed')
+        for c in json.loads(show('02_chunks.json')):
+            DocumentChunk.objects.create(document=doc, chunk_index=int(c['chunk_index']), page_number=int(c['page_number']),
+                                         section_title=c['section_title'], raw_text=c['raw_text'],
+                                         token_count=int(c['token_count']))
+        pipeline = ZeldaIntelligencePipelineV2()
+        pipeline.embedding_engine.client = object()          # the run's scheme: semantic hashing (no network)
+        pipeline._embed_chunks(doc)
+        recorded = json.loads(show('10_retrieval_ask_q1_q7.json'))
+        head = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
+        dirty = subprocess.run(['git', 'status', '--porcelain', '--', 'zelda_api/views.py'], capture_output=True,
+                               text=True).stdout.strip()
+        out = {'head': head, 'views_py_uncommitted_change': bool(dirty), 'document_chunks': DocumentChunk.objects.filter(document=doc).count(),
+               'questions': {}}
+        post = lambda url, body: self.client.post(url, data=json.dumps(body), content_type='application/json')
+        with mock.patch.object(retrieval.embedding_engine, 'client', object()), \
+                mock.patch('zelda_api.intelligence_pipeline._call_claude_for_query_extraction',
+                           return_value={'constraints': []}) as extract:
+            self.client.force_login(owner)
+            for q, rec in recorded.items():
+                text = rec['question']
+                search = post(reverse('zelda_api:document_search', args=[doc.pk]), {'query': text, 'top_k': 5}).json()
+                as_run = post(reverse('zelda_api:ask'), {'q': text})
+                with_doc = post(reverse('zelda_api:ask'), {'q': text, 'document_id': doc.pk})
+                body = with_doc.json()
+                out['questions'][q] = {
+                    'question': text,
+                    'search_pages_now': [(r['page'], r['relevance']) for r in search['results']],
+                    'search_pages_recorded': [(r['page'], r['relevance']) for r in rec['search']['body']['results']],
+                    'ask_as_run': {'status': as_run.status_code, 'body': as_run.json()},
+                    'ask_recorded': rec['ask'],
+                    'ask_with_document': {'status': with_doc.status_code, 'body': body},
+                    'evidence_equals_search': [(e['chunk_id'], e['page'], e['text'], e['relevance']) for e in body.get('evidence', [])]
+                                              == [(r['id'], r['page'], r['text'], r['relevance']) for r in search['results']],
+                }
+            out['extraction_calls_mocked'] = extract.call_count
+            self.client.force_login(investor)
+            refused = post(reverse('zelda_api:ask'), {'q': recorded['Q1']['question'], 'document_id': doc.pk})
+            out['stranger_with_document'] = {'status': refused.status_code, 'body': refused.content.decode()[:300]}
+        with open(os.environ['RA114_REPLAY_OUT'], 'w', encoding='utf-8', newline='\n') as f:
+            json.dump(out, f, indent=1, ensure_ascii=False)
