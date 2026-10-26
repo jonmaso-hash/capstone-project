@@ -220,6 +220,21 @@ class SyntheticDeckTests(TestCase):
         self.assertEqual(self.pages(doc, 'When did Fernway raise money?'), [1])
         self.assertEqual(self.pages(doc, 'How many message?'), [2])
 
+    def test_a_heading_the_question_already_names_counts_once(self):
+        # "revenue" is the Revenue topic's own name: it is a stated word here, not also a heading bonus, so the
+        # passage with both of the question's topics outranks the one with only that word.
+        doc = self.deck('Ledgerly', ['Revenue: $2M', 'Growth: 3x and strong traction'])
+        self.assertEqual(self.pages(doc, 'revenue growth'), [2, 1])
+
+    def test_equal_scores_come_back_in_document_order(self):
+        # Stored out of order: equal scores come back in the document's order (DocumentChunk.Meta.ordering and a
+        # stable sort), so /ask/ and /search/ list the same passages the same way.
+        doc = DocumentSource.objects.create(uploaded_by=self.owner, filename='s.pdf', source_entity='Tidewell',
+                                            document_type='pitch_deck', status='analyzed')
+        _add_chunks(doc, [{'chunk_index': i, 'page_number': i + 1, 'section_title': '', 'raw_text': 'Revenue grew',
+                           'token_count': 2} for i in (2, 0, 1)])
+        self.assertEqual(self.pages(doc, 'revenue'), [1, 2, 3])
+
     def test_a_one_chunk_document_still_answers(self):
         doc = self.deck('Solo', ['Solo has revenue of $2M.'])
         self.assertEqual(self.pages(doc, 'revenue'), [1])

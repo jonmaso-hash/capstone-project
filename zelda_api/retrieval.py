@@ -220,9 +220,8 @@ class VectorRetriever:
             except Exception as e:
                 logger.error(f"Error scoring chunk {chunk.id}: {str(e)}")
 
-        # Sort by score and return top-k; equal scores in document order, so
-        # the same question always returns the same list.
-        scored_chunks.sort(key=lambda x: (-x['score'], x['chunk'].document_id, x['chunk'].chunk_index))
+        # Sort by score and return top-k
+        scored_chunks.sort(key=lambda x: x['score'], reverse=True)
 
         return [
             {
