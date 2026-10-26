@@ -1,0 +1,263 @@
+{
+ "head": "9ee8d3dbf156cdee15167e87702d6a7802780551",
+ "retrieval_py_differs_from_head": false,
+ "questions": {
+  "Q1": {
+   "question": "How much has ManyChat raised?",
+   "pages": [
+    2
+   ],
+   "relevance": [
+    0.3
+   ],
+   "first_excerpt": "Why this deck fits the audit leg\nSource: Pitch Deck Hunt lists ManyChat as a 2015 Series A",
+   "no_relevant_evidence": false,
+   "response": "1 passage from this document may bear on that (page 2). They are the document's own words, shown as excerpts: what it states, not a verified answer.",
+   "other_document_text_returned": false,
+   "ask_equals_search": true
+  },
+  "Q2": {
+   "question": "How many users does ManyChat have?",
+   "pages": [
+    10
+   ],
+   "relevance": [
+    0.15
+   ],
+   "first_excerpt": "angel.co/manychat\nmike@manychat.com\nTotal Bots Created\nJul-15\nAug-15\nSep-15\nOct-15\nNov-15\n",
+   "no_relevant_evidence": false,
+   "response": "1 passage from this document may bear on that (page 10). They are the document's own words, shown as excerpts: what it states, not a verified answer.",
+   "other_document_text_returned": false,
+   "ask_equals_search": true
+  },
+  "Q3": {
+   "question": "How many messages does ManyChat send?",
+   "pages": [
+    10,
+    12
+   ],
+   "relevance": [
+    0.15,
+    0.15
+   ],
+   "first_excerpt": "angel.co/manychat\nmike@manychat.com\nTotal Bots Created\nJul-15\nAug-15\nSep-15\nOct-15\nNov-15\n",
+   "no_relevant_evidence": false,
+   "response": "2 passages from this document may bear on that (pages 10, 12). They are the document's own words, shown as excerpts: what it states, not a verified answer.",
+   "other_document_text_returned": false,
+   "ask_equals_search": true
+  },
+  "Q4": {
+   "question": "Is ManyChat registered with the SEC?",
+   "pages": [],
+   "relevance": [],
+   "first_excerpt": null,
+   "no_relevant_evidence": true,
+   "response": "No relevant evidence was found in this document for that question.",
+   "other_document_text_returned": false,
+   "ask_equals_search": true
+  },
+  "Q5": {
+   "question": "What is ManyChat's current revenue?",
+   "pages": [
+    2
+   ],
+   "relevance": [
+    0.15
+   ],
+   "first_excerpt": "Why this deck fits the audit leg\nSource: Pitch Deck Hunt lists ManyChat as a 2015 Series A",
+   "no_relevant_evidence": false,
+   "response": "1 passage from this document may bear on that (page 2). They are the document's own words, shown as excerpts: what it states, not a verified answer.",
+   "other_document_text_returned": false,
+   "ask_equals_search": true
+  },
+  "Q6": {
+   "question": "When did ManyChat raise its Series A?",
+   "pages": [
+    2,
+    1
+   ],
+   "relevance": [
+    0.3,
+    0.15
+   ],
+   "first_excerpt": "Why this deck fits the audit leg\nSource: Pitch Deck Hunt lists ManyChat as a 2015 Series A",
+   "no_relevant_evidence": false,
+   "response": "2 passages from this document may bear on that (pages 1, 2). They are the document's own words, shown as excerpts: what it states, not a verified answer.",
+   "other_document_text_returned": false,
+   "ask_equals_search": true
+  },
+  "Q7": {
+   "question": "Should I invest in ManyChat?",
+   "pages": [],
+   "relevance": [],
+   "first_excerpt": null,
+   "no_relevant_evidence": true,
+   "response": "No relevant evidence was found in this document for that question.",
+   "other_document_text_returned": false,
+   "ask_equals_search": true
+  },
+  "C1 unrelated": {
+   "question": "What is the weather in Paris?",
+   "pages": [],
+   "relevance": [],
+   "first_excerpt": null,
+   "no_relevant_evidence": true,
+   "response": "No relevant evidence was found in this document for that question.",
+   "other_document_text_returned": false,
+   "ask_equals_search": true
+  },
+  "C2 subject only": {
+   "question": "Who is ManyChat's CEO?",
+   "pages": [],
+   "relevance": [],
+   "first_excerpt": null,
+   "no_relevant_evidence": true,
+   "response": "No relevant evidence was found in this document for that question.",
+   "other_document_text_returned": false,
+   "ask_equals_search": true
+  },
+  "C3 other document words": {
+   "question": "users traction raised Series A",
+   "pages": [
+    2,
+    1,
+    10
+   ],
+   "relevance": [
+    0.15,
+    0.075,
+    0.075
+   ],
+   "first_excerpt": "Why this deck fits the audit leg\nSource: Pitch Deck Hunt lists ManyChat as a 2015 Series A",
+   "no_relevant_evidence": false,
+   "response": "3 passages from this document may bear on that (pages 1, 2, 10). They are the document's own words, shown as excerpts: what it states, not a verified answer.",
+   "other_document_text_returned": false,
+   "ask_equals_search": true
+  }
+ },
+ "extraction_calls": 0,
+ "stored_vector_type": "str",
+ "similarity_as_stored": {
+  "Q1": [
+   0.0
+  ],
+  "Q2": [
+   0.0
+  ],
+  "Q3": [
+   0.0
+  ],
+  "Q4": [
+   0.0
+  ],
+  "Q5": [
+   0.0
+  ],
+  "Q6": [
+   0.0
+  ],
+  "Q7": [
+   0.0
+  ]
+ },
+ "similarity_if_decoded_by_page": {
+  "Q1": [
+   0.0,
+   -0.0,
+   1.0,
+   -0.0,
+   0.0,
+   0.0,
+   "nan",
+   -0.0,
+   0.0,
+   0.0,
+   -0.0,
+   0.0
+  ],
+  "Q2": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   "nan",
+   -0.0,
+   -0.0,
+   -0.0,
+   0.0,
+   0.025
+  ],
+  "Q3": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   -0.0,
+   1.0,
+   "nan",
+   0.0,
+   0.0,
+   -0.0,
+   0.0,
+   0.0
+  ],
+  "Q4": [
+   0.0,
+   0.0,
+   0.984,
+   -0.0,
+   0.0,
+   -0.0,
+   "nan",
+   0.0,
+   0.0,
+   -0.174,
+   -0.0,
+   -0.0
+  ],
+  "Q5": [
+   -1.0,
+   0.0,
+   -0.0,
+   -0.0,
+   0.0,
+   0.0,
+   "nan",
+   -1.0,
+   -0.0,
+   0.0,
+   0.999,
+   -0.0
+  ],
+  "Q6": [
+   -0.011,
+   1.0,
+   -0.0,
+   -0.0,
+   -0.0,
+   -0.006,
+   "nan",
+   -0.011,
+   -0.0,
+   -0.118,
+   0.063,
+   0.0
+  ],
+  "Q7": [
+   "nan",
+   "nan",
+   "nan",
+   "nan",
+   "nan",
+   "nan",
+   "nan",
+   "nan",
+   "nan",
+   "nan",
+   "nan",
+   "nan"
+  ]
+ }
+}

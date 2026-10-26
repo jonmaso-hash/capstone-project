@@ -1,0 +1,44 @@
+2026-10-26 01:33:10,058 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-26 01:34:02,481 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 01:34:02,500 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 01:34:02,513 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 01:34:02,531 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 01:34:02,641 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 01:34:02,659 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 01:34:02,687 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 01:34:02,710 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 01:34:03,145 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 01:34:03,164 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 01:34:03,175 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 01:34:03,193 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 01:34:03,204 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 01:34:03,222 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 01:34:03,234 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 01:34:03,254 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 01:34:03,266 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 01:34:03,289 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 01:34:03,306 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 01:34:03,325 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 01:34:03,374 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 01:34:03,394 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 01:34:03,448 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 01:34:03,469 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 01:34:03,478 INFO zelda_api.signals - DocumentSource created: s.pdf
+.2026-10-26 01:34:03,501 INFO zelda_api.signals - DocumentSource created: s.pdf
+.2026-10-26 01:34:03,512 INFO zelda_api.signals - DocumentSource created: s.pdf
+.2026-10-26 01:34:03,521 INFO zelda_api.signals - DocumentSource created: s.pdf
+.2026-10-26 01:34:03,533 INFO zelda_api.signals - DocumentSource created: s.pdf
+.2026-10-26 01:34:03,547 INFO zelda_api.signals - DocumentSource created: s.pdf
+.2026-10-26 01:34:03,563 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 01:34:03,585 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 01:34:03,644 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 01:34:03,662 INFO zelda_api.signals - DocumentSource created: other.pdf
+.
+----------------------------------------------------------------------
+Ran 20 tests in 1.222s
+
+OK
+Destroying test database for alias 'default'...
+Found 20 test(s).
+System check identified no issues (0 silenced).
