@@ -37,6 +37,87 @@ def meaningful_terms(text):
     return {w for w in re.findall(r"[a-z0-9]+", (text or '').lower()) if len(w) > 3}
 
 
+# Words a question is made of, not what it is about. "with" once put page 2
+# first for "Is ManyChat registered with the SEC?" (memo 104, Q4).
+QUESTION_WORDS = frozenset({
+    'about', 'also', 'been', 'being', 'could', 'does', 'from', 'have', 'into', 'many', 'much', 'please', 'should',
+    'show', 'some', 'tell', 'than', 'that', 'their', 'them', 'then', 'there', 'these', 'they', 'this', 'those',
+    'very', 'were', 'what', 'when', 'where', 'which', 'whom', 'whose', 'will', 'with', 'would', 'your',
+})
+
+# Pitch-deck topics and the words a question uses for them (also the queries
+# retrieve_for_category runs). A question in a topic's words also reaches a
+# passage headed with the topic's name, at RELATED_WEIGHT: decks report
+# adoption under "Traction" without saying "users" (memo 104, Q2).
+CATEGORY_QUERIES = {
+    'TAM': "total addressable market market size opportunity",
+    'Team': "team members founders experience background",
+    'Revenue': "revenue income financial metrics traction",
+    'Product': "product features technology solution",
+    'Traction': "customers users adoption growth metrics",
+    'Funding': "funding investment ask capital raise",
+    'Risk': "risk challenges problems threats competition",
+    'Other': "company business model vision",
+}
+RELATED_WEIGHT = 0.5
+
+
+def word_stem(word):
+    """
+    A light, consistent word form, so "raise"/"raised" and "message"/"messages"
+    match (memo 104's Q6 tied the page that says "raised" with one that does
+    not). Not a linguistic stemmer: both sides go through the same rule, and
+    "-ing" is left alone ("messaging apps" is not a count of messages).
+    """
+    if len(word) > 4 and word.endswith('ies'):
+        word = word[:-3] + 'y'
+    elif len(word) > 4 and word.endswith(('ches', 'shes', 'sses', 'xes', 'zes')):
+        word = word[:-2]
+    elif len(word) > 3 and word.endswith('s') and not word.endswith(('ss', 'us', 'is')):
+        word = word[:-1]
+    if len(word) > 5 and word.endswith('ed'):
+        word = word[:-2]
+    if len(word) > 4 and word.endswith('e'):
+        word = word[:-1]
+    return word
+
+
+def scoring_terms(text):
+    """The meaningful terms that say what a question or passage is about, in their stem form."""
+    return {word_stem(w) for w in meaningful_terms(text) if w not in QUESTION_WORDS}
+
+
+def _topic_terms():
+    topics = {}
+    for name, query in CATEGORY_QUERIES.items():
+        label = scoring_terms(name)
+        if name != 'Other' and label:
+            topics[next(iter(label))] = scoring_terms(query) | label
+    return topics
+
+
+TOPIC_TERMS = _topic_terms()
+
+
+def related_terms(query_terms):
+    """The topic headings a question's own words point to, other than words it already uses."""
+    return {label for label, words in TOPIC_TERMS.items() if query_terms & words} - query_terms
+
+
+def without_subject(query, document_source):
+    """
+    The question without the document's own subject name. Inside one document
+    the name says which document, not which passage: memo 104's deck carries
+    "angel.co/manychat" on every slide, so "ManyChat" matched all twelve
+    chunks and tied them. Across documents the name still counts.
+    """
+    if document_source is None:
+        return query
+    for name in meaningful_terms(getattr(document_source, 'source_entity', '')):
+        query = re.sub(rf'(?<![a-z0-9]){re.escape(name)}(?![a-z0-9])', ' ', query, flags=re.IGNORECASE)
+    return query
+
+
 def validate_top_k(value, default=5):
     """
     An int in 1..MAX_TOP_K, or ValueError. Booleans and strings are not
@@ -81,7 +162,7 @@ class VectorRetriever:
             logger.warning(f"Failed to embed query: {query}")
             return self._keyword_fallback_search(query, candidates)
 
-        return self._vector_search(query_embedding, query, candidates)
+        return self._vector_search(query_embedding, without_subject(query, document_source), candidates)
 
     @staticmethod
     def _candidates(principal, document_source: Optional[DocumentSource]):
@@ -139,8 +220,9 @@ class VectorRetriever:
             except Exception as e:
                 logger.error(f"Error scoring chunk {chunk.id}: {str(e)}")
 
-        # Sort by score and return top-k
-        scored_chunks.sort(key=lambda x: x['score'], reverse=True)
+        # Sort by score and return top-k; equal scores in document order, so
+        # the same question always returns the same list.
+        scored_chunks.sort(key=lambda x: (-x['score'], x['chunk'].document_id, x['chunk'].chunk_index))
 
         return [
             {
@@ -184,18 +266,16 @@ class VectorRetriever:
 
     def _keyword_boost(self, query: str, text: str) -> float:
         """
-        Calculate keyword match boost (0.0-1.0).
+        Calculate keyword match boost (0.0-1.0): the share of the question's
+        own terms the passage contains, a topic heading the question's words
+        point to counting RELATED_WEIGHT.
         """
-        query_words = meaningful_terms(query)
-        text_words = meaningful_terms(text)
-
-        matches = len(query_words & text_words)
-        max_matches = len(query_words)
-
-        if max_matches == 0:
+        query_words = scoring_terms(query)
+        if not query_words:
             return 0.0
-
-        return min(matches / max_matches, 1.0)
+        text_words = scoring_terms(text)
+        matches = len(query_words & text_words) + RELATED_WEIGHT * len(related_terms(query_words) & text_words)
+        return min(matches / len(query_words), 1.0)
 
 
 def document_chunks(principal, document_source: DocumentSource):
@@ -269,19 +349,7 @@ class ContextAssembler:
         Returns:
             (retrieved_chunks, assembled_context_text)
         """
-        # Map categories to search queries
-        category_queries = {
-            'TAM': "total addressable market market size opportunity",
-            'Team': "team members founders experience background",
-            'Revenue': "revenue income financial metrics traction",
-            'Product': "product features technology solution",
-            'Traction': "customers users adoption growth metrics",
-            'Funding': "funding investment ask capital raise",
-            'Risk': "risk challenges problems threats competition",
-            'Other': "company business model vision",
-        }
-
-        query = category_queries.get(category, category)
+        query = CATEGORY_QUERIES.get(category, category)
         results = self.retriever.retrieve(principal, query, document_source)
 
         # Assemble into readable text

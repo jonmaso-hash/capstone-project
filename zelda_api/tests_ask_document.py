@@ -130,6 +130,18 @@ class DocumentAuthorizationTests(_Ask):
         self.assertEqual(response.status_code, 403)
         retrieve.assert_not_called()
 
+    def test_a_refusal_from_retrieval_itself_is_a_403(self):
+        """Retrieval checks the same rule again on its own (RetrievalRefused). If the two ever disagree -- the
+        document's access changes between the check and the retrieval, or the two checks drift apart -- the answer
+        is still a refusal with no text, never a 200 that reads as "nothing in this document bears on it"."""
+        from zelda_api.retrieval import RetrievalRefused
+        with mock.patch('zelda_api.retrieval.VectorRetriever.retrieve', side_effect=RetrievalRefused('revoked')) as retrieve:
+            response, extract = self.ask(self.users['a'], {'q': 'raised', 'document_id': self.docs['a'].pk})
+        retrieve.assert_called_once()
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json(), {'status': 'error', 'message': 'Not authorized.'})
+        extract.assert_not_called()
+
 
 class DocumentInputTests(_Ask):
 
@@ -139,8 +151,10 @@ class DocumentInputTests(_Ask):
                 response, extract = self.ask(self.users['a'], {'q': 'raised', 'document_id': bad})
                 self.assertEqual(response.status_code, 400)
                 extract.assert_not_called()
-        response, _ = self.ask(self.users['a'], {'q': 'raised', 'document_id': 10 ** 9})
-        self.assertEqual(response.status_code, 404)
+        for missing in (10 ** 9, 0, -1, 2 ** 63, 10 ** 30):     # out of the id column's range too: a 404, not a 500
+            with self.subTest(document_id=missing):
+                response, _ = self.ask(self.users['a'], {'q': 'raised', 'document_id': missing})
+                self.assertEqual(response.status_code, 404)
 
     def test_a_document_question_needs_a_question(self):
         for q in ('', '   ', ['raised'], None):
