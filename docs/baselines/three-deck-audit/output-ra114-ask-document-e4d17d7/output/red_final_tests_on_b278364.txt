@@ -1,0 +1,419 @@
+2026-10-25 17:37:04,649 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-25 17:37:57,144 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:37:57,187 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:37:57,204 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:37:57,225 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-25 17:37:57,415 WARNING django.request - Forbidden: /api/v1/zelda/ask/
+.2026-10-25 17:37:57,423 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:37:57,448 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:37:57,465 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:37:57,482 INFO zelda_api.signals - DocumentSource created: h.pdf
+FFFFF2026-10-25 17:37:57,659 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:37:57,680 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:37:57,699 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:37:57,717 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-25 17:37:57,841 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:37:57,858 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:37:57,874 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:37:57,891 INFO zelda_api.signals - DocumentSource created: h.pdf
+F2026-10-25 17:37:57,980 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:37:57,997 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:37:58,014 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:37:58,031 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-25 17:37:58,096 WARNING django.request - Forbidden: /api/v1/zelda/ask/
+.2026-10-25 17:37:58,102 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:37:58,124 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:37:58,143 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:37:58,161 INFO zelda_api.signals - DocumentSource created: h.pdf
+FFFFFFFF2026-10-25 17:37:58,380 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:37:58,398 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:37:58,415 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:37:58,432 INFO zelda_api.signals - DocumentSource created: h.pdf
+FF2026-10-25 17:37:58,558 ERROR django.request - Internal Server Error: /api/v1/zelda/ask/
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\views\generic\base.py", line 106, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\views.py", line 532, in post
+    question = request.data.get('q', '').strip()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'list' object has no attribute 'strip'
+E2026-10-25 17:37:58,588 ERROR django.request - Internal Server Error: /api/v1/zelda/ask/
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\views\generic\base.py", line 106, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\views.py", line 532, in post
+    question = request.data.get('q', '').strip()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'strip'
+E2026-10-25 17:37:58,602 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:37:58,619 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:37:58,635 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:37:58,655 INFO zelda_api.signals - DocumentSource created: h.pdf
+F2026-10-25 17:37:58,742 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:37:58,759 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:37:58,777 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:37:58,796 INFO zelda_api.signals - DocumentSource created: h.pdf
+E2026-10-25 17:37:58,875 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:37:58,894 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:37:58,928 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:37:58,954 INFO zelda_api.signals - DocumentSource created: h.pdf
+E2026-10-25 17:37:59,054 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:37:59,075 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:37:59,091 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:37:59,108 INFO zelda_api.signals - DocumentSource created: h.pdf
+E2026-10-25 17:37:59,197 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:37:59,213 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:37:59,232 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:37:59,252 INFO zelda_api.signals - DocumentSource created: h.pdf
+E2026-10-25 17:37:59,330 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:37:59,348 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:37:59,369 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:37:59,388 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-25 17:37:59,489 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:37:59,510 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:37:59,527 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:37:59,545 INFO zelda_api.signals - DocumentSource created: h.pdf
+.
+======================================================================
+ERROR: test_a_document_question_needs_a_question (zelda_api.tests_ask_document.DocumentInputTests.test_a_document_question_needs_a_question) (q=['raised'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 148, in test_a_document_question_needs_a_question
+    response, extract = self.ask(self.users['a'], {'q': q, 'document_id': self.docs['a'].pk})
+                        ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 42, in ask
+    response = self.client.post(reverse('zelda_api:ask'), data=json.dumps(body), content_type='application/json')
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\test\client.py", line 1156, in post
+    response = super().post(
+        path,
+    ...<5 lines>...
+        **extra,
+    )
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\test\client.py", line 499, in post
+    return self.generic(
+           ~~~~~~~~~~~~^
+        "POST",
+        ^^^^^^^
+    ...<6 lines>...
+        **extra,
+        ^^^^^^^^
+    )
+    ^
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\test\client.py", line 671, in generic
+    return self.request(**r)
+           ~~~~~~~~~~~~^^^^^
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\test\client.py", line 1090, in request
+    self.check_exception(response)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\test\client.py", line 805, in check_exception
+    raise exc_value
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\views\generic\base.py", line 106, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\views.py", line 532, in post
+    question = request.data.get('q', '').strip()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'list' object has no attribute 'strip'
+
+======================================================================
+ERROR: test_a_document_question_needs_a_question (zelda_api.tests_ask_document.DocumentInputTests.test_a_document_question_needs_a_question) (q=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 148, in test_a_document_question_needs_a_question
+    response, extract = self.ask(self.users['a'], {'q': q, 'document_id': self.docs['a'].pk})
+                        ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 42, in ask
+    response = self.client.post(reverse('zelda_api:ask'), data=json.dumps(body), content_type='application/json')
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\test\client.py", line 1156, in post
+    response = super().post(
+        path,
+    ...<5 lines>...
+        **extra,
+    )
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\test\client.py", line 499, in post
+    return self.generic(
+           ~~~~~~~~~~~~^
+        "POST",
+        ^^^^^^^
+    ...<6 lines>...
+        **extra,
+        ^^^^^^^^
+    )
+    ^
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\test\client.py", line 671, in generic
+    return self.request(**r)
+           ~~~~~~~~~~~~^^^^^
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\test\client.py", line 1090, in request
+    self.check_exception(response)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\test\client.py", line 805, in check_exception
+    raise exc_value
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\views\generic\base.py", line 106, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\views.py", line 532, in post
+    question = request.data.get('q', '').strip()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'strip'
+
+======================================================================
+ERROR: test_insufficient_evidence_is_said_outright (zelda_api.tests_ask_document.DocumentQuestionTests.test_insufficient_evidence_is_said_outright)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 73, in test_insufficient_evidence_is_said_outright
+    self.assertEqual((data['evidence'], data['no_relevant_evidence']), ([], True))
+                      ~~~~^^^^^^^^^^^^
+KeyError: 'evidence'
+
+======================================================================
+ERROR: test_only_that_documents_chunks_are_used (zelda_api.tests_ask_document.DocumentQuestionTests.test_only_that_documents_chunks_are_used)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 80, in test_only_that_documents_chunks_are_used
+    evidence = response.json()['evidence']
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: 'evidence'
+
+======================================================================
+ERROR: test_staff_who_may_read_every_document_get_only_the_one_asked_about (zelda_api.tests_ask_document.DocumentQuestionTests.test_staff_who_may_read_every_document_get_only_the_one_asked_about)
+Staff may read deck P's text too, which holds the same words: the question about deck A still uses deck
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 88, in test_staff_who_may_read_every_document_get_only_the_one_asked_about
+    evidence = response.json()['evidence']
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: 'evidence'
+
+======================================================================
+ERROR: test_the_answer_is_the_documents_own_text_never_composed (zelda_api.tests_ask_document.DocumentQuestionTests.test_the_answer_is_the_documents_own_text_never_composed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 64, in test_the_answer_is_the_documents_own_text_never_composed
+    for item in data['evidence']:
+                ~~~~^^^^^^^^^^^^
+KeyError: 'evidence'
+
+======================================================================
+FAIL: test_everyone_else_is_refused_without_text (zelda_api.tests_ask_document.DocumentAuthorizationTests.test_everyone_else_is_refused_without_text) (principal='investor', doc='a')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 106, in test_everyone_else_is_refused_without_text
+    self.assertEqual(response.status_code, 403)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 403
+
+======================================================================
+FAIL: test_everyone_else_is_refused_without_text (zelda_api.tests_ask_document.DocumentAuthorizationTests.test_everyone_else_is_refused_without_text) (principal='connected', doc='a')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 106, in test_everyone_else_is_refused_without_text
+    self.assertEqual(response.status_code, 403)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 403
+
+======================================================================
+FAIL: test_everyone_else_is_refused_without_text (zelda_api.tests_ask_document.DocumentAuthorizationTests.test_everyone_else_is_refused_without_text) (principal='roleless', doc='a')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 106, in test_everyone_else_is_refused_without_text
+    self.assertEqual(response.status_code, 403)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 403
+
+======================================================================
+FAIL: test_everyone_else_is_refused_without_text (zelda_api.tests_ask_document.DocumentAuthorizationTests.test_everyone_else_is_refused_without_text) (principal='owner_x', doc='a')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 106, in test_everyone_else_is_refused_without_text
+    self.assertEqual(response.status_code, 403)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 403
+
+======================================================================
+FAIL: test_everyone_else_is_refused_without_text (zelda_api.tests_ask_document.DocumentAuthorizationTests.test_everyone_else_is_refused_without_text) (principal='owner_a', doc='x')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 106, in test_everyone_else_is_refused_without_text
+    self.assertEqual(response.status_code, 403)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 403
+
+======================================================================
+FAIL: test_retrieval_is_never_reached_when_refused (zelda_api.tests_ask_document.DocumentAuthorizationTests.test_retrieval_is_never_reached_when_refused)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 130, in test_retrieval_is_never_reached_when_refused
+    self.assertEqual(response.status_code, 403)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 403
+
+======================================================================
+FAIL: test_a_bad_document_id_is_a_400_and_a_missing_one_a_404 (zelda_api.tests_ask_document.DocumentInputTests.test_a_bad_document_id_is_a_400_and_a_missing_one_a_404) (document_id='abc')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 140, in test_a_bad_document_id_is_a_400_and_a_missing_one_a_404
+    self.assertEqual(response.status_code, 400)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 400
+
+======================================================================
+FAIL: test_a_bad_document_id_is_a_400_and_a_missing_one_a_404 (zelda_api.tests_ask_document.DocumentInputTests.test_a_bad_document_id_is_a_400_and_a_missing_one_a_404) (document_id='7')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 140, in test_a_bad_document_id_is_a_400_and_a_missing_one_a_404
+    self.assertEqual(response.status_code, 400)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 400
+
+======================================================================
+FAIL: test_a_bad_document_id_is_a_400_and_a_missing_one_a_404 (zelda_api.tests_ask_document.DocumentInputTests.test_a_bad_document_id_is_a_400_and_a_missing_one_a_404) (document_id=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 140, in test_a_bad_document_id_is_a_400_and_a_missing_one_a_404
+    self.assertEqual(response.status_code, 400)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 400
+
+======================================================================
+FAIL: test_a_bad_document_id_is_a_400_and_a_missing_one_a_404 (zelda_api.tests_ask_document.DocumentInputTests.test_a_bad_document_id_is_a_400_and_a_missing_one_a_404) (document_id=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 140, in test_a_bad_document_id_is_a_400_and_a_missing_one_a_404
+    self.assertEqual(response.status_code, 400)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 400
+
+======================================================================
+FAIL: test_a_bad_document_id_is_a_400_and_a_missing_one_a_404 (zelda_api.tests_ask_document.DocumentInputTests.test_a_bad_document_id_is_a_400_and_a_missing_one_a_404) (document_id=1.5)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 140, in test_a_bad_document_id_is_a_400_and_a_missing_one_a_404
+    self.assertEqual(response.status_code, 400)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 400
+
+======================================================================
+FAIL: test_a_bad_document_id_is_a_400_and_a_missing_one_a_404 (zelda_api.tests_ask_document.DocumentInputTests.test_a_bad_document_id_is_a_400_and_a_missing_one_a_404) (document_id=[1])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 140, in test_a_bad_document_id_is_a_400_and_a_missing_one_a_404
+    self.assertEqual(response.status_code, 400)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 400
+
+======================================================================
+FAIL: test_a_bad_document_id_is_a_400_and_a_missing_one_a_404 (zelda_api.tests_ask_document.DocumentInputTests.test_a_bad_document_id_is_a_400_and_a_missing_one_a_404) (document_id={'id': 1})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 140, in test_a_bad_document_id_is_a_400_and_a_missing_one_a_404
+    self.assertEqual(response.status_code, 400)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 400
+
+======================================================================
+FAIL: test_a_bad_document_id_is_a_400_and_a_missing_one_a_404 (zelda_api.tests_ask_document.DocumentInputTests.test_a_bad_document_id_is_a_400_and_a_missing_one_a_404)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 143, in test_a_bad_document_id_is_a_400_and_a_missing_one_a_404
+    self.assertEqual(response.status_code, 404)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 404
+
+======================================================================
+FAIL: test_a_document_question_needs_a_question (zelda_api.tests_ask_document.DocumentInputTests.test_a_document_question_needs_a_question) (q='')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 149, in test_a_document_question_needs_a_question
+    self.assertEqual(response.status_code, 400)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 400
+
+======================================================================
+FAIL: test_a_document_question_needs_a_question (zelda_api.tests_ask_document.DocumentInputTests.test_a_document_question_needs_a_question) (q='   ')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 149, in test_a_document_question_needs_a_question
+    self.assertEqual(response.status_code, 400)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 400
+
+======================================================================
+FAIL: test_a_document_question_is_answered_from_the_document (zelda_api.tests_ask_document.DocumentQuestionTests.test_a_document_question_is_answered_from_the_document)
+The RA-114 reproduction: memo 104's Q1, asked about its document.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-pm-b27\zelda_api\tests_ask_document.py", line 53, in test_a_document_question_is_answered_from_the_document
+    self.assertNotIn(FALLBACK, data['response'])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "I couldn't find specific search criteria" unexpectedly found in "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders."
+
+----------------------------------------------------------------------
+Ran 14 tests in 2.506s
+
+FAILED (failures=17, errors=6)
+Destroying test database for alias 'default'...
+Found 14 test(s).
+System check identified no issues (0 silenced).

@@ -661,6 +661,13 @@
                 <h6 class="fw-bold text-dark mb-3">
                     <i class="bi bi-stars text-primary me-2"></i>Ask Zelda
                 </h6>
+                <!-- Set only from the Library's "Ask about this document" on your own
+                     documents (RA-114); cleared, Ask is the marketplace search as before. -->
+                <div id="zelda-ask-document" class="small p-2 mb-2 bg-light rounded-3" style="display: none;" role="status">
+                    <i class="bi bi-file-earmark-text me-1"></i>Asking about <strong id="zelda-ask-document-name"></strong>.
+                    Answers are passages quoted from it, not marketplace results.
+                    <button type="button" class="btn btn-link btn-sm p-0 align-baseline" id="zelda-ask-document-clear">Ask the marketplace instead</button>
+                </div>
                 <form id="zelda-ask-form">
                     <textarea
                         id="zeldaAskQuery"
@@ -1125,12 +1132,55 @@
     // instead of throwing, so the server's actual message reaches the user.
     // ──────────────────────────────────────────────────────────────────────────
 
-    document.getElementById('zelda-ask-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const question = document.getElementById('zeldaAskQuery').value.trim();
-        if (!question) return;
+    // A question about one of your own documents (RA-114) carries its
+    // document_id and is answered server-side from that document's text, as
+    // quoted passages. With no document chosen the request is the marketplace
+    // search's {q}, unchanged.
+    let zeldaAskDocument = null;
+    // The newest Ask. An answer to any earlier one -- an older question, or one
+    // asked before the document context changed -- is stale and never shown
+    // (review of 8d08fe5: Deck A's excerpts rendered under Deck B).
+    let zeldaAskRequest = 0;
+    const ZELDA_ASK_PLACEHOLDER = document.getElementById('zeldaAskQuery').placeholder;
 
-        addLogEntry(`Asking Zelda: "${question}"`, 'info');
+    function setZeldaAskDocument(documentId, name) {
+        zeldaAskRequest += 1;
+        const id = Number(documentId);
+        zeldaAskDocument = Number.isInteger(id) && id > 0 ? {id, name: String(name || `Document ${id}`)} : null;
+        document.getElementById('zelda-ask-document').style.display = zeldaAskDocument ? 'block' : 'none';
+        document.getElementById('zelda-ask-document-name').textContent = zeldaAskDocument ? zeldaAskDocument.name : '';
+        document.getElementById('zeldaAskQuery').placeholder = zeldaAskDocument
+            ? 'e.g. "How much has the company raised?"'
+            : ZELDA_ASK_PLACEHOLDER;
+        renderSearchResults([], 'ask');
+    }
+
+    document.getElementById('zelda-ask-document-clear').addEventListener('click', () => setZeldaAskDocument(null));
+
+    function zeldaAskBody(question) {
+        return zeldaAskDocument ? { q: question, document_id: zeldaAskDocument.id } : { q: question };
+    }
+
+    function renderDocumentEvidence(evidence) {
+        const card = document.getElementById('ask-results-card');
+        const list = document.getElementById('ask-results-list');
+        if (!evidence.length) {
+            card.style.display = 'none';
+            list.innerHTML = '';
+            return;
+        }
+        list.innerHTML = evidence.map(item => `
+            <div class="zelda-card p-3">
+                <div class="small text-muted mb-1">${item.page != null ? `Page ${zeldaEscape(item.page)}` : 'Page not recorded'}${item.section ? ` · ${zeldaEscape(item.section)}` : ''}</div>
+                <blockquote class="small mb-0" style="white-space: pre-line;">${zeldaEscape(item.text)}</blockquote>
+            </div>`).join('');
+        card.style.display = 'block';
+    }
+
+    async function submitZeldaAsk(question) {
+        const request = ++zeldaAskRequest;
+        const asked = zeldaAskDocument;
+        addLogEntry(asked ? `Asking about ${asked.name}: "${question}"` : `Asking Zelda: "${question}"`, 'info');
 
         try {
             const response = await fetch(`${ZELDA_API}/ask/`, {
@@ -1140,10 +1190,14 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken'),
                 },
-                body: JSON.stringify({ q: question })
+                body: JSON.stringify(zeldaAskBody(question))
             });
 
             const data = await response.json();
+            if (request !== zeldaAskRequest) {
+                addLogEntry('An earlier question was answered after you moved on; its answer is not shown.', 'info');
+                return;
+            }
 
             if (data.status === 'error') {
                 addLogEntry(data.message || `Error: HTTP ${response.status}`, 'error');
@@ -1152,14 +1206,26 @@
                 if (data.response) {
                     addLogEntry(data.response, 'success');
                 }
-                renderSearchResults(data.results || [], 'ask');
+                if (asked && Array.isArray(data.evidence)) {
+                    renderDocumentEvidence(data.evidence);
+                } else {
+                    renderSearchResults(data.results || [], 'ask');
+                }
             }
 
         } catch (err) {
+            if (request !== zeldaAskRequest) return;
             addLogEntry(`Error: ${err.message}`, 'error');
         }
 
         document.getElementById('zeldaAskQuery').value = '';
+    }
+
+    document.getElementById('zelda-ask-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const question = document.getElementById('zeldaAskQuery').value.trim();
+        if (!question) return;
+        submitZeldaAsk(question);
     });
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -1254,6 +1320,12 @@
             : '';
     }
 
+    // Your own documents only (the Library's "your company" section): the
+    // owner may ask of a document's text; anyone else would be refused.
+    function renderLibraryAskButton(documentId, name) {
+        return `<button type="button" class="zelda-button mt-2 ms-1 zelda-library-ask" style="padding: 0.35rem 0.8rem; font-size: 0.8rem;" data-document-id="${Number(documentId)}" data-document-name="${zeldaEscape(name)}"><i class="bi bi-chat-quote me-1"></i>Ask about this document</button>`;
+    }
+
     function renderLibraryDismiss(type, id, name) {
         return `<button type="button" class="btn-close zelda-library-dismiss ms-2 flex-shrink-0"
             data-library-type="${zeldaEscape(type)}" data-library-id="${zeldaEscape(id)}"
@@ -1274,6 +1346,7 @@
                         </div>
                         <div class="small text-muted">${zeldaEscape(d.kind)} · ${zeldaEscape(d.status)} · ${zeldaDate(d.created_at)}</div>
                         ${d.can_open_brief ? renderLibraryBriefButton(d.document_id) : ''}
+                        ${d.can_open_brief ? renderLibraryAskButton(d.document_id, d.name) : ''}
                     </div>`).join('');
                 cards.push(`<div class="zelda-card p-3">
                     <h6 class="fw-bold text-dark mb-1">${zeldaEscape(section.title)}${section.company ? ` · ${zeldaEscape(section.company)}` : ''}</h6>
@@ -1376,6 +1449,14 @@
         if (pageButton) {
             event.preventDefault();
             await loadLibrary(Number(pageButton.dataset.page));
+            return;
+        }
+        const askButton = event.target.closest('.zelda-library-ask');
+        if (askButton) {
+            event.preventDefault();
+            setZeldaAskDocument(askButton.dataset.documentId, askButton.dataset.documentName);
+            document.querySelector('.zelda-tab[data-tab="ask"]').click();
+            document.getElementById('zeldaAskQuery').focus();
             return;
         }
         const button = event.target.closest('.zelda-library-dismiss');

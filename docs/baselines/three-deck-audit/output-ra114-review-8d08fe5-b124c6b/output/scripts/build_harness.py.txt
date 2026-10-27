@@ -1,0 +1,44 @@
+"""Builds mutate_ra114c.py from round 2's mutate_ra114b.py: re-anchors S1/S2 to the round 3 code, adds the
+review-of-8d08fe5 mutants (N*, F*, G*) and the Ask test to the panel labels, then checks every anchor occurs once."""
+import sys
+from pathlib import Path
+
+here = Path(__file__).resolve().parent
+s = (here.parent / 'r27' / 'mutate_ra114b.py').read_text(encoding='utf-8')
+
+
+def rep(a, b):
+    global s
+    assert s.count(a) == 1, a[:60]
+    s = s.replace(a, b)
+
+
+rep('Usage: python mutate_ra114b.py', 'Usage: python mutate_ra114c.py')
+rep("PANEL = ['zelda_api.tests_assistant_panel_escaping', 'pages.tests_zelda_panel_markup']",
+    "PANEL = ['zelda_api.tests_assistant_panel_escaping', 'zelda_api.tests_assistant_panel_ask', 'pages.tests_zelda_panel_markup']")
+NEW_RET = r'''    ('S1', 'subject name not set aside', RET, "        question = without_subject(query, document_source)\n", "        question = query\n", RANK),
+    ('S2', 'subject name set aside across documents too', RET, "    pattern = subject_pattern(document_source) if document_source is not None else None", "    pattern = subject_pattern(document_source if document_source is not None else DocumentSource(source_entity='Other Co'))", RANK),
+    ('N1', 'each word of the name set aside on its own', RET, "r'[^a-z0-9]+'.join(map(re.escape, words))", "'|'.join(map(re.escape, words))", RANK),
+    ('N2', 'name set aside in the question only', RET, "self._keyword_boost(question, without_subject(chunk.raw_text, document_source))", "self._keyword_boost(question, chunk.raw_text)", RANK),
+    ('N3', 'legal suffix kept in the name', RET, "    while len(words) > 1 and words[-1] in LEGAL_SUFFIXES:\n        words.pop()\n", "", RANK),
+    ('F1', 'chunks without a vector skipped', RET, "            try:\n                similarity = 0.0\n", "            try:\n                if not chunk.embedding_vector:\n                    continue\n                similarity = 0.0\n", RANK),
+    ('F2', 'a question that cannot be embedded gets nothing', RET, "            logger.warning(f\"Failed to embed query: {query}\")\n", "            logger.warning(f\"Failed to embed query: {query}\")\n            return []\n", RANK),
+'''
+i, j = s.index("    ('S1',"), s.index("    ('W1',")
+s = s[:i] + NEW_RET + s[j:]
+NEW_TPL = r'''    ('G1', 'stale answers shown', TPL, "            if (request !== zeldaAskRequest) {\n                addLogEntry('An earlier", "            if (false) {\n                addLogEntry('An earlier", PANEL),
+    ('G2', 'choosing a document leaves pending answers current', TPL, "        zeldaAskRequest += 1;\n", "", PANEL),
+    ('G3', 'a new question leaves the older one current', TPL, "const request = ++zeldaAskRequest;", "const request = zeldaAskRequest;", PANEL),
+    ('G4', 'stale failures reported', TPL, "            if (request !== zeldaAskRequest) return;\n", "", PANEL),
+'''
+i = s.index("    ('Z1',")
+s = s[:i] + NEW_TPL + s[i:]
+out = here / 'mutate_ra114c.py'
+out.write_text(s, encoding='utf-8')
+
+worktree = Path(sys.argv[1])
+ns = {}
+exec(s[s.index('VIEWS ='):s.index('ONLY = set')], ns)
+bad = [(m[0], (worktree / m[2]).read_text(encoding='utf-8').replace('\r\n', '\n').count(m[3])) for m in ns['M']]
+bad = [b for b in bad if b[1] != 1]
+print(f"{len(ns['M'])} mutants; anchors not found exactly once: {bad}")

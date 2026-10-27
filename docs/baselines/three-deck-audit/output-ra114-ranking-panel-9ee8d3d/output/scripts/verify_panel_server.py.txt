@@ -1,0 +1,112 @@
+"""RA-114 panel check (evidence script). Serves a worktree on 127.0.0.1 against a THROWAWAY SQLite file in the
+scratchpad -- never the application database -- with outbound connections blocked and the marketplace query
+extraction replaced by a recorder (no model call is possible). Seeds one owner with memo 104's recorded chunks and
+writes a session key for that owner, so no password is entered anywhere. Every /ask/ request body the panel sends is
+appended to ask_requests.jsonl.
+
+Usage: python verify_panel_server.py <worktree> <out_dir> <port>
+"""
+import json
+import os
+import socket
+import sys
+from pathlib import Path
+
+worktree, out, port = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3]
+out.mkdir(parents=True, exist_ok=True)
+db = out / 'verify_panel.sqlite3'
+if db.exists():
+    db.unlink()
+os.environ.update({
+    'SECRET_KEY': 'ci-only-placeholder-key-not-for-production-use', 'DEBUG': 'True',
+    'ALLOWED_HOSTS': 'localhost,127.0.0.1', 'EMAIL_HOST_USER': 'ci@example.invalid',
+    'CELERY_TASK_ALWAYS_EAGER': 'True', 'CELERY_BROKER_URL': 'memory://', 'CELERY_RESULT_BACKEND': 'cache+memory://',
+    'CACHE_URL': '', 'ANTHROPIC_API_KEY': '', 'DATABASE_URL': f'sqlite:///{db.as_posix()}',
+    'DJANGO_SETTINGS_MODULE': 'config.settings', 'PYTHONDONTWRITEBYTECODE': '1',
+})
+sys.path.insert(0, str(worktree))
+os.chdir(worktree)
+
+_connect = socket.socket.connect
+
+
+def _local_only(self, address):
+    host = address[0] if isinstance(address, tuple) else address
+    if host not in ('127.0.0.1', 'localhost', '::1'):
+        raise ConnectionRefusedError(f'verify_panel_server: outbound connection to {host!r} blocked')
+    return _connect(self, address)
+
+
+socket.socket.connect = _local_only
+
+import django  # noqa: E402
+django.setup()
+from django.conf import settings  # noqa: E402
+assert settings.DATABASES['default']['NAME'] == str(db) or Path(settings.DATABASES['default']['NAME']) == db, \
+    settings.DATABASES['default']['NAME']
+from django.core.management import call_command  # noqa: E402
+
+call_command('migrate', verbosity=0)
+
+from importlib import import_module  # noqa: E402
+from django.contrib.auth import get_user_model  # noqa: E402
+from zelda_api import intelligence_pipeline, views  # noqa: E402
+from zelda_api.embeddings import EmbeddingEngine  # noqa: E402
+from zelda_api.vector_models import DocumentChunk, DocumentSource, IntelligenceMemo  # noqa: E402
+
+extractions = []
+
+
+def _recorded_extraction(*args, **kwargs):
+    extractions.append({'args': [str(a)[:200] for a in args]})
+    (out / 'extraction_calls.json').write_text(json.dumps(extractions, indent=1), encoding='utf-8')
+    return {'constraints': []}          # memo 104's recorded extraction result
+
+
+intelligence_pipeline._call_claude_for_query_extraction = _recorded_extraction
+
+_post = views.ZeldaAskAPIView.post
+
+
+def _logged_post(self, request):
+    response = _post(self, request)
+    with open(out / 'ask_requests.jsonl', 'a', encoding='utf-8') as f:
+        f.write(json.dumps({'user': request.user.username, 'body': request.data, 'status': response.status_code,
+                            'response': response.data}, ensure_ascii=False) + '\n')
+    return response
+
+
+views.ZeldaAskAPIView.post = _logged_post
+
+User = get_user_model()
+owner = User.objects.create_user('verify_owner')
+owner.set_unusable_password()
+owner.save()
+stranger = User.objects.create_user('verify_stranger')
+stranger.set_unusable_password()
+stranger.save()
+recorded = json.loads((worktree / 'zelda_api/data/document_retrieval/memo104_chunks.json').read_text(encoding='utf-8'))
+doc = DocumentSource.objects.create(uploaded_by=owner, filename='manychat_series_a_audit_deck.pptx',
+                                    source_entity=recorded['provenance']['source_entity'], document_type='pitch_deck',
+                                    status='analyzed')
+hashing = EmbeddingEngine.__new__(EmbeddingEngine)
+for c in recorded['chunks']:
+    DocumentChunk.objects.create(document=doc, chunk_index=c['chunk_index'], page_number=c['page_number'],
+                                 section_title=c['section_title'], raw_text=c['raw_text'], token_count=c['token_count'],
+                                 embedding_vector=json.dumps(hashing._mock_embedding_with_semantic_hashing(c['raw_text'])))
+IntelligenceMemo.objects.create(document=doc, executive_summary='Verification placeholder memo (throwaway database).')
+
+store = import_module(settings.SESSION_ENGINE).SessionStore
+keys = {}
+for user in (owner, stranger):
+    session = store()
+    session['_auth_user_id'] = str(user.pk)
+    session['_auth_user_backend'] = settings.AUTHENTICATION_BACKENDS[0]
+    session['_auth_user_hash'] = user.get_session_auth_hash()
+    session.create()
+    keys[user.username] = session.session_key
+(out / 'seed.json').write_text(json.dumps({'database': str(db), 'document_id': doc.pk, 'chunks': len(recorded['chunks']),
+                                           'cookie_name': settings.SESSION_COOKIE_NAME, 'sessions': keys}, indent=1),
+                               encoding='utf-8')
+print('seeded', doc.pk, flush=True)
+call_command('runserver', f'127.0.0.1:{port}', use_reloader=False)

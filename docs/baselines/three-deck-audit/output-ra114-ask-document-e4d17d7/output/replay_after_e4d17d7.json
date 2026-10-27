@@ -1,0 +1,789 @@
+{
+ "head": "e4d17d768f488a03468ae9e35ce825667e85c800",
+ "views_py_uncommitted_change": false,
+ "document_chunks": 12,
+ "questions": {
+  "Q1": {
+   "question": "How much has ManyChat raised?",
+   "search_pages_now": [
+    [
+     2,
+     0.19999999999999998
+    ],
+    [
+     1,
+     0.09999999999999999
+    ],
+    [
+     3,
+     0.09999999999999999
+    ],
+    [
+     4,
+     0.09999999999999999
+    ],
+    [
+     5,
+     0.09999999999999999
+    ]
+   ],
+   "search_pages_recorded": [
+    [
+     2,
+     0.19999999999999998
+    ],
+    [
+     1,
+     0.09999999999999999
+    ],
+    [
+     3,
+     0.09999999999999999
+    ],
+    [
+     4,
+     0.09999999999999999
+    ],
+    [
+     5,
+     0.09999999999999999
+    ]
+   ],
+   "ask_as_run": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_recorded": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_with_document": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "document_id": 1,
+     "response": "5 passages from this document may bear on that (pages 1, 2, 3, 4, 5). They are the document's own words, shown as excerpts: what it states, not a verified answer.",
+     "evidence": [
+      {
+       "chunk_id": 2,
+       "page": 2,
+       "section": "Why this deck fits the audit leg",
+       "text": "Why this deck fits the audit leg\nSource: Pitch Deck Hunt lists ManyChat as a 2015 Series A deck with $23.1M raised. The embedded SlideShare deck has 10 slides. ManyChat’s current site is active under Manychat, Inc. and describes current products across Instagram, WhatsApp, TikTok, and Messenger.\nStage\nSeries A\nCompany status\nActive private company\nAudit use\nPrivate-company source deck\nDeck length\n10 slides\nUse this as the third audit deck after Nike / Ben & Jerry’s to check how Zelda handles a live private company with older public fundraising materials.",
+       "relevance": 0.19999999999999998
+      },
+      {
+       "chunk_id": 1,
+       "page": 1,
+       "section": "Audit source deck",
+       "text": "Audit source deck\nManyChat\nSeries A pitch deck recreation\nSelected because the company remains an active private operating company for this audit leg.\nPRIVATE COMPANY\nSERIES A\n10-SLIDE SOURCE\n🐙\nManyChat",
+       "relevance": 0.09999999999999999
+      },
+      {
+       "chunk_id": 3,
+       "page": 3,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\n🐙\nManyChat\nCreate Your Chat Bot in 5-Minutes\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 1",
+       "relevance": 0.09999999999999999
+      },
+      {
+       "chunk_id": 4,
+       "page": 4,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\nMessaging apps opened up their APIs.\n✈\nTelegram\n100M\npeople\nkik\nKik\n275M\npeople\n⚡\nFB Messenger\n900M\npeople\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 2",
+       "relevance": 0.09999999999999999
+      },
+      {
+       "chunk_id": 5,
+       "page": 5,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\nMessengers are great for engagement and sales.\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 3",
+       "relevance": 0.09999999999999999
+      }
+     ],
+     "no_relevant_evidence": false,
+     "results": []
+    }
+   },
+   "evidence_equals_search": true
+  },
+  "Q2": {
+   "question": "How many users does ManyChat have?",
+   "search_pages_now": [
+    [
+     1,
+     0.06
+    ],
+    [
+     2,
+     0.06
+    ],
+    [
+     3,
+     0.06
+    ],
+    [
+     4,
+     0.06
+    ],
+    [
+     5,
+     0.06
+    ]
+   ],
+   "search_pages_recorded": [
+    [
+     1,
+     0.06
+    ],
+    [
+     2,
+     0.06
+    ],
+    [
+     3,
+     0.06
+    ],
+    [
+     4,
+     0.06
+    ],
+    [
+     5,
+     0.06
+    ]
+   ],
+   "ask_as_run": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_recorded": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_with_document": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "document_id": 1,
+     "response": "5 passages from this document may bear on that (pages 1, 2, 3, 4, 5). They are the document's own words, shown as excerpts: what it states, not a verified answer.",
+     "evidence": [
+      {
+       "chunk_id": 1,
+       "page": 1,
+       "section": "Audit source deck",
+       "text": "Audit source deck\nManyChat\nSeries A pitch deck recreation\nSelected because the company remains an active private operating company for this audit leg.\nPRIVATE COMPANY\nSERIES A\n10-SLIDE SOURCE\n🐙\nManyChat",
+       "relevance": 0.06
+      },
+      {
+       "chunk_id": 2,
+       "page": 2,
+       "section": "Why this deck fits the audit leg",
+       "text": "Why this deck fits the audit leg\nSource: Pitch Deck Hunt lists ManyChat as a 2015 Series A deck with $23.1M raised. The embedded SlideShare deck has 10 slides. ManyChat’s current site is active under Manychat, Inc. and describes current products across Instagram, WhatsApp, TikTok, and Messenger.\nStage\nSeries A\nCompany status\nActive private company\nAudit use\nPrivate-company source deck\nDeck length\n10 slides\nUse this as the third audit deck after Nike / Ben & Jerry’s to check how Zelda handles a live private company with older public fundraising materials.",
+       "relevance": 0.06
+      },
+      {
+       "chunk_id": 3,
+       "page": 3,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\n🐙\nManyChat\nCreate Your Chat Bot in 5-Minutes\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 1",
+       "relevance": 0.06
+      },
+      {
+       "chunk_id": 4,
+       "page": 4,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\nMessaging apps opened up their APIs.\n✈\nTelegram\n100M\npeople\nkik\nKik\n275M\npeople\n⚡\nFB Messenger\n900M\npeople\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 2",
+       "relevance": 0.06
+      },
+      {
+       "chunk_id": 5,
+       "page": 5,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\nMessengers are great for engagement and sales.\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 3",
+       "relevance": 0.06
+      }
+     ],
+     "no_relevant_evidence": false,
+     "results": []
+    }
+   },
+   "evidence_equals_search": true
+  },
+  "Q3": {
+   "question": "How many messages does ManyChat send?",
+   "search_pages_now": [
+    [
+     10,
+     0.12
+    ],
+    [
+     12,
+     0.12
+    ],
+    [
+     1,
+     0.06
+    ],
+    [
+     2,
+     0.06
+    ],
+    [
+     3,
+     0.06
+    ]
+   ],
+   "search_pages_recorded": [
+    [
+     10,
+     0.12
+    ],
+    [
+     12,
+     0.12
+    ],
+    [
+     1,
+     0.06
+    ],
+    [
+     2,
+     0.06
+    ],
+    [
+     3,
+     0.06
+    ]
+   ],
+   "ask_as_run": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_recorded": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_with_document": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "document_id": 1,
+     "response": "5 passages from this document may bear on that (pages 1, 2, 3, 10, 12). They are the document's own words, shown as excerpts: what it states, not a verified answer.",
+     "evidence": [
+      {
+       "chunk_id": 10,
+       "page": 10,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\nTotal Bots Created\nJul-15\nAug-15\nSep-15\nOct-15\nNov-15\nDec-15\nJan-16\nFeb-16\nMar-16\nApr-16\n0\n20,000\n40,000\n60,000\n80,000\n100,000\n120,000\n140,000\nTraction by Apr-16\n140 000+ bots\n500M messages\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 8",
+       "relevance": 0.12
+      },
+      {
+       "chunk_id": 12,
+       "page": 12,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\n🐙\nManyChat\n140 000+ bots\n500M\nmessages/month\nLaunching on Facebook\nMessenger this month\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 10",
+       "relevance": 0.12
+      },
+      {
+       "chunk_id": 1,
+       "page": 1,
+       "section": "Audit source deck",
+       "text": "Audit source deck\nManyChat\nSeries A pitch deck recreation\nSelected because the company remains an active private operating company for this audit leg.\nPRIVATE COMPANY\nSERIES A\n10-SLIDE SOURCE\n🐙\nManyChat",
+       "relevance": 0.06
+      },
+      {
+       "chunk_id": 2,
+       "page": 2,
+       "section": "Why this deck fits the audit leg",
+       "text": "Why this deck fits the audit leg\nSource: Pitch Deck Hunt lists ManyChat as a 2015 Series A deck with $23.1M raised. The embedded SlideShare deck has 10 slides. ManyChat’s current site is active under Manychat, Inc. and describes current products across Instagram, WhatsApp, TikTok, and Messenger.\nStage\nSeries A\nCompany status\nActive private company\nAudit use\nPrivate-company source deck\nDeck length\n10 slides\nUse this as the third audit deck after Nike / Ben & Jerry’s to check how Zelda handles a live private company with older public fundraising materials.",
+       "relevance": 0.06
+      },
+      {
+       "chunk_id": 3,
+       "page": 3,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\n🐙\nManyChat\nCreate Your Chat Bot in 5-Minutes\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 1",
+       "relevance": 0.06
+      }
+     ],
+     "no_relevant_evidence": false,
+     "results": []
+    }
+   },
+   "evidence_equals_search": true
+  },
+  "Q4": {
+   "question": "Is ManyChat registered with the SEC?",
+   "search_pages_now": [
+    [
+     2,
+     0.19999999999999998
+    ],
+    [
+     1,
+     0.09999999999999999
+    ],
+    [
+     3,
+     0.09999999999999999
+    ],
+    [
+     4,
+     0.09999999999999999
+    ],
+    [
+     5,
+     0.09999999999999999
+    ]
+   ],
+   "search_pages_recorded": [
+    [
+     2,
+     0.19999999999999998
+    ],
+    [
+     1,
+     0.09999999999999999
+    ],
+    [
+     3,
+     0.09999999999999999
+    ],
+    [
+     4,
+     0.09999999999999999
+    ],
+    [
+     5,
+     0.09999999999999999
+    ]
+   ],
+   "ask_as_run": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_recorded": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_with_document": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "document_id": 1,
+     "response": "5 passages from this document may bear on that (pages 1, 2, 3, 4, 5). They are the document's own words, shown as excerpts: what it states, not a verified answer.",
+     "evidence": [
+      {
+       "chunk_id": 2,
+       "page": 2,
+       "section": "Why this deck fits the audit leg",
+       "text": "Why this deck fits the audit leg\nSource: Pitch Deck Hunt lists ManyChat as a 2015 Series A deck with $23.1M raised. The embedded SlideShare deck has 10 slides. ManyChat’s current site is active under Manychat, Inc. and describes current products across Instagram, WhatsApp, TikTok, and Messenger.\nStage\nSeries A\nCompany status\nActive private company\nAudit use\nPrivate-company source deck\nDeck length\n10 slides\nUse this as the third audit deck after Nike / Ben & Jerry’s to check how Zelda handles a live private company with older public fundraising materials.",
+       "relevance": 0.19999999999999998
+      },
+      {
+       "chunk_id": 1,
+       "page": 1,
+       "section": "Audit source deck",
+       "text": "Audit source deck\nManyChat\nSeries A pitch deck recreation\nSelected because the company remains an active private operating company for this audit leg.\nPRIVATE COMPANY\nSERIES A\n10-SLIDE SOURCE\n🐙\nManyChat",
+       "relevance": 0.09999999999999999
+      },
+      {
+       "chunk_id": 3,
+       "page": 3,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\n🐙\nManyChat\nCreate Your Chat Bot in 5-Minutes\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 1",
+       "relevance": 0.09999999999999999
+      },
+      {
+       "chunk_id": 4,
+       "page": 4,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\nMessaging apps opened up their APIs.\n✈\nTelegram\n100M\npeople\nkik\nKik\n275M\npeople\n⚡\nFB Messenger\n900M\npeople\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 2",
+       "relevance": 0.09999999999999999
+      },
+      {
+       "chunk_id": 5,
+       "page": 5,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\nMessengers are great for engagement and sales.\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 3",
+       "relevance": 0.09999999999999999
+      }
+     ],
+     "no_relevant_evidence": false,
+     "results": []
+    }
+   },
+   "evidence_equals_search": true
+  },
+  "Q5": {
+   "question": "What is ManyChat's current revenue?",
+   "search_pages_now": [
+    [
+     2,
+     0.15
+    ],
+    [
+     1,
+     0.075
+    ],
+    [
+     3,
+     0.075
+    ],
+    [
+     4,
+     0.075
+    ],
+    [
+     5,
+     0.075
+    ]
+   ],
+   "search_pages_recorded": [
+    [
+     2,
+     0.15
+    ],
+    [
+     1,
+     0.075
+    ],
+    [
+     3,
+     0.075
+    ],
+    [
+     4,
+     0.075
+    ],
+    [
+     5,
+     0.075
+    ]
+   ],
+   "ask_as_run": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_recorded": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_with_document": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "document_id": 1,
+     "response": "5 passages from this document may bear on that (pages 1, 2, 3, 4, 5). They are the document's own words, shown as excerpts: what it states, not a verified answer.",
+     "evidence": [
+      {
+       "chunk_id": 2,
+       "page": 2,
+       "section": "Why this deck fits the audit leg",
+       "text": "Why this deck fits the audit leg\nSource: Pitch Deck Hunt lists ManyChat as a 2015 Series A deck with $23.1M raised. The embedded SlideShare deck has 10 slides. ManyChat’s current site is active under Manychat, Inc. and describes current products across Instagram, WhatsApp, TikTok, and Messenger.\nStage\nSeries A\nCompany status\nActive private company\nAudit use\nPrivate-company source deck\nDeck length\n10 slides\nUse this as the third audit deck after Nike / Ben & Jerry’s to check how Zelda handles a live private company with older public fundraising materials.",
+       "relevance": 0.15
+      },
+      {
+       "chunk_id": 1,
+       "page": 1,
+       "section": "Audit source deck",
+       "text": "Audit source deck\nManyChat\nSeries A pitch deck recreation\nSelected because the company remains an active private operating company for this audit leg.\nPRIVATE COMPANY\nSERIES A\n10-SLIDE SOURCE\n🐙\nManyChat",
+       "relevance": 0.075
+      },
+      {
+       "chunk_id": 3,
+       "page": 3,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\n🐙\nManyChat\nCreate Your Chat Bot in 5-Minutes\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 1",
+       "relevance": 0.075
+      },
+      {
+       "chunk_id": 4,
+       "page": 4,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\nMessaging apps opened up their APIs.\n✈\nTelegram\n100M\npeople\nkik\nKik\n275M\npeople\n⚡\nFB Messenger\n900M\npeople\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 2",
+       "relevance": 0.075
+      },
+      {
+       "chunk_id": 5,
+       "page": 5,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\nMessengers are great for engagement and sales.\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 3",
+       "relevance": 0.075
+      }
+     ],
+     "no_relevant_evidence": false,
+     "results": []
+    }
+   },
+   "evidence_equals_search": true
+  },
+  "Q6": {
+   "question": "When did ManyChat raise its Series A?",
+   "search_pages_now": [
+    [
+     1,
+     0.15
+    ],
+    [
+     2,
+     0.15
+    ],
+    [
+     3,
+     0.075
+    ],
+    [
+     4,
+     0.075
+    ],
+    [
+     5,
+     0.075
+    ]
+   ],
+   "search_pages_recorded": [
+    [
+     1,
+     0.15
+    ],
+    [
+     2,
+     0.15
+    ],
+    [
+     3,
+     0.075
+    ],
+    [
+     4,
+     0.075
+    ],
+    [
+     5,
+     0.075
+    ]
+   ],
+   "ask_as_run": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_recorded": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_with_document": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "document_id": 1,
+     "response": "5 passages from this document may bear on that (pages 1, 2, 3, 4, 5). They are the document's own words, shown as excerpts: what it states, not a verified answer.",
+     "evidence": [
+      {
+       "chunk_id": 1,
+       "page": 1,
+       "section": "Audit source deck",
+       "text": "Audit source deck\nManyChat\nSeries A pitch deck recreation\nSelected because the company remains an active private operating company for this audit leg.\nPRIVATE COMPANY\nSERIES A\n10-SLIDE SOURCE\n🐙\nManyChat",
+       "relevance": 0.15
+      },
+      {
+       "chunk_id": 2,
+       "page": 2,
+       "section": "Why this deck fits the audit leg",
+       "text": "Why this deck fits the audit leg\nSource: Pitch Deck Hunt lists ManyChat as a 2015 Series A deck with $23.1M raised. The embedded SlideShare deck has 10 slides. ManyChat’s current site is active under Manychat, Inc. and describes current products across Instagram, WhatsApp, TikTok, and Messenger.\nStage\nSeries A\nCompany status\nActive private company\nAudit use\nPrivate-company source deck\nDeck length\n10 slides\nUse this as the third audit deck after Nike / Ben & Jerry’s to check how Zelda handles a live private company with older public fundraising materials.",
+       "relevance": 0.15
+      },
+      {
+       "chunk_id": 3,
+       "page": 3,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\n🐙\nManyChat\nCreate Your Chat Bot in 5-Minutes\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 1",
+       "relevance": 0.075
+      },
+      {
+       "chunk_id": 4,
+       "page": 4,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\nMessaging apps opened up their APIs.\n✈\nTelegram\n100M\npeople\nkik\nKik\n275M\npeople\n⚡\nFB Messenger\n900M\npeople\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 2",
+       "relevance": 0.075
+      },
+      {
+       "chunk_id": 5,
+       "page": 5,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\nMessengers are great for engagement and sales.\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 3",
+       "relevance": 0.075
+      }
+     ],
+     "no_relevant_evidence": false,
+     "results": []
+    }
+   },
+   "evidence_equals_search": true
+  },
+  "Q7": {
+   "question": "Should I invest in ManyChat?",
+   "search_pages_now": [
+    [
+     1,
+     0.09999999999999999
+    ],
+    [
+     2,
+     0.09999999999999999
+    ],
+    [
+     3,
+     0.09999999999999999
+    ],
+    [
+     4,
+     0.09999999999999999
+    ],
+    [
+     5,
+     0.09999999999999999
+    ]
+   ],
+   "search_pages_recorded": [
+    [
+     1,
+     0.09999999999999999
+    ],
+    [
+     2,
+     0.09999999999999999
+    ],
+    [
+     3,
+     0.09999999999999999
+    ],
+    [
+     4,
+     0.09999999999999999
+    ],
+    [
+     5,
+     0.09999999999999999
+    ]
+   ],
+   "ask_as_run": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_recorded": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.",
+     "results": []
+    }
+   },
+   "ask_with_document": {
+    "status": 200,
+    "body": {
+     "status": "success",
+     "document_id": 1,
+     "response": "5 passages from this document may bear on that (pages 1, 2, 3, 4, 5). They are the document's own words, shown as excerpts: what it states, not a verified answer.",
+     "evidence": [
+      {
+       "chunk_id": 1,
+       "page": 1,
+       "section": "Audit source deck",
+       "text": "Audit source deck\nManyChat\nSeries A pitch deck recreation\nSelected because the company remains an active private operating company for this audit leg.\nPRIVATE COMPANY\nSERIES A\n10-SLIDE SOURCE\n🐙\nManyChat",
+       "relevance": 0.09999999999999999
+      },
+      {
+       "chunk_id": 2,
+       "page": 2,
+       "section": "Why this deck fits the audit leg",
+       "text": "Why this deck fits the audit leg\nSource: Pitch Deck Hunt lists ManyChat as a 2015 Series A deck with $23.1M raised. The embedded SlideShare deck has 10 slides. ManyChat’s current site is active under Manychat, Inc. and describes current products across Instagram, WhatsApp, TikTok, and Messenger.\nStage\nSeries A\nCompany status\nActive private company\nAudit use\nPrivate-company source deck\nDeck length\n10 slides\nUse this as the third audit deck after Nike / Ben & Jerry’s to check how Zelda handles a live private company with older public fundraising materials.",
+       "relevance": 0.09999999999999999
+      },
+      {
+       "chunk_id": 3,
+       "page": 3,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\n🐙\nManyChat\nCreate Your Chat Bot in 5-Minutes\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 1",
+       "relevance": 0.09999999999999999
+      },
+      {
+       "chunk_id": 4,
+       "page": 4,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\nMessaging apps opened up their APIs.\n✈\nTelegram\n100M\npeople\nkik\nKik\n275M\npeople\n⚡\nFB Messenger\n900M\npeople\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 2",
+       "relevance": 0.09999999999999999
+      },
+      {
+       "chunk_id": 5,
+       "page": 5,
+       "section": "angel.co/manychat",
+       "text": "angel.co/manychat\nmike@manychat.com\nMessengers are great for engagement and sales.\nRecreated from public Pitch Deck Hunt / SlideShare source • slide 3",
+       "relevance": 0.09999999999999999
+      }
+     ],
+     "no_relevant_evidence": false,
+     "results": []
+    }
+   },
+   "evidence_equals_search": true
+  }
+ },
+ "extraction_calls_mocked": 7,
+ "stranger_with_document": {
+  "status": 403,
+  "body": "{\"status\":\"error\",\"message\":\"Not authorized.\"}"
+ }
+}

@@ -1,0 +1,58 @@
+2026-10-26 03:00:16,530 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+.......2026-10-26 03:01:15,978 INFO zelda_api.signals - DocumentSource created: input.pdf
+.2026-10-26 03:01:16,155 INFO zelda_api.signals - DocumentSource created: input.pdf
+.2026-10-26 03:01:16,346 INFO zelda_api.signals - DocumentSource created: input.pdf
+.2026-10-26 03:01:16,710 INFO zelda_api.signals - DocumentSource created: input.pdf
+2026-10-26 03:01:16,713 INFO zelda_api.signals - DocumentSource created: analysis.pdf
+.2026-10-26 03:01:16,768 INFO zelda_api.signals - DocumentSource created: input.pdf
+.2026-10-26 03:01:16,896 INFO zelda_api.signals - DocumentSource created: input.pdf
+2026-10-26 03:01:16,899 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-26 03:01:16,920 INFO zelda_api.signals - DocumentSource created: input.pdf
+.2026-10-26 03:01:17,062 INFO zelda_api.signals - DocumentSource created: input.pdf
+...2026-10-26 03:01:17,410 INFO zelda_api.signals - DocumentSource created: deck.pdf
+..2026-10-26 03:01:17,600 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-26 03:01:17,750 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-26 03:01:17,763 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-26 03:01:17,884 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-26 03:01:17,900 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-26 03:01:17,913 INFO zelda_api.signals - DocumentSource created: v.pdf
+2026-10-26 03:01:17,915 INFO zelda_api.signals - DocumentSource created: v.pdf
+.2026-10-26 03:01:17,989 INFO zelda_api.signals - DocumentSource created: deck.pdf
+..2026-10-26 03:01:18,195 WARNING django.request - Forbidden: /api/v1/zelda/library/
+.2026-10-26 03:01:18,414 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-26 03:01:18,537 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-26 03:01:18,582 WARNING django.request - Forbidden: /api/v1/zelda/library/document/1/dismiss/
+2026-10-26 03:01:18,626 WARNING django.request - Forbidden: /api/v1/zelda/library/document/1/dismiss/
+.2026-10-26 03:01:18,636 INFO zelda_api.signals - DocumentSource created: deck.pdf
+2026-10-26 03:01:18,698 WARNING django.request - Not Found: /api/v1/zelda/library/document/1/dismiss/
+2026-10-26 03:01:18,703 WARNING django.request - Not Found: /api/v1/zelda/library/order/not-a-uuid/dismiss/
+.2026-10-26 03:01:18,749 INFO zelda_api.signals - DocumentSource created: v.pdf
+.2026-10-26 03:01:18,856 INFO zelda_api.signals - DocumentSource created: deck.pdf
+.2026-10-26 03:01:18,980 INFO zelda_api.signals - DocumentSource created: qibby.pptx
+.2026-10-26 03:01:19,056 INFO zelda_api.signals - DocumentSource created: deck-0.pdf
+2026-10-26 03:01:19,057 INFO zelda_api.signals - DocumentSource created: deck-1.pdf
+2026-10-26 03:01:19,058 INFO zelda_api.signals - DocumentSource created: deck-2.pdf
+2026-10-26 03:01:19,059 INFO zelda_api.signals - DocumentSource created: deck-3.pdf
+2026-10-26 03:01:19,060 INFO zelda_api.signals - DocumentSource created: deck-4.pdf
+2026-10-26 03:01:19,061 INFO zelda_api.signals - DocumentSource created: deck-5.pdf
+2026-10-26 03:01:19,062 INFO zelda_api.signals - DocumentSource created: deck-6.pdf
+2026-10-26 03:01:19,064 INFO zelda_api.signals - DocumentSource created: deck-7.pdf
+2026-10-26 03:01:19,065 INFO zelda_api.signals - DocumentSource created: deck-8.pdf
+2026-10-26 03:01:19,066 INFO zelda_api.signals - DocumentSource created: deck-9.pdf
+2026-10-26 03:01:19,067 INFO zelda_api.signals - DocumentSource created: deck-10.pdf
+2026-10-26 03:01:19,068 INFO zelda_api.signals - DocumentSource created: deck-11.pdf
+.2026-10-26 03:01:19,208 INFO zelda_api.signals - DocumentSource created: deck-0.pdf
+2026-10-26 03:01:19,209 INFO zelda_api.signals - DocumentSource created: deck-1.pdf
+2026-10-26 03:01:19,210 INFO zelda_api.signals - DocumentSource created: deck-2.pdf
+2026-10-26 03:01:19,211 INFO zelda_api.signals - DocumentSource created: deck-3.pdf
+2026-10-26 03:01:19,213 INFO zelda_api.signals - DocumentSource created: buy.pdf
+.2026-10-26 03:01:19,322 INFO zelda_api.signals - DocumentSource created: qibby.pdf
+...................
+----------------------------------------------------------------------
+Ran 52 tests in 5.842s
+
+OK
+Destroying test database for alias 'default'...
+Found 52 test(s).
+System check identified no issues (0 silenced).

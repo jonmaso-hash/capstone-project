@@ -225,8 +225,8 @@ class StructuralTests(_Retrieval):
     def test_the_scan_can_fail(self):
         source = inspect.getsource(retrieval_module)
         mutated = source.replace(
-            "        chunks = list(candidates.filter(q_objects)",
-            "        chunks = list(DocumentChunk.objects.all().filter(q_objects)",
+            "        chunks = list(candidates.select_related('document'))",
+            "        chunks = list(DocumentChunk.objects.all().select_related('document'))",
         )
         self.assertNotEqual(mutated, source, 'mutation did not apply')
         self.assertTrue(chunk_reads_outside_candidates(mutated))

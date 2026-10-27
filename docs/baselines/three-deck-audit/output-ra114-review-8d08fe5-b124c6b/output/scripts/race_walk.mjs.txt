@@ -1,0 +1,105 @@
+// RA-114 review of 8d08fe5, finding 3 (evidence script): a delayed document answer must not render under another
+// context. Headless Chrome with a throwaway profile, over the DevTools protocol, against verify_panel_server.py run
+// with RA114_SLOW_QUESTION=raised (throwaway SQLite, network blocked, extraction recorded, no model). Signs in with
+// the seeded throwaway session cookie; no password is typed. Writes race_walk.json and PNGs to <out>.
+// Usage: node race_walk.mjs <out_dir> <port> <chrome.exe>
+import { spawn } from 'node:child_process';
+import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+const [out, port, chromePath] = process.argv.slice(2);
+const seed = JSON.parse(readFileSync(join(out, 'seed.json'), 'utf8'));
+const base = `http://127.0.0.1:${port}`;
+const profile = mkdtempSync(join(tmpdir(), 'ra114-race-'));
+const debugPort = 9334;
+const chrome = spawn(chromePath, ['--headless=new', `--remote-debugging-port=${debugPort}`, `--user-data-dir=${profile}`,
+  '--no-first-run', '--no-default-browser-check', '--window-size=1400,1000', 'about:blank'], { stdio: 'ignore' });
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+let target;
+for (let i = 0; i < 50 && !target; i++) {
+  await sleep(200);
+  try { target = (await (await fetch(`http://127.0.0.1:${debugPort}/json`)).json()).find(t => t.type === 'page'); } catch {}
+}
+const ws = new WebSocket(target.webSocketDebuggerUrl);
+await new Promise(r => ws.addEventListener('open', r));
+let nextId = 0; const pending = new Map(); const consoleErrors = [];
+ws.addEventListener('message', ev => {
+  const msg = JSON.parse(ev.data);
+  if (msg.id && pending.has(msg.id)) { pending.get(msg.id)(msg); pending.delete(msg.id); }
+  if (msg.method === 'Runtime.exceptionThrown') consoleErrors.push(msg.params.exceptionDetails.exception?.description || msg.params.exceptionDetails.text);
+  if (msg.method === 'Runtime.consoleAPICalled' && msg.params.type === 'error') consoleErrors.push(msg.params.args.map(a => a.value ?? a.description).join(' '));
+});
+const send = (method, params = {}) => new Promise(r => { const id = ++nextId; pending.set(id, r); ws.send(JSON.stringify({ id, method, params })); });
+const evaluate = async expr => {
+  const r = await send('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true });
+  if (r.result.exceptionDetails) throw new Error(r.result.exceptionDetails.exception?.description || 'eval error');
+  return r.result.result.value;
+};
+const shot = async name => {
+  const r = await send('Page.captureScreenshot', { format: 'png' });
+  writeFileSync(join(out, name), Buffer.from(r.result.data, 'base64'));
+};
+const requests = () => { try { return readFileSync(join(out, 'ask_requests.jsonl'), 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse); } catch { return []; } };
+await send('Page.enable'); await send('Runtime.enable');
+
+await send('Network.setCookie', { name: seed.cookie_name, value: seed.sessions.verify_owner, domain: '127.0.0.1', path: '/' });
+await send('Page.navigate', { url: `${base}/` });
+for (let i = 0; i < 50; i++) { await sleep(200); if (await evaluate(`document.readyState === 'complete' && location.href.startsWith('${base}')`)) break; }
+await evaluate(`bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('aiAgentSidebar')).show(), true`);
+await sleep(600);
+
+const state = () => evaluate(`({
+  contextName: document.getElementById('zelda-ask-document-name').textContent,
+  contextShown: getComputedStyle(document.getElementById('zelda-ask-document')).display !== 'none',
+  resultsShown: document.getElementById('ask-results-card').style.display === 'block',
+  results: [...document.querySelectorAll('#ask-results-list .zelda-card')].map(c => c.innerText.replace(/\\s+/g, ' ').slice(0, 120)),
+  log: [...document.querySelectorAll('#agent-response-log .log-entry')].slice(-3).map(e => e.textContent.replace(/^\\[[^\\]]*\\]\\s*/, '')),
+})`);
+async function openLibrary() {
+  await evaluate(`document.querySelector('.zelda-tab[data-tab="library"]').click(), true`);
+  for (let i = 0; i < 50; i++) { await sleep(200); if (await evaluate(`document.querySelectorAll('.zelda-library-ask').length >= 2`)) break; }
+}
+const choose = id => evaluate(`document.querySelector('.zelda-library-ask[data-document-id="${id}"]').click(), true`);
+const submit = q => evaluate(`(() => { document.getElementById('zeldaAskQuery').value = ${JSON.stringify(q)};
+  document.getElementById('zelda-ask-form').requestSubmit(); return true; })()`);
+const waitForRequests = async n => { for (let i = 0; i < 60 && requests().length < n; i++) await sleep(200); await sleep(600); };
+
+const walk = { base, document_a: seed.document_id, document_b: seed.document_b_id, steps: [] };
+const step = (name, data) => { walk.steps.push({ name, ...data }); console.log(name, JSON.stringify(data).slice(0, 400)); };
+
+// Scenario 1 (the reviewer's): ask about A (delayed), switch to B before A answers.
+await openLibrary();
+step('library ask buttons', { buttons: await evaluate(`[...document.querySelectorAll('.zelda-library-ask')].map(b => b.dataset.documentName)`) });
+await choose(seed.document_id);
+await submit('How much has ManyChat raised?');          // delayed by the server
+await sleep(300);
+await openLibrary();
+await choose(seed.document_b_id);
+step('switched to B while A is pending', await state());
+await waitForRequests(1);
+step('after A answered, context B', { ...(await state()), answered: requests().map(r => ({ document_id: r.body.document_id, status: r.status })) });
+await shot('race_1_after_a_answered_under_b.png');
+
+// Scenario 2: on B, a delayed question then a fast one; only the newer answer may stand.
+await submit('How much has Northwind raised?');          // delayed
+await sleep(300);
+await submit('What is the revenue?');                     // fast
+await waitForRequests(3);
+step('two questions on B, newer answered first', { ...(await state()), answered: requests().map(r => ({ q: r.body.q, status: r.status })) });
+await shot('race_2_newer_question_wins.png');
+
+// Scenario 3: a delayed document answer, then back to the marketplace before it answers.
+await submit('How much has Northwind raised?');           // delayed
+await sleep(300);
+await evaluate(`document.getElementById('zelda-ask-document-clear').click(), true`);
+await waitForRequests(4);
+step('cleared to marketplace while pending', await state());
+await shot('race_3_cleared_while_pending.png');
+
+walk.console_errors = consoleErrors;
+writeFileSync(join(out, 'race_walk.json'), JSON.stringify(walk, null, 1));
+ws.close(); chrome.kill(); await sleep(500);
+try { rmSync(profile, { recursive: true, force: true }); } catch {}
+console.log('console errors:', consoleErrors.length);

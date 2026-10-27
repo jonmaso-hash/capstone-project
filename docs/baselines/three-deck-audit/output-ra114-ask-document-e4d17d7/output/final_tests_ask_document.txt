@@ -1,0 +1,86 @@
+2026-10-25 17:26:56,280 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-25 17:27:50,132 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:27:50,163 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:27:50,185 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:27:50,207 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-25 17:27:50,411 WARNING django.request - Forbidden: /api/v1/zelda/ask/
+.2026-10-25 17:27:50,420 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:27:50,445 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:27:50,464 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:27:50,488 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-25 17:27:50,583 WARNING django.request - Forbidden: /api/v1/zelda/ask/
+2026-10-25 17:27:50,601 WARNING django.request - Forbidden: /api/v1/zelda/ask/
+2026-10-25 17:27:50,621 WARNING django.request - Forbidden: /api/v1/zelda/ask/
+2026-10-25 17:27:50,642 WARNING django.request - Forbidden: /api/v1/zelda/ask/
+2026-10-25 17:27:50,664 WARNING django.request - Forbidden: /api/v1/zelda/ask/
+.2026-10-25 17:27:50,671 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:27:50,691 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:27:50,711 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:27:50,734 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-25 17:27:50,934 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:27:50,962 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:27:50,990 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:27:51,013 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-25 17:27:51,088 WARNING django.request - Forbidden: /api/v1/zelda/ask/
+.2026-10-25 17:27:51,094 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:27:51,112 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:27:51,132 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:27:51,151 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-25 17:27:51,226 WARNING django.request - Forbidden: /api/v1/zelda/ask/
+.2026-10-25 17:27:51,233 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:27:51,250 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:27:51,267 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:27:51,286 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-25 17:27:51,359 WARNING django.request - Bad Request: /api/v1/zelda/ask/
+2026-10-25 17:27:51,374 WARNING django.request - Bad Request: /api/v1/zelda/ask/
+2026-10-25 17:27:51,391 WARNING django.request - Bad Request: /api/v1/zelda/ask/
+2026-10-25 17:27:51,409 WARNING django.request - Bad Request: /api/v1/zelda/ask/
+2026-10-25 17:27:51,427 WARNING django.request - Bad Request: /api/v1/zelda/ask/
+2026-10-25 17:27:51,443 WARNING django.request - Bad Request: /api/v1/zelda/ask/
+2026-10-25 17:27:51,459 WARNING django.request - Bad Request: /api/v1/zelda/ask/
+2026-10-25 17:27:51,476 WARNING django.request - Not Found: /api/v1/zelda/ask/
+.2026-10-25 17:27:51,482 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:27:51,501 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:27:51,523 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:27:51,542 INFO zelda_api.signals - DocumentSource created: h.pdf
+2026-10-25 17:27:51,614 WARNING django.request - Bad Request: /api/v1/zelda/ask/
+2026-10-25 17:27:51,630 WARNING django.request - Bad Request: /api/v1/zelda/ask/
+2026-10-25 17:27:51,650 WARNING django.request - Bad Request: /api/v1/zelda/ask/
+2026-10-25 17:27:51,676 WARNING django.request - Bad Request: /api/v1/zelda/ask/
+.2026-10-25 17:27:51,685 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:27:51,703 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:27:51,719 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:27:51,737 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-25 17:27:51,821 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:27:51,838 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:27:51,856 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:27:51,877 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-25 17:27:51,961 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:27:51,982 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:27:52,001 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:27:52,021 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-25 17:27:52,106 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:27:52,125 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:27:52,143 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:27:52,159 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-25 17:27:52,250 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:27:52,268 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:27:52,287 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:27:52,304 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-25 17:27:52,388 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:27:52,406 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:27:52,425 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:27:52,446 INFO zelda_api.signals - DocumentSource created: h.pdf
+.2026-10-25 17:27:52,566 INFO zelda_api.signals - DocumentSource created: a.pdf
+2026-10-25 17:27:52,583 INFO zelda_api.signals - DocumentSource created: p.pdf
+2026-10-25 17:27:52,601 INFO zelda_api.signals - DocumentSource created: x.pdf
+2026-10-25 17:27:52,619 INFO zelda_api.signals - DocumentSource created: h.pdf
+.
+----------------------------------------------------------------------
+Ran 14 tests in 2.597s
+
+OK
+Destroying test database for alias 'default'...
+Found 14 test(s).
+System check identified no issues (0 silenced).

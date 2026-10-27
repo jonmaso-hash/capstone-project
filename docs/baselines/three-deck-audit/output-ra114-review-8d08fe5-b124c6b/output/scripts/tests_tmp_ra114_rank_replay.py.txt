@@ -1,0 +1,100 @@
+"""RA-114 ranking before/after (evidence script, never committed as a test). Memo 104's 12 recorded chunks
+(RA114_CHUNKS, the frozen copy of f73bef5 02_chunks.json) in the throwaway TEST database with production-shaped vectors
+(json.dumps of the semantic-hash vector, as the pipeline stores them); Q1-Q7 and the controls sent to /ask/ with the
+document and to /search/; extraction patched and asserted unused. Copied into a worktree as
+zelda_api/tests_tmp_ra114_rank_replay.py, run with RA114_CHUNKS and RA114_REPLAY_OUT, then deleted."""
+import json, os, subprocess
+from unittest import mock
+
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+from django.urls import reverse
+
+from zelda_api.embeddings import EmbeddingEngine
+from zelda_api.vector_models import DocumentChunk, DocumentSource
+
+QUESTIONS = {
+    'Q1': 'How much has ManyChat raised?', 'Q2': 'How many users does ManyChat have?',
+    'Q3': 'How many messages does ManyChat send?', 'Q4': 'Is ManyChat registered with the SEC?',
+    'Q5': "What is ManyChat's current revenue?", 'Q6': 'When did ManyChat raise its Series A?',
+    'Q7': 'Should I invest in ManyChat?',
+    'C1 unrelated': 'What is the weather in Paris?', 'C2 subject only': "Who is ManyChat's CEO?",
+    'C3 other document words': 'users traction raised Series A',
+}
+
+
+class Replay(TestCase):
+
+    def test_replay(self):
+        recorded = json.load(open(os.environ['RA114_CHUNKS'], encoding='utf-8'))
+        owner = get_user_model().objects.create_user('rank_owner', password='x')
+        doc = DocumentSource.objects.create(uploaded_by=owner, filename='deck.pptx', source_entity='ManyChat',
+                                            document_type='pitch_deck', status='analyzed')
+        other = DocumentSource.objects.create(uploaded_by=owner, filename='other.pdf', source_entity='Other Co',
+                                              document_type='pitch_deck', status='analyzed')
+        hashing = EmbeddingEngine.__new__(EmbeddingEngine)
+        vec = lambda t: json.dumps(hashing._mock_embedding_with_semantic_hashing(t))
+        for c in recorded['chunks']:
+            DocumentChunk.objects.create(document=doc, chunk_index=c['chunk_index'], page_number=c['page_number'],
+                                         section_title=c['section_title'], raw_text=c['raw_text'],
+                                         token_count=c['token_count'], embedding_vector=vec(c['raw_text']))
+        other_text = 'Traction: Other Co has 40,000 users and raised $5M in its Series A from ManyChat investors.'
+        DocumentChunk.objects.create(document=other, chunk_index=0, page_number=1, section_title='Traction',
+                                     raw_text=other_text, token_count=20, embedding_vector=vec(other_text))
+        head = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
+        dirty = subprocess.run(['git', 'status', '--porcelain', '--', 'zelda_api/retrieval.py'], capture_output=True,
+                               text=True).stdout.strip()
+        out = {'head': head, 'retrieval_py_differs_from_head': bool(dirty), 'questions': {}}
+        post = lambda url, body: self.client.post(url, data=json.dumps(body), content_type='application/json').json()
+        self.client.force_login(owner)
+        with mock.patch('zelda_api.intelligence_pipeline._call_claude_for_query_extraction') as extract:
+            for q, text in QUESTIONS.items():
+                ask = post(reverse('zelda_api:ask'), {'q': text, 'document_id': doc.pk})
+                search = post(reverse('zelda_api:document_search', args=[doc.pk]), {'query': text})
+                out['questions'][q] = {
+                    'question': text,
+                    'pages': [e['page'] for e in ask['evidence']],
+                    'relevance': [round(e['relevance'], 4) for e in ask['evidence']],
+                    'first_excerpt': ask['evidence'][0]['text'][:90] if ask['evidence'] else None,
+                    'no_relevant_evidence': ask['no_relevant_evidence'],
+                    'response': ask['response'],
+                    'other_document_text_returned': other_text in [e['text'] for e in ask['evidence']],
+                    'ask_equals_search': [(e['chunk_id'], e['page'], e['text'], e['relevance']) for e in ask['evidence']]
+                                         == [(r['id'], r['page'], r['text'], r['relevance']) for r in search['results']],
+                }
+            out['extraction_calls'] = extract.call_count
+        # Why the vector half contributes nothing, and why decoding it would not help: the stored vector is a JSON
+        # string (cosine_similarity returns 0 on the length mismatch); decoded, the hash similarity is noise.
+        import math
+        from zelda_api.retrieval import embedding_engine
+        chunks = list(DocumentChunk.objects.filter(document=doc).order_by('chunk_index'))
+        out['stored_vector_type'] = type(chunks[0].embedding_vector).__name__
+        out['similarity_as_stored'] = {q: sorted({embedding_engine.cosine_similarity(hashing._mock_embedding_with_semantic_hashing(t), c.embedding_vector) for c in chunks})
+                                       for q, t in QUESTIONS.items() if q.startswith('Q')}
+        decoded = {}
+        for q, t in QUESTIONS.items():
+            if q.startswith('Q'):
+                values = [embedding_engine.cosine_similarity(hashing._mock_embedding_with_semantic_hashing(t), json.loads(c.embedding_vector)) for c in chunks]
+                decoded[q] = ['nan' if math.isnan(v) else round(v, 3) for v in values]
+        out['similarity_if_decoded_by_page'] = decoded
+
+        # Review of 8d08fe5. Finding 2: the same questions when the question cannot be embedded, and when no chunk
+        # has a stored vector -- the paths that used the old substring match.
+        from zelda_api.principal import ORIGIN_TASK, Principal
+        from zelda_api.retrieval import VectorRetriever
+        principal = Principal.for_user(owner, ORIGIN_TASK)
+        pages = lambda text, d=doc: [r['page'] for r in VectorRetriever(top_k=5).retrieve(principal, text, d)]
+        with mock.patch('zelda_api.retrieval.embedding_engine.embed_text', return_value=None):
+            out['question_not_embedded_pages'] = {q: pages(t) for q, t in QUESTIONS.items() if q.startswith('Q')}
+        DocumentChunk.objects.filter(document=doc).update(embedding_vector=None)
+        out['no_stored_vectors_pages'] = {q: pages(t) for q, t in QUESTIONS.items() if q.startswith('Q')}
+        # Finding 1: a company name holding a topic word.
+        labs = DocumentSource.objects.create(uploaded_by=owner, filename='labs.pdf', source_entity='Revenue Labs',
+                                             document_type='pitch_deck', status='analyzed')
+        for i, t in enumerate(('Revenue Labs | revenuelabs.io | Our team', 'Revenue Labs | revenuelabs.io | Revenue: $2M ARR')):
+            DocumentChunk.objects.create(document=labs, chunk_index=i, page_number=i + 1, section_title='', raw_text=t,
+                                         token_count=6, embedding_vector=vec(t))
+        out['revenue_labs_pages'] = {q: pages(q, labs) for q in ('What is the revenue?', "What is Revenue Labs' revenue?",
+                                                                 'Who founded Revenue Labs?')}
+        with open(os.environ['RA114_REPLAY_OUT'], 'w', encoding='utf-8', newline='\n') as f:
+            json.dump(out, f, indent=1, ensure_ascii=False)

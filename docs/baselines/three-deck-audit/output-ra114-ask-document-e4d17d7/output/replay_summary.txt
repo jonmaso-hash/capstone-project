@@ -1,0 +1,72 @@
+== before_b278364 head 1aab9e345af13dc79c69680a373f50f2c5c32c04 uncommitted views change False chunks 12 extraction mocked calls 14 | stranger 200 {"status":"success","response":"I couldn't find specific search criteria in that
+Q1 How much has ManyChat raised?
+   search ranks now==recorded: True [2, 1, 3, 4, 5]
+   ask as run ({q}) == recorded body: True
+   ask with document_id: 200 I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.
+   evidence pages: [] no_rel None evidence==search False
+Q2 How many users does ManyChat have?
+   search ranks now==recorded: True [1, 2, 3, 4, 5]
+   ask as run ({q}) == recorded body: True
+   ask with document_id: 200 I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.
+   evidence pages: [] no_rel None evidence==search False
+Q3 How many messages does ManyChat send?
+   search ranks now==recorded: True [10, 12, 1, 2, 3]
+   ask as run ({q}) == recorded body: True
+   ask with document_id: 200 I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.
+   evidence pages: [] no_rel None evidence==search False
+Q4 Is ManyChat registered with the SEC?
+   search ranks now==recorded: True [2, 1, 3, 4, 5]
+   ask as run ({q}) == recorded body: True
+   ask with document_id: 200 I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.
+   evidence pages: [] no_rel None evidence==search False
+Q5 What is ManyChat's current revenue?
+   search ranks now==recorded: True [2, 1, 3, 4, 5]
+   ask as run ({q}) == recorded body: True
+   ask with document_id: 200 I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.
+   evidence pages: [] no_rel None evidence==search False
+Q6 When did ManyChat raise its Series A?
+   search ranks now==recorded: True [1, 2, 3, 4, 5]
+   ask as run ({q}) == recorded body: True
+   ask with document_id: 200 I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.
+   evidence pages: [] no_rel None evidence==search False
+Q7 Should I invest in ManyChat?
+   search ranks now==recorded: True [1, 2, 3, 4, 5]
+   ask as run ({q}) == recorded body: True
+   ask with document_id: 200 I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders.
+   evidence pages: [] no_rel None evidence==search False
+== after_e4d17d7 head e4d17d768f488a03468ae9e35ce825667e85c800 uncommitted views change False chunks 12 extraction mocked calls 7 | stranger 403 {"status":"error","message":"Not authorized."}
+Q1 How much has ManyChat raised?
+   search ranks now==recorded: True [2, 1, 3, 4, 5]
+   ask as run ({q}) == recorded body: True
+   ask with document_id: 200 5 passages from this document may bear on that (pages 1, 2, 3, 4, 5). They are the document's own words, shown as excerpts: what it states, 
+   evidence pages: [2, 1, 3, 4, 5] no_rel False evidence==search True
+Q2 How many users does ManyChat have?
+   search ranks now==recorded: True [1, 2, 3, 4, 5]
+   ask as run ({q}) == recorded body: True
+   ask with document_id: 200 5 passages from this document may bear on that (pages 1, 2, 3, 4, 5). They are the document's own words, shown as excerpts: what it states, 
+   evidence pages: [1, 2, 3, 4, 5] no_rel False evidence==search True
+Q3 How many messages does ManyChat send?
+   search ranks now==recorded: True [10, 12, 1, 2, 3]
+   ask as run ({q}) == recorded body: True
+   ask with document_id: 200 5 passages from this document may bear on that (pages 1, 2, 3, 10, 12). They are the document's own words, shown as excerpts: what it states
+   evidence pages: [10, 12, 1, 2, 3] no_rel False evidence==search True
+Q4 Is ManyChat registered with the SEC?
+   search ranks now==recorded: True [2, 1, 3, 4, 5]
+   ask as run ({q}) == recorded body: True
+   ask with document_id: 200 5 passages from this document may bear on that (pages 1, 2, 3, 4, 5). They are the document's own words, shown as excerpts: what it states, 
+   evidence pages: [2, 1, 3, 4, 5] no_rel False evidence==search True
+Q5 What is ManyChat's current revenue?
+   search ranks now==recorded: True [2, 1, 3, 4, 5]
+   ask as run ({q}) == recorded body: True
+   ask with document_id: 200 5 passages from this document may bear on that (pages 1, 2, 3, 4, 5). They are the document's own words, shown as excerpts: what it states, 
+   evidence pages: [2, 1, 3, 4, 5] no_rel False evidence==search True
+Q6 When did ManyChat raise its Series A?
+   search ranks now==recorded: True [1, 2, 3, 4, 5]
+   ask as run ({q}) == recorded body: True
+   ask with document_id: 200 5 passages from this document may bear on that (pages 1, 2, 3, 4, 5). They are the document's own words, shown as excerpts: what it states, 
+   evidence pages: [1, 2, 3, 4, 5] no_rel False evidence==search True
+Q7 Should I invest in ManyChat?
+   search ranks now==recorded: True [1, 2, 3, 4, 5]
+   ask as run ({q}) == recorded body: True
+   ask with document_id: 200 5 passages from this document may bear on that (pages 1, 2, 3, 4, 5). They are the document's own words, shown as excerpts: what it states, 
+   evidence pages: [1, 2, 3, 4, 5] no_rel False evidence==search True

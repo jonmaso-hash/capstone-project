@@ -1,0 +1,89 @@
+{
+ "base": "http://127.0.0.1:8766",
+ "document_a": 1,
+ "document_b": 2,
+ "steps": [
+  {
+   "name": "library ask buttons",
+   "buttons": [
+    "Northwind",
+    "ManyChat"
+   ]
+  },
+  {
+   "name": "switched to B while A is pending",
+   "contextName": "Northwind",
+   "contextShown": true,
+   "resultsShown": false,
+   "results": [],
+   "log": [
+    "\n                    [Ready] Awaiting input... Search, product analysis, or memo retrieval\n                ",
+    "Zelda Intelligence initialized",
+    "Asking about ManyChat: \"How much has ManyChat raised?\""
+   ]
+  },
+  {
+   "name": "after A answered, context B",
+   "contextName": "Northwind",
+   "contextShown": true,
+   "resultsShown": true,
+   "results": [
+    "Page 2 · Why this deck fits the audit leg Why this deck fits the audit leg Source: Pitch Deck Hunt lists ManyChat as a 2"
+   ],
+   "log": [
+    "Zelda Intelligence initialized",
+    "Asking about ManyChat: \"How much has ManyChat raised?\"",
+    "1 passage from this document may bear on that (page 2). They are the document's own words, shown as excerpts: what it states, not a verified answer."
+   ],
+   "answered": [
+    {
+     "document_id": 1,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "name": "two questions on B, newer answered first",
+   "contextName": "Northwind",
+   "contextShown": true,
+   "resultsShown": true,
+   "results": [
+    "Page 3 Northwind | Raised $5M seed"
+   ],
+   "log": [
+    "Asking about Northwind: \"What is the revenue?\"",
+    "1 passage from this document may bear on that (page 2). They are the document's own words, shown as excerpts: what it states, not a verified answer.",
+    "1 passage from this document may bear on that (page 3). They are the document's own words, shown as excerpts: what it states, not a verified answer."
+   ],
+   "answered": [
+    {
+     "q": "How much has ManyChat raised?",
+     "status": 200
+    },
+    {
+     "q": "What is the revenue?",
+     "status": 200
+    },
+    {
+     "q": "How much has Northwind raised?",
+     "status": 200
+    }
+   ]
+  },
+  {
+   "name": "cleared to marketplace while pending",
+   "contextName": "",
+   "contextShown": false,
+   "resultsShown": true,
+   "results": [
+    "Page 3 Northwind | Raised $5M seed"
+   ],
+   "log": [
+    "1 passage from this document may bear on that (page 3). They are the document's own words, shown as excerpts: what it states, not a verified answer.",
+    "Asking about Northwind: \"How much has Northwind raised?\"",
+    "1 passage from this document may bear on that (page 3). They are the document's own words, shown as excerpts: what it states, not a verified answer."
+   ]
+  }
+ ],
+ "console_errors": []
+}

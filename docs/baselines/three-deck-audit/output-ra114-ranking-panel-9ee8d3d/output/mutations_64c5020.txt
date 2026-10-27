@@ -1,0 +1,25 @@
+R1   views.py      document_id ignored (no routing)                 caught fails=22 errors=6 ran=15
+R2   views.py      routes on key presence (null document_id too)    caught fails=1 errors=0 ran=15
+A1   views.py      no authorization check before retrieval          caught fails=1 errors=0 ran=15
+A2   views.py      refused retrieval returns 200 with nothing       caught fails=1 errors=0 ran=15
+I1   views.py      retrieval over every authorized document         caught fails=1 errors=0 ran=15
+E1   views.py      no_relevant_evidence never true                  caught fails=1 errors=0 ran=15
+E2   views.py      empty evidence worded as found                   caught fails=1 errors=0 ran=15
+V1   views.py      bool accepted as a document id                   caught fails=2 errors=0 ran=15
+V2   views.py      empty question accepted                          caught fails=2 errors=0 ran=15
+X1   views.py      model extraction still called                    caught fails=2 errors=0 ran=15
+X2   views.py      marketplace cards added to a document answer     caught fails=1 errors=0 ran=15
+S1   retrieval.py  subject name not set aside                       caught fails=7 errors=0 ran=66
+S2   retrieval.py  subject name set aside across documents too      caught fails=1 errors=0 ran=66
+W1   retrieval.py  question words count                             caught fails=2 errors=0 ran=66
+ST1  retrieval.py  no word forms at all                             caught fails=3 errors=0 ran=66
+ST2  retrieval.py  no -ed form                                      caught fails=3 errors=0 ran=66
+ST3  retrieval.py  -ing folded too                                  caught fails=2 errors=0 ran=66
+T1   retrieval.py  no topic headings                                caught fails=3 errors=1 ran=66
+T2   retrieval.py  a heading counts as much as a stated word        caught fails=1 errors=0 ran=66
+T3   retrieval.py  headings the question already uses double-count  SURVIVED fails=0 errors=0 ran=66
+D1   retrieval.py  ties in database order                           SURVIVED fails=0 errors=0 ran=66
+P1   zelda_ai_assistant_enhanced.html document excerpt rendered unescaped              caught fails=1 errors=0 ran=15
+P2   zelda_ai_assistant_enhanced.html library ask button name unescaped                caught fails=1 errors=0 ran=15
+Z1   retrieval.py  zero-relevance chunks returned                   caught fails=14 errors=0 ran=66
+22/24 caught | restored sha256 zelda_api/views.py=6c9714b2cf28ba7aa10fa9096287aafa680b1a8cb50cf707f933118c6c9169f9 zelda_api/retrieval.py=710b6b72a7884e3ef7c62df98675fdfa6af9e2dcdec340f2de0582ac85d6682c templates/includes/zelda_ai_assistant_enhanced.html=9b3c3f89fb211153558b19b6f5ffcc5d67e3e5c5acbb5172f1348b20cdbb2a24

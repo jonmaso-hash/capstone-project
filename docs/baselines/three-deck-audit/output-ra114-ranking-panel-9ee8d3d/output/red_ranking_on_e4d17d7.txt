@@ -1,0 +1,205 @@
+2026-10-26 00:22:34,737 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-26 00:23:26,856 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 00:23:26,880 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 00:23:26,895 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 00:23:26,914 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 00:23:27,015 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 00:23:27,033 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 00:23:27,061 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 00:23:27,082 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 00:23:27,424 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 00:23:27,443 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 00:23:27,453 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 00:23:27,472 INFO zelda_api.signals - DocumentSource created: other.pdf
+F2026-10-26 00:23:27,485 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 00:23:27,505 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 00:23:27,517 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 00:23:27,538 INFO zelda_api.signals - DocumentSource created: other.pdf
+F2026-10-26 00:23:27,550 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 00:23:27,568 INFO zelda_api.signals - DocumentSource created: other.pdf
+F2026-10-26 00:23:27,579 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 00:23:27,598 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 00:23:27,654 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 00:23:27,673 INFO zelda_api.signals - DocumentSource created: other.pdf
+F2026-10-26 00:23:27,726 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 00:23:27,747 INFO zelda_api.signals - DocumentSource created: other.pdf
+.2026-10-26 00:23:27,756 INFO zelda_api.signals - DocumentSource created: s.pdf
+F2026-10-26 00:23:27,771 INFO zelda_api.signals - DocumentSource created: s.pdf
+.2026-10-26 00:23:27,781 INFO zelda_api.signals - DocumentSource created: s.pdf
+F2026-10-26 00:23:27,794 INFO zelda_api.signals - DocumentSource created: s.pdf
+F2026-10-26 00:23:27,807 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 00:23:27,827 INFO zelda_api.signals - DocumentSource created: other.pdf
+F2026-10-26 00:23:27,886 INFO zelda_api.signals - DocumentSource created: deck.pptx
+2026-10-26 00:23:27,903 INFO zelda_api.signals - DocumentSource created: other.pdf
+FF
+======================================================================
+FAIL: test_q2_reaches_the_traction_slide (zelda_api.tests_document_retrieval_ranking.RecordedDeckTests.test_q2_reaches_the_traction_slide)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra114\zelda_api\tests_document_retrieval_ranking.py", line 108, in test_q2_reaches_the_traction_slide
+    self.assertEqual(results[0]['page'], 10)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 10
+
+======================================================================
+FAIL: test_q6_puts_the_page_that_says_raised_first (zelda_api.tests_document_retrieval_ranking.RecordedDeckTests.test_q6_puts_the_page_that_says_raised_first)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra114\zelda_api\tests_document_retrieval_ranking.py", line 115, in test_q6_puts_the_page_that_says_raised_first
+    self.assertEqual(self.pages(QUESTIONS['Q6'])[0], 2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 2
+
+======================================================================
+FAIL: test_questions_the_deck_cannot_answer_reach_nothing (zelda_api.tests_document_retrieval_ranking.RecordedDeckTests.test_questions_the_deck_cannot_answer_reach_nothing)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra114\zelda_api\tests_document_retrieval_ranking.py", line 119, in test_questions_the_deck_cannot_answer_reach_nothing
+    self.assertEqual(self.pages(QUESTIONS['Q4']), [])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [2, 1, 3, 4, 5] != []
+
+First list contains 5 additional elements.
+First extra element 0:
+2
+
+- [2, 1, 3, 4, 5]
++ []
+
+======================================================================
+FAIL: test_the_full_ranking_is_pinned (zelda_api.tests_document_retrieval_ranking.RecordedDeckTests.test_the_full_ranking_is_pinned)
+The observed ranking at the fix, for review; the tests above carry the criteria.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra114\zelda_api\tests_document_retrieval_ranking.py", line 125, in test_the_full_ranking_is_pinned
+    self.assertEqual(observed, {
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+        'Q1': [2], 'Q2': [10], 'Q3': [10, 12], 'Q4': [], 'Q5': [2], 'Q6': [2, 1], 'Q7': [],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    })
+    ^^
+AssertionError: {'Q1': [2, 1, 3, 4, 5], 'Q2': [1, 2, 3, 4, 5], 'Q3[108 chars], 5]} != {'Q1': [2], 'Q2': [10], 'Q3': [10, 12], 'Q4': [], [29 chars]: []}
+- {'Q1': [2, 1, 3, 4, 5],
+-  'Q2': [1, 2, 3, 4, 5],
++ {'Q1': [2],
++  'Q2': [10],
+-  'Q3': [10, 12, 1, 2, 3],
+?               ---------
+
++  'Q3': [10, 12],
+-  'Q4': [2, 1, 3, 4, 5],
+-  'Q5': [2, 1, 3, 4, 5],
+-  'Q6': [1, 2, 3, 4, 5],
+-  'Q7': [1, 2, 3, 4, 5]}
++  'Q4': [],
++  'Q5': [2],
++  'Q6': [2, 1],
++  'Q7': []}
+
+======================================================================
+FAIL: test_a_footer_name_on_every_page_selects_nothing (zelda_api.tests_document_retrieval_ranking.SyntheticDeckTests.test_a_footer_name_on_every_page_selects_nothing)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra114\zelda_api\tests_document_retrieval_ranking.py", line 210, in test_a_footer_name_on_every_page_selects_nothing
+    self.assertEqual(self.pages(doc, 'How many users does Brightline Robotics have?'), [2])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [1, 2, 3] != [2]
+
+First differing element 0:
+1
+2
+
+First list contains 2 additional elements.
+First extra element 1:
+2
+
+- [1, 2, 3]
++ [2]
+
+======================================================================
+FAIL: test_a_stated_figure_outranks_a_related_heading (zelda_api.tests_document_retrieval_ranking.SyntheticDeckTests.test_a_stated_figure_outranks_a_related_heading)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra114\zelda_api\tests_document_retrieval_ranking.py", line 216, in test_a_stated_figure_outranks_a_related_heading
+    self.assertEqual(self.pages(doc, 'How many users does Quill have?'), [2, 1])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [2] != [2, 1]
+
+Second list contains 1 additional elements.
+First extra element 1:
+1
+
+- [2]
++ [2, 1]
+
+======================================================================
+FAIL: test_word_forms_match (zelda_api.tests_document_retrieval_ranking.SyntheticDeckTests.test_word_forms_match)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra114\zelda_api\tests_document_retrieval_ranking.py", line 220, in test_word_forms_match
+    self.assertEqual(self.pages(doc, 'When did Fernway raise money?'), [1])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [1, 2] != [1]
+
+First list contains 1 additional elements.
+First extra element 1:
+2
+
+- [1, 2]
++ [1]
+
+======================================================================
+FAIL: test_the_endpoint_says_so (zelda_api.tests_document_retrieval_ranking.UnrelatedQuestionTests.test_the_endpoint_says_so)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra114\zelda_api\tests_document_retrieval_ranking.py", line 148, in test_the_endpoint_says_so
+    self.assertEqual((body['evidence'], body['no_relevant_evidence']), ([], True))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ([{'chunk_id': 1, 'page': 1, 'section': 'Au[1737 chars]alse) != ([], True)
+
+First differing element 0:
+[{'chunk_id': 1, 'page': 1, 'section': 'Au[1729 chars]0.3}]
+[]
+
+Diff is 2736 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_unrelated_questions_reach_nothing (zelda_api.tests_document_retrieval_ranking.UnrelatedQuestionTests.test_unrelated_questions_reach_nothing) (question="Who is ManyChat's CEO?")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra114\zelda_api\tests_document_retrieval_ranking.py", line 142, in test_unrelated_questions_reach_nothing
+    self.assertEqual(self.pages(question), [])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [1, 2, 3, 4, 5] != []
+
+First list contains 5 additional elements.
+First extra element 0:
+1
+
+- [1, 2, 3, 4, 5]
++ []
+
+======================================================================
+FAIL: test_unrelated_questions_reach_nothing (zelda_api.tests_document_retrieval_ranking.UnrelatedQuestionTests.test_unrelated_questions_reach_nothing) (question='ManyChat')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV-ra114\zelda_api\tests_document_retrieval_ranking.py", line 142, in test_unrelated_questions_reach_nothing
+    self.assertEqual(self.pages(question), [])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [1, 2, 3, 4, 5] != []
+
+First list contains 5 additional elements.
+First extra element 0:
+1
+
+- [1, 2, 3, 4, 5]
++ []
+
+----------------------------------------------------------------------
+Ran 18 tests in 1.086s
+
+FAILED (failures=10)
+Destroying test database for alias 'default'...
+Found 18 test(s).
+System check identified no issues (0 silenced).

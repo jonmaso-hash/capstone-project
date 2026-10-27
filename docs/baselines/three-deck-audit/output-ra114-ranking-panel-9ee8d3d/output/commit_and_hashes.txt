@@ -1,0 +1,43 @@
+branch fix/ask-document-routing-ra114
+base origin/main b27836439ca0e6aa9acc1ca6feaeae1be80b6415
+
+9ee8d3dbf156cdee15167e87702d6a7802780551 Pin a topic word the question names counting once, and ties in document order (RA-114)
+64c50205aa2112c2bf3c908a748e8de9a5131ab8 Reach the passage a document question is about, and ask it from the panel (RA-114)
+6917e845298dbcd436c9ceb5a9b49bb71fd35888 Record the RA-114 diagnosis, reproduction and offline fix evidence at e4d17d7
+e4d17d768f488a03468ae9e35ce825667e85c800 Answer document questions sent to Ask Zelda from the document (RA-114)
+
+validation head 9ee8d3dbf156cdee15167e87702d6a7802780551
+
+diff origin/main...HEAD (code and tests):
+ .../includes/zelda_ai_assistant_enhanced.html      |  73 ++++++-
+ .../data/document_retrieval/memo104_chunks.json    |  96 +++++++++
+ zelda_api/retrieval.py                             | 115 +++++++---
+ zelda_api/tests_ask_document.py                    | 185 ++++++++++++++++
+ zelda_api/tests_assistant_panel_escaping.py        |   6 +
+ zelda_api/tests_document_retrieval_ranking.py      | 240 +++++++++++++++++++++
+ zelda_api/views.py                                 |  59 +++++
+ 7 files changed, 747 insertions(+), 27 deletions(-)
+
+diff e4d17d7..HEAD (this round):
+ .../includes/zelda_ai_assistant_enhanced.html      |  73 ++++++-
+ .../data/document_retrieval/memo104_chunks.json    |  96 +++++++++
+ zelda_api/retrieval.py                             | 115 +++++++---
+ zelda_api/tests_ask_document.py                    |  18 +-
+ zelda_api/tests_assistant_panel_escaping.py        |   6 +
+ zelda_api/tests_document_retrieval_ranking.py      | 240 +++++++++++++++++++++
+ 6 files changed, 519 insertions(+), 29 deletions(-)
+
+blobs at HEAD:
+  2453f351ee23f39b110708240d1ce2d446a6114f zelda_api/views.py
+  0f6eb1e42f5a90f7c05d33f79b434b376275fdb7 zelda_api/retrieval.py
+  75de4201375f9cbe3baf05a06f5a2e7ecbfcb876 templates/includes/zelda_ai_assistant_enhanced.html
+  2fef76678c9b711e9f63334233adb5c3aa257766 zelda_api/tests_ask_document.py
+  322369eec3a98fcd211a57cc0ab8c7f667f2eb14 zelda_api/tests_document_retrieval_ranking.py
+  fa79345fdf128e6b7f99001649b30d519c0b4021 zelda_api/tests_assistant_panel_escaping.py
+  fa3bd2d9055be69eb0f6f4c0c1eee3eb18714090 zelda_api/data/document_retrieval/memo104_chunks.json
+
+untouched since b278364 (output guards):
+  zelda_api/basis_fidelity.py same
+  zelda_api/funding_fidelity.py same
+
+views.py e4d17d7 vs HEAD: same

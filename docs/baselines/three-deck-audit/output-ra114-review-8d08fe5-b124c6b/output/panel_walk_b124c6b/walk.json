@@ -1,0 +1,276 @@
+{
+ "base": "http://127.0.0.1:8765",
+ "document_id": 1,
+ "steps": [
+  {
+   "name": "positive control: page loaded signed in, panel present",
+   "url": "http://127.0.0.1:8765/",
+   "title": "Interlink Foundry",
+   "askForm": true,
+   "sidebarShown": true,
+   "contextShownAtLoad": false
+  },
+  {
+   "name": "marketplace question, no document chosen",
+   "question": "Series A founders in messaging",
+   "sent": [
+    {
+     "body": {
+      "q": "Series A founders in messaging"
+     },
+     "status": 200,
+     "evidence_pages": [],
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders."
+    }
+   ],
+   "panel": {
+    "contextShown": false,
+    "contextName": "",
+    "placeholder": "e.g. \"Series C founder seeking $3M, burn under $40k/mo\" — buyers can ask \"HVAC business for sale under $5M EBITDA\"",
+    "resultsShown": false,
+    "results": [],
+    "lastLog": [
+     "Asking Zelda: \"Series A founders in messaging\"",
+     "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders."
+    ]
+   }
+  },
+  {
+   "0": {
+    "id": "1",
+    "name": "ManyChat",
+    "text": "Ask about this document"
+   },
+   "name": "library offers ask on the own document"
+  },
+  {
+   "name": "document chosen from the library",
+   "contextShown": true,
+   "contextName": "ManyChat",
+   "placeholder": "e.g. \"How much has the company raised?\"",
+   "resultsShown": false,
+   "results": [],
+   "lastLog": [
+    "Asking Zelda: \"Series A founders in messaging\"",
+    "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders."
+   ]
+  },
+  {
+   "name": "document question: How much has ManyChat raised?",
+   "question": "How much has ManyChat raised?",
+   "sent": [
+    {
+     "body": {
+      "q": "How much has ManyChat raised?",
+      "document_id": 1
+     },
+     "status": 200,
+     "evidence_pages": [
+      2
+     ],
+     "no_relevant_evidence": false,
+     "response": "1 passage from this document may bear on that (page 2). They are the document's own words, shown as excerpts: what it states, not a verified answer."
+    }
+   ],
+   "panel": {
+    "contextShown": true,
+    "contextName": "ManyChat",
+    "placeholder": "e.g. \"How much has the company raised?\"",
+    "resultsShown": true,
+    "results": [
+     "Page 2 · Why this deck fits the audit leg\nWhy this deck fits the audit leg\nSource: Pitch Deck Hunt lists ManyChat as a 2015 Series A deck with $23.1M raised. Th"
+    ],
+    "lastLog": [
+     "Asking about ManyChat: \"How much has ManyChat raised?\"",
+     "1 passage from this document may bear on that (page 2). They are the document's own words, shown as excerpts: what it states, not a verified answer."
+    ]
+   }
+  },
+  {
+   "name": "document question: How many users does ManyChat have?",
+   "question": "How many users does ManyChat have?",
+   "sent": [
+    {
+     "body": {
+      "q": "How many users does ManyChat have?",
+      "document_id": 1
+     },
+     "status": 200,
+     "evidence_pages": [
+      10
+     ],
+     "no_relevant_evidence": false,
+     "response": "1 passage from this document may bear on that (page 10). They are the document's own words, shown as excerpts: what it states, not a verified answer."
+    }
+   ],
+   "panel": {
+    "contextShown": true,
+    "contextName": "ManyChat",
+    "placeholder": "e.g. \"How much has the company raised?\"",
+    "resultsShown": true,
+    "results": [
+     "Page 10 · angel.co/manychat\nangel.co/manychat\nmike@manychat.com\nTotal Bots Created\nJul-15\nAug-15\nSep-15\nOct-15\nNov-15\nDec-15\nJan-16\nFeb-16\nMar-16\nApr-16\n0\n20,00"
+    ],
+    "lastLog": [
+     "Asking about ManyChat: \"How many users does ManyChat have?\"",
+     "1 passage from this document may bear on that (page 10). They are the document's own words, shown as excerpts: what it states, not a verified answer."
+    ]
+   }
+  },
+  {
+   "name": "document question: How many messages does ManyChat send?",
+   "question": "How many messages does ManyChat send?",
+   "sent": [
+    {
+     "body": {
+      "q": "How many messages does ManyChat send?",
+      "document_id": 1
+     },
+     "status": 200,
+     "evidence_pages": [
+      10,
+      12
+     ],
+     "no_relevant_evidence": false,
+     "response": "2 passages from this document may bear on that (pages 10, 12). They are the document's own words, shown as excerpts: what it states, not a verified answer."
+    }
+   ],
+   "panel": {
+    "contextShown": true,
+    "contextName": "ManyChat",
+    "placeholder": "e.g. \"How much has the company raised?\"",
+    "resultsShown": true,
+    "results": [
+     "Page 10 · angel.co/manychat\nangel.co/manychat\nmike@manychat.com\nTotal Bots Created\nJul-15\nAug-15\nSep-15\nOct-15\nNov-15\nDec-15\nJan-16\nFeb-16\nMar-16\nApr-16\n0\n20,00",
+     "Page 12 · angel.co/manychat\nangel.co/manychat\nmike@manychat.com\n🐙\nManyChat\n140 000+ bots\n500M\nmessages/month\nLaunching on Facebook\nMessenger this month\nRecreat"
+    ],
+    "lastLog": [
+     "Asking about ManyChat: \"How many messages does ManyChat send?\"",
+     "2 passages from this document may bear on that (pages 10, 12). They are the document's own words, shown as excerpts: what it states, not a verified answer."
+    ]
+   }
+  },
+  {
+   "name": "document question: Should I invest in ManyChat?",
+   "question": "Should I invest in ManyChat?",
+   "sent": [
+    {
+     "body": {
+      "q": "Should I invest in ManyChat?",
+      "document_id": 1
+     },
+     "status": 200,
+     "evidence_pages": [],
+     "no_relevant_evidence": true,
+     "response": "No relevant evidence was found in this document for that question."
+    }
+   ],
+   "panel": {
+    "contextShown": true,
+    "contextName": "ManyChat",
+    "placeholder": "e.g. \"How much has the company raised?\"",
+    "resultsShown": false,
+    "results": [],
+    "lastLog": [
+     "Asking about ManyChat: \"Should I invest in ManyChat?\"",
+     "No relevant evidence was found in this document for that question."
+    ]
+   }
+  },
+  {
+   "name": "document cleared",
+   "contextShown": false,
+   "contextName": "",
+   "placeholder": "e.g. \"Series C founder seeking $3M, burn under $40k/mo\" — buyers can ask \"HVAC business for sale under $5M EBITDA\"",
+   "resultsShown": false,
+   "results": [],
+   "lastLog": [
+    "Asking about ManyChat: \"Should I invest in ManyChat?\"",
+    "No relevant evidence was found in this document for that question."
+   ]
+  },
+  {
+   "name": "marketplace question after clearing",
+   "question": "Series A founders in messaging",
+   "sent": [
+    {
+     "body": {
+      "q": "Series A founders in messaging"
+     },
+     "status": 200,
+     "evidence_pages": [],
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders."
+    }
+   ],
+   "panel": {
+    "contextShown": false,
+    "contextName": "",
+    "placeholder": "e.g. \"Series C founder seeking $3M, burn under $40k/mo\" — buyers can ask \"HVAC business for sale under $5M EBITDA\"",
+    "resultsShown": false,
+    "results": [],
+    "lastLog": [
+     "Asking Zelda: \"Series A founders in messaging\"",
+     "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders."
+    ]
+   }
+  },
+  {
+   "name": "stranger library has no ask button",
+   "askButtons": 0,
+   "libraryText": "Nothing here yet\n\nAnalyses you run and reports you open will be collected here."
+  },
+  {
+   "name": "stranger forcing another owner's document",
+   "question": "How much has ManyChat raised?",
+   "sent": [
+    {
+     "body": {
+      "q": "How much has ManyChat raised?",
+      "document_id": 1
+     },
+     "status": 403,
+     "evidence_pages": [],
+     "response": "Not authorized."
+    }
+   ],
+   "panel": {
+    "contextShown": true,
+    "contextName": "forced",
+    "placeholder": "e.g. \"How much has the company raised?\"",
+    "resultsShown": false,
+    "results": [],
+    "lastLog": [
+     "Asking about forced: \"How much has ManyChat raised?\"",
+     "Not authorized."
+    ]
+   }
+  },
+  {
+   "name": "stranger marketplace question still works",
+   "question": "Series A founders in messaging",
+   "sent": [
+    {
+     "body": {
+      "q": "Series A founders in messaging"
+     },
+     "status": 200,
+     "evidence_pages": [],
+     "response": "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders."
+    }
+   ],
+   "panel": {
+    "contextShown": false,
+    "contextName": "",
+    "placeholder": "e.g. \"Series C founder seeking $3M, burn under $40k/mo\" — buyers can ask \"HVAC business for sale under $5M EBITDA\"",
+    "resultsShown": false,
+    "results": [],
+    "lastLog": [
+     "Asking Zelda: \"Series A founders in messaging\"",
+     "I couldn't find specific search criteria in that — try mentioning industry, size, price, or financials for founders."
+    ]
+   }
+  }
+ ],
+ "console_errors": [],
+ "extraction_calls": 3
+}

@@ -129,6 +129,13 @@ ALLOWED = {
     'renderDisclaimerFooter': set(),
     'loadMemo': {'docId', "data.lite_sections ? ' (showing Zelda Lite)' : ''", 'section.label', 'err.message'},
     'loadIntelligenceBrief': {'s.label', 'founderId', 'err.message'},   # err.message: addLogEntry only
+    # RA-114 document answers: page and section escaped inside their own fragments.
+    'renderDocumentEvidence': {"item.page != null ? `Page ${zeldaEscape(item.page)}` : 'Page not recorded'",
+                               "item.section ? ` · ${zeldaEscape(item.section)}` : ''"},
+    # The Ask request: its interpolations go to addLogEntry (asked.name, question, err.message), the request URL
+    # (ZELDA_API) or an error message (response.status), never to markup directly.
+    'submitZeldaAsk': {'asked.name', 'question', 'ZELDA_API', 'response.status', 'err.message'},
+    'renderLibraryAskButton': {'Number(documentId)'},
 }
 
 

@@ -1,0 +1,59 @@
+2026-10-26 01:40:44,907 WARNING zelda_api.embeddings - ANTHROPIC_API_KEY not configured in settings.
+Creating test database for alias 'default'...
+2026-10-26 01:41:37,638 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-26 01:41:37,681 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-26 01:41:37,711 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-26 01:41:37,731 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+.2026-10-26 01:41:37,795 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-26 01:41:37,822 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-26 01:41:37,823 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-26 01:41:37,840 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-26 01:41:38,043 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=1, output_tokens=1
+2026-10-26 01:41:38,044 INFO zelda_api.intelligence_pipeline - Memo executive_summary: removed unsupported time wording ['to date', 'so far'] for document 1
+2026-10-26 01:41:38,044 INFO zelda_api.intelligence_pipeline - Memo open_concerns: removed unsupported time wording ['currently'] for document 1
+2026-10-26 01:41:38,114 INFO zelda_api.intelligence_pipeline - Memo executive_summary: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-26 01:41:38,115 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-26 01:41:38,263 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-26 01:41:38,274 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-26 01:41:38,304 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-26 01:41:38,306 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-26 01:41:38,324 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-26 01:41:38,340 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=1, output_tokens=1
+2026-10-26 01:41:38,341 INFO zelda_api.intelligence_pipeline - Memo executive_summary: removed unsupported time wording ['to date', 'so far'] for document 1
+2026-10-26 01:41:38,341 INFO zelda_api.intelligence_pipeline - Memo open_concerns: removed unsupported time wording ['currently'] for document 1
+2026-10-26 01:41:38,342 INFO zelda_api.intelligence_pipeline - Memo executive_summary: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-26 01:41:38,343 INFO zelda_api.intelligence_pipeline - Memo open_concerns: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-26 01:41:38,372 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-26 01:41:41,962 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-26 01:41:42,010 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-26 01:41:42,011 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-26 01:41:42,030 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+.2026-10-26 01:41:42,055 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-26 01:41:42,082 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-26 01:41:42,083 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-26 01:41:42,098 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+.2026-10-26 01:41:42,166 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-26 01:41:42,193 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-26 01:41:42,194 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-26 01:41:42,210 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-26 01:41:42,227 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=1, output_tokens=1
+2026-10-26 01:41:42,228 INFO zelda_api.intelligence_pipeline - Memo executive_summary: removed unsupported time wording ['to date', 'so far'] for document 1
+2026-10-26 01:41:42,229 INFO zelda_api.intelligence_pipeline - Memo supported_points: removed unsupported time wording ['currently'] for document 1
+2026-10-26 01:41:42,239 INFO zelda_api.intelligence_pipeline - Memo executive_summary: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-26 01:41:42,274 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+.2026-10-26 01:41:42,282 INFO zelda_api.signals - DocumentSource created: manychat.pdf
+2026-10-26 01:41:42,310 INFO zelda_api.intelligence_pipeline - Extracted 3 insights with dynamic confidence
+2026-10-26 01:41:42,311 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 1
+2026-10-26 01:41:42,329 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 3 claims from insights
+2026-10-26 01:41:42,348 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 1: input_tokens=1, output_tokens=1
+2026-10-26 01:41:42,349 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: removed unsupported time wording ['so far'] for document 1
+2026-10-26 01:41:42,350 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 1
+2026-10-26 01:41:42,381 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 1
+...................
+----------------------------------------------------------------------
+Ran 25 tests in 4.990s
+
+OK
+Destroying test database for alias 'default'...
+Found 25 test(s).
+System check identified no issues (0 silenced).
