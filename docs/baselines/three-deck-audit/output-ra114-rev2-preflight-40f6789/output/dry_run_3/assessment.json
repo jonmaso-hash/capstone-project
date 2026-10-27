@@ -1,0 +1,510 @@
+{
+ "mode": "OFFLINE DRY RUN",
+ "label": "OFFLINE DRY RUN: model replies are memo 104 recordings and the network was loopback only. These are not live results and decide nothing about RA-114 acceptance.",
+ "document_id": 3147,
+ "document": [
+  "manychat_series_a_audit_deck.pptx",
+  "ManyChat"
+ ],
+ "integrity": {
+  "checkpoints_in_order_and_complete": true,
+  "checkpoint_problems": [],
+  "checkpoint_lines": {
+   "before_upload": 0,
+   "after_memo": 1,
+   "before_document_form": 1,
+   "after_document_form": 1,
+   "before_panel": 1,
+   "after_panel": 1,
+   "after_marketplace_Q1": 2,
+   "after_marketplace_Q2": 3,
+   "after_marketplace_Q3": 4,
+   "after_marketplace_Q4": 5,
+   "after_marketplace_Q5": 6,
+   "after_marketplace_Q6": 7,
+   "after_marketplace_Q7": 8,
+   "end": 8
+  },
+  "checkpoint_lines_as_planned": true,
+  "checkpoint_sha256": {
+   "before_upload": "e3b0c44298fc1c14",
+   "after_memo": "abb39aaf42ff92d8",
+   "before_document_form": "abb39aaf42ff92d8",
+   "after_document_form": "abb39aaf42ff92d8",
+   "before_panel": "abb39aaf42ff92d8",
+   "after_panel": "abb39aaf42ff92d8",
+   "after_marketplace_Q1": "9bba45fe35148fe3",
+   "after_marketplace_Q2": "bf99913974024cfe",
+   "after_marketplace_Q3": "98ab04eb847b0fee",
+   "after_marketplace_Q4": "dad7ea2dfa55adcb",
+   "after_marketplace_Q5": "806e9c5a84420ec6",
+   "after_marketplace_Q6": "8e7c6aa5735f9aba",
+   "after_marketplace_Q7": "c8220d2687aecf97",
+   "end": "c8220d2687aecf97"
+  },
+  "deviations": [],
+  "calls_attempted": 8,
+  "calls_refused": 0,
+  "calls_at_most_8": true,
+  "call_sequence": [
+   [
+    1,
+    "memo",
+    "memo",
+    0
+   ],
+   [
+    2,
+    "marketplace_Q1",
+    "ask_query_extraction",
+    0
+   ],
+   [
+    3,
+    "marketplace_Q2",
+    "ask_query_extraction",
+    0
+   ],
+   [
+    4,
+    "marketplace_Q3",
+    "ask_query_extraction",
+    0
+   ],
+   [
+    5,
+    "marketplace_Q4",
+    "ask_query_extraction",
+    0
+   ],
+   [
+    6,
+    "marketplace_Q5",
+    "ask_query_extraction",
+    0
+   ],
+   [
+    7,
+    "marketplace_Q6",
+    "ask_query_extraction",
+    0
+   ],
+   [
+    8,
+    "marketplace_Q7",
+    "ask_query_extraction",
+    0
+   ]
+  ],
+  "calls_as_planned": true,
+  "aborts": [],
+  "one_upload": true,
+  "blocked_outbound_hosts": [
+   "23.38.168.72",
+   "2600:1404:200:284::17b2",
+   "2600:1404:200:287::17b2"
+  ],
+  "recorder_errors": 0,
+  "document_form_window_unchanged": true,
+  "panel_window_unchanged": true
+ },
+ "document_form": {
+  "Q1": {
+   "present": true,
+   "pass": true,
+   "checks": {
+    "request_body_exact": true,
+    "c1_200_success_doc_no_cards": true,
+    "c2_not_marketplace_fallback": true,
+    "c3_grounded_byte_for_byte": true,
+    "c5_no_relevant_evidence_explicit": true,
+    "c6_nothing_composed": true,
+    "c4_same_as_search": true
+   },
+   "pages": [
+    2
+   ],
+   "relevance": [
+    0.3
+   ],
+   "no_relevant_evidence": false,
+   "response": "1 passage from this document may bear on that (page 2). They are the document's own words, shown as excerpts: what it states, not a verified answer."
+  },
+  "Q2": {
+   "present": true,
+   "pass": true,
+   "checks": {
+    "request_body_exact": true,
+    "c1_200_success_doc_no_cards": true,
+    "c2_not_marketplace_fallback": true,
+    "c3_grounded_byte_for_byte": true,
+    "c5_no_relevant_evidence_explicit": true,
+    "c6_nothing_composed": true,
+    "c4_same_as_search": true
+   },
+   "pages": [
+    10
+   ],
+   "relevance": [
+    0.15
+   ],
+   "no_relevant_evidence": false,
+   "response": "1 passage from this document may bear on that (page 10). They are the document's own words, shown as excerpts: what it states, not a verified answer."
+  },
+  "Q3": {
+   "present": true,
+   "pass": true,
+   "checks": {
+    "request_body_exact": true,
+    "c1_200_success_doc_no_cards": true,
+    "c2_not_marketplace_fallback": true,
+    "c3_grounded_byte_for_byte": true,
+    "c5_no_relevant_evidence_explicit": true,
+    "c6_nothing_composed": true,
+    "c4_same_as_search": true
+   },
+   "pages": [
+    10,
+    12
+   ],
+   "relevance": [
+    0.15,
+    0.15
+   ],
+   "no_relevant_evidence": false,
+   "response": "2 passages from this document may bear on that (pages 10, 12). They are the document's own words, shown as excerpts: what it states, not a verified answer."
+  },
+  "Q4": {
+   "present": true,
+   "pass": true,
+   "checks": {
+    "request_body_exact": true,
+    "c1_200_success_doc_no_cards": true,
+    "c2_not_marketplace_fallback": true,
+    "c3_grounded_byte_for_byte": true,
+    "c5_no_relevant_evidence_explicit": true,
+    "c6_nothing_composed": true,
+    "c4_same_as_search": true
+   },
+   "pages": [],
+   "relevance": [],
+   "no_relevant_evidence": true,
+   "response": "No relevant evidence was found in this document for that question."
+  },
+  "Q5": {
+   "present": true,
+   "pass": true,
+   "checks": {
+    "request_body_exact": true,
+    "c1_200_success_doc_no_cards": true,
+    "c2_not_marketplace_fallback": true,
+    "c3_grounded_byte_for_byte": true,
+    "c5_no_relevant_evidence_explicit": true,
+    "c6_nothing_composed": true,
+    "c4_same_as_search": true
+   },
+   "pages": [
+    2
+   ],
+   "relevance": [
+    0.15
+   ],
+   "no_relevant_evidence": false,
+   "response": "1 passage from this document may bear on that (page 2). They are the document's own words, shown as excerpts: what it states, not a verified answer."
+  },
+  "Q6": {
+   "present": true,
+   "pass": true,
+   "checks": {
+    "request_body_exact": true,
+    "c1_200_success_doc_no_cards": true,
+    "c2_not_marketplace_fallback": true,
+    "c3_grounded_byte_for_byte": true,
+    "c5_no_relevant_evidence_explicit": true,
+    "c6_nothing_composed": true,
+    "c4_same_as_search": true
+   },
+   "pages": [
+    2,
+    1
+   ],
+   "relevance": [
+    0.3,
+    0.15
+   ],
+   "no_relevant_evidence": false,
+   "response": "2 passages from this document may bear on that (pages 1, 2). They are the document's own words, shown as excerpts: what it states, not a verified answer."
+  },
+  "Q7": {
+   "present": true,
+   "pass": true,
+   "checks": {
+    "request_body_exact": true,
+    "c1_200_success_doc_no_cards": true,
+    "c2_not_marketplace_fallback": true,
+    "c3_grounded_byte_for_byte": true,
+    "c5_no_relevant_evidence_explicit": true,
+    "c6_nothing_composed": true,
+    "c4_same_as_search": true
+   },
+   "pages": [],
+   "relevance": [],
+   "no_relevant_evidence": true,
+   "response": "No relevant evidence was found in this document for that question."
+  }
+ },
+ "document_form_all_criteria": true,
+ "grounding_aid": {
+  "Q1": {
+   "pages": [
+    2
+   ],
+   "required_pages (revision 1 table)": [
+    2
+   ],
+   "required_present": true,
+   "offline_prediction (revision 2)": [
+    2
+   ],
+   "matches_prediction": true
+  },
+  "Q2": {
+   "pages": [
+    10
+   ],
+   "required_pages (revision 1 table)": [
+    10
+   ],
+   "required_present": true,
+   "offline_prediction (revision 2)": [
+    10
+   ],
+   "matches_prediction": true
+  },
+  "Q3": {
+   "pages": [
+    10,
+    12
+   ],
+   "required_pages (revision 1 table)": [
+    10,
+    12
+   ],
+   "required_present": true,
+   "offline_prediction (revision 2)": [
+    10,
+    12
+   ],
+   "matches_prediction": true
+  },
+  "Q4": {
+   "pages": [],
+   "required_pages (revision 1 table)": "no page required; nothing may be composed",
+   "required_present": true,
+   "offline_prediction (revision 2)": [],
+   "matches_prediction": true
+  },
+  "Q5": {
+   "pages": [
+    2
+   ],
+   "required_pages (revision 1 table)": "no page required; nothing may be composed",
+   "required_present": true,
+   "offline_prediction (revision 2)": [
+    2
+   ],
+   "matches_prediction": true
+  },
+  "Q6": {
+   "pages": [
+    2,
+    1
+   ],
+   "required_pages (revision 1 table)": [
+    2
+   ],
+   "required_present": true,
+   "offline_prediction (revision 2)": [
+    2,
+    1
+   ],
+   "matches_prediction": true
+  },
+  "Q7": {
+   "pages": [],
+   "required_pages (revision 1 table)": "no page required; nothing may be composed",
+   "required_present": true,
+   "offline_prediction (revision 2)": [],
+   "matches_prediction": true
+  }
+ },
+ "control_paris": {
+  "status": 200,
+  "no_relevant_evidence": true,
+  "evidence": 0,
+  "request_body_exact": true,
+  "pass": true
+ },
+ "authorization": {
+  "LITE": {
+   "ask": 403,
+   "search": 403,
+   "user": "r2dry_lite",
+   "document_text_in_body": false,
+   "pass": true
+  },
+  "PAID": {
+   "ask": 403,
+   "search": 403,
+   "user": "r2dry_paid",
+   "document_text_in_body": false,
+   "pass": true
+  },
+  "UNRELATED": {
+   "ask": 403,
+   "search": 403,
+   "user": "r2dry_investor",
+   "document_text_in_body": false,
+   "pass": true
+  },
+  "owner_200": true,
+  "pass": true
+ },
+ "panel": {
+  "ask_requests_in_panel_phase": 1,
+  "response_criteria_1_6": {
+   "present": true,
+   "pass": true,
+   "checks": {
+    "request_body_exact": true,
+    "c1_200_success_doc_no_cards": true,
+    "c2_not_marketplace_fallback": true,
+    "c3_grounded_byte_for_byte": true,
+    "c5_no_relevant_evidence_explicit": true,
+    "c6_nothing_composed": true
+   },
+   "pages": [
+    2
+   ],
+   "relevance": [
+    0.3
+   ],
+   "no_relevant_evidence": false,
+   "response": "1 passage from this document may bear on that (page 2). They are the document's own words, shown as excerpts: what it states, not a verified answer."
+  },
+  "request_body_exact": true,
+  "request_was_untagged_app_fetch": true,
+  "observed": {
+   "document_id": 3147,
+   "button_document_name": "ManyChat",
+   "context_bar_shown": true,
+   "context_bar_name": "ManyChat",
+   "rendered": [
+    {
+     "label": "Page 2 · Why this deck fits the audit leg",
+     "has_quote": true,
+     "quote_head": "Why this deck fits the audit leg\nSource: Pitch Deck Hunt lists ManyChat as a 201"
+    }
+   ],
+   "marketplace_cards": 0,
+   "results_card_shown": true,
+   "ask_posts_in_panel_after_q1": 1,
+   "context_bar_hidden_after_clear": true,
+   "ask_posts_in_panel_after_clear": 1
+  },
+  "rendered_pages_match_response": true,
+  "ledger_unchanged": true,
+  "pass": true
+ },
+ "marketplace_control": {
+  "Q1": {
+   "status": 200,
+   "request_body_exact": true,
+   "response_equals_memo104": true,
+   "results": 0,
+   "response_head": "I couldn't find specific search criteria in that — try mentioning industry, size, price, o"
+  },
+  "Q2": {
+   "status": 200,
+   "request_body_exact": true,
+   "response_equals_memo104": true,
+   "results": 0,
+   "response_head": "I couldn't find specific search criteria in that — try mentioning industry, size, price, o"
+  },
+  "Q3": {
+   "status": 200,
+   "request_body_exact": true,
+   "response_equals_memo104": true,
+   "results": 0,
+   "response_head": "I couldn't find specific search criteria in that — try mentioning industry, size, price, o"
+  },
+  "Q4": {
+   "status": 200,
+   "request_body_exact": true,
+   "response_equals_memo104": true,
+   "results": 0,
+   "response_head": "I couldn't find specific search criteria in that — try mentioning industry, size, price, o"
+  },
+  "Q5": {
+   "status": 200,
+   "request_body_exact": true,
+   "response_equals_memo104": true,
+   "results": 0,
+   "response_head": "I couldn't find specific search criteria in that — try mentioning industry, size, price, o"
+  },
+  "Q6": {
+   "status": 200,
+   "request_body_exact": true,
+   "response_equals_memo104": true,
+   "results": 0,
+   "response_head": "I couldn't find specific search criteria in that — try mentioning industry, size, price, o"
+  },
+  "Q7": {
+   "status": 200,
+   "request_body_exact": true,
+   "response_equals_memo104": true,
+   "results": 0,
+   "response_head": "I couldn't find specific search criteria in that — try mentioning industry, size, price, o"
+  }
+ },
+ "matrix": {
+  "rows": 72,
+  "principals": [
+   "ANON",
+   "LITE",
+   "OWNER",
+   "PAID"
+  ],
+  "compared_with_memo104": 72,
+  "differing": [],
+  "not_run_here": [
+   "STAFF"
+  ],
+  "canary_rows": [
+   [
+    "OWNER",
+    "A_profile"
+   ]
+  ],
+  "memo104_canary_rows": [
+   [
+    "OWNER",
+    "A_profile"
+   ],
+   [
+    "STAFF",
+    "A_profile"
+   ]
+  ]
+ },
+ "walks": {
+  "logouts": [],
+  "after_logout_checks": [
+   302,
+   302,
+   302,
+   302
+  ]
+ },
+ "observations_stopped_steps": []
+}

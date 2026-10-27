@@ -1,0 +1,216 @@
+{
+ "label": "OFFLINE DRY RUN: headless Chrome with seeded throwaway sessions; not a live run",
+ "transcript": [
+  {
+   "step": "owner_upload",
+   "seconds": 6,
+   "phase": "owner_matrix",
+   "total": 1,
+   "ledger_lines": 1,
+   "aborted": false,
+   "whoami": "r2dry_owner",
+   "log": [
+    "2026-10-27T05:24:57.895Z step owner_upload done",
+    "2026-10-27T05:24:57.875Z checkpoint after_memo: ledger 1 line(s), next phase owner_matrix (allows 0)",
+    "2026-10-27T05:24:57.768Z uploaded: document 3147"
+   ]
+  },
+  {
+   "step": "owner_matrix",
+   "seconds": 1,
+   "phase": "owner_matrix",
+   "total": 1,
+   "ledger_lines": 1,
+   "aborted": false,
+   "whoami": "r2dry_owner",
+   "log": [
+    "2026-10-27T05:24:59.364Z step owner_matrix done",
+    "2026-10-27T05:24:59.341Z matrix OWNER: 18 rows",
+    "2026-10-27T05:24:58.311Z step owner_matrix started"
+   ]
+  },
+  {
+   "step": "owner_document_form",
+   "seconds": 1,
+   "phase": "controls",
+   "total": 1,
+   "ledger_lines": 1,
+   "aborted": false,
+   "whoami": "r2dry_owner",
+   "log": [
+    "2026-10-27T05:25:00.519Z step owner_document_form done",
+    "2026-10-27T05:25:00.496Z checkpoint after_document_form: ledger 1 line(s), next phase controls (allows 0)",
+    "2026-10-27T05:25:00.431Z document form pages: {\"Q1\":[2],\"Q2\":[10],\"Q3\":[10,12],\"Q4\":[],\"Q5\":[2],\"Q6\":[2,1],\"Q7\":[]}"
+   ]
+  },
+  {
+   "step": "owner_control",
+   "seconds": 0,
+   "phase": "controls",
+   "total": 1,
+   "ledger_lines": 1,
+   "aborted": false,
+   "whoami": "r2dry_owner",
+   "log": [
+    "2026-10-27T05:25:01.111Z step owner_control done",
+    "2026-10-27T05:25:01.093Z control: 200, no_relevant_evidence true",
+    "2026-10-27T05:25:01.054Z step owner_control started"
+   ]
+  },
+  {
+   "step": "owner_panel",
+   "seconds": 10,
+   "phase": "marketplace_Q1",
+   "total": 1,
+   "ledger_lines": 1,
+   "aborted": false,
+   "whoami": "r2dry_owner",
+   "log": [
+    "2026-10-27T05:25:11.542Z step owner_panel done",
+    "2026-10-27T05:25:11.521Z checkpoint after_panel: ledger 1 line(s), next phase marketplace_Q1 (allows 1)",
+    "2026-10-27T05:25:11.465Z panel: {\"document_id\":3147,\"button_document_name\":\"ManyChat\",\"context_bar_shown\":true,\"context_bar_name\":\"ManyChat\",\"rendered\":[{\"label\":\"Page 2 · Why this deck fits the audit leg\",\"has_quote\":true,\"quote_head\":\"Why this deck fits the audit leg\\nSource: Pitch Deck Hunt lists ManyChat as a 201\"}],\"marketplace_cards\":0,\"results_card_shown\":true,\"ask_posts_in_panel_after_q1\":1,\"context_bar_hidden_after_clea"
+   ]
+  },
+  {
+   "step": "owner_marketplace",
+   "seconds": 6,
+   "phase": "other_principals",
+   "total": 8,
+   "ledger_lines": 8,
+   "aborted": false,
+   "whoami": "r2dry_owner",
+   "log": [
+    "2026-10-27T05:25:17.964Z step owner_marketplace done",
+    "2026-10-27T05:25:17.940Z All model calls are done. STOP THE WORKER NOW, then sign the owner out with the nav Logout button.",
+    "2026-10-27T05:25:17.940Z checkpoint after_marketplace_Q7: ledger 8 line(s), next phase other_principals (allows 0)"
+   ]
+  },
+  {
+   "step": "signed_out_check",
+   "seconds": 0,
+   "phase": "other_principals",
+   "total": 8,
+   "ledger_lines": 8,
+   "aborted": false,
+   "whoami": null,
+   "log": [
+    "2026-10-27T05:25:18.445Z step signed_out_check done",
+    "2026-10-27T05:25:18.435Z signed-out check: opaqueredirect 0",
+    "2026-10-27T05:25:18.414Z step signed_out_check started"
+   ]
+  },
+  {
+   "step": "lite",
+   "seconds": 5,
+   "phase": "other_principals",
+   "total": 8,
+   "ledger_lines": 8,
+   "aborted": false,
+   "whoami": "r2dry_lite",
+   "log": [
+    "2026-10-27T05:25:23.797Z step lite done",
+    "2026-10-27T05:25:23.779Z authorization LITE: ask 403, search 403 (expected 403, 403)",
+    "2026-10-27T05:25:23.725Z matrix LITE: 18 rows"
+   ]
+  },
+  {
+   "step": "signed_out_check",
+   "seconds": 0,
+   "phase": "other_principals",
+   "total": 8,
+   "ledger_lines": 8,
+   "aborted": false,
+   "whoami": null,
+   "log": [
+    "2026-10-27T05:25:24.294Z step signed_out_check done",
+    "2026-10-27T05:25:24.284Z signed-out check: opaqueredirect 0",
+    "2026-10-27T05:25:24.265Z step signed_out_check started"
+   ]
+  },
+  {
+   "step": "paid",
+   "seconds": 2,
+   "phase": "other_principals",
+   "total": 8,
+   "ledger_lines": 8,
+   "aborted": false,
+   "whoami": "r2dry_paid",
+   "log": [
+    "2026-10-27T05:25:26.091Z step paid done",
+    "2026-10-27T05:25:26.072Z authorization PAID: ask 403, search 403 (expected 403, 403)",
+    "2026-10-27T05:25:26.018Z matrix PAID: 18 rows"
+   ]
+  },
+  {
+   "step": "signed_out_check",
+   "seconds": 0,
+   "phase": "other_principals",
+   "total": 8,
+   "ledger_lines": 8,
+   "aborted": false,
+   "whoami": null,
+   "log": [
+    "2026-10-27T05:25:26.588Z step signed_out_check done",
+    "2026-10-27T05:25:26.577Z signed-out check: opaqueredirect 0",
+    "2026-10-27T05:25:26.559Z step signed_out_check started"
+   ]
+  },
+  {
+   "step": "unrelated",
+   "seconds": 0,
+   "phase": "other_principals",
+   "total": 8,
+   "ledger_lines": 8,
+   "aborted": false,
+   "whoami": "r2dry_investor",
+   "log": [
+    "2026-10-27T05:25:27.138Z step unrelated done",
+    "2026-10-27T05:25:27.116Z authorization UNRELATED: ask 403, search 403 (expected 403, 403)",
+    "2026-10-27T05:25:27.071Z step unrelated started"
+   ]
+  },
+  {
+   "step": "signed_out_check",
+   "seconds": 0,
+   "phase": "other_principals",
+   "total": 8,
+   "ledger_lines": 8,
+   "aborted": false,
+   "whoami": null,
+   "log": [
+    "2026-10-27T05:25:27.637Z step signed_out_check done",
+    "2026-10-27T05:25:27.627Z signed-out check: opaqueredirect 0",
+    "2026-10-27T05:25:27.609Z step signed_out_check started"
+   ]
+  },
+  {
+   "step": "anon",
+   "seconds": 0,
+   "phase": "other_principals",
+   "total": 8,
+   "ledger_lines": 8,
+   "aborted": false,
+   "whoami": null,
+   "log": [
+    "2026-10-27T05:25:28.352Z step anon done",
+    "2026-10-27T05:25:28.332Z matrix ANON: 18 rows",
+    "2026-10-27T05:25:27.981Z step anon started"
+   ]
+  },
+  {
+   "step": "end",
+   "seconds": 0,
+   "phase": "closed",
+   "total": 8,
+   "ledger_lines": 8,
+   "aborted": false,
+   "whoami": null,
+   "log": [
+    "2026-10-27T05:25:28.717Z step end done",
+    "2026-10-27T05:25:28.706Z checkpoint end: ledger 8 line(s), next phase closed (allows 0)",
+    "2026-10-27T05:25:28.654Z step end started"
+   ]
+  }
+ ],
+ "page_errors": []
+}

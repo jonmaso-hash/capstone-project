@@ -1,0 +1,73 @@
+{
+ "accounts": {
+  "owner": {
+   "user_id": 321,
+   "username": "r2dry_owner",
+   "has_usable_password": false
+  },
+  "lite": {
+   "user_id": 322,
+   "username": "r2dry_lite",
+   "has_usable_password": false
+  },
+  "paid": {
+   "user_id": 323,
+   "username": "r2dry_paid",
+   "has_usable_password": false
+  },
+  "unrelated": {
+   "user_id": 324,
+   "username": "r2dry_investor",
+   "has_usable_password": false
+  },
+  "staff": {
+   "user_id": 325,
+   "username": "r2dry_staff",
+   "has_usable_password": false
+  }
+ },
+ "owner_application_id": 50,
+ "paid_subscription": {
+  "plan": "INVESTOR_PREMIUM",
+  "status": "active"
+ },
+ "staff_is_staff": true,
+ "canary_field": "reason_for_capital",
+ "canary_visibility": "PRIVATE",
+ "sequences_bumped": {
+  "zelda_api_claimeddatapoint": [
+   2356,
+   2396
+  ],
+  "zelda_api_documentchunk": [
+   4288,
+   4420
+  ],
+  "zelda_api_documentsource": [
+   3135,
+   3146
+  ],
+  "zelda_api_entityverificationreport": [
+   34,
+   45
+  ],
+  "zelda_api_intelligenceinsight": [
+   5168,
+   5208
+  ],
+  "zelda_api_intelligencememo": [
+   93,
+   104
+  ],
+  "zelda_api_truthdeltareport": [
+   87,
+   98
+  ]
+ },
+ "same_name_profiles": [
+  42,
+  45,
+  47,
+  50
+ ]
+}

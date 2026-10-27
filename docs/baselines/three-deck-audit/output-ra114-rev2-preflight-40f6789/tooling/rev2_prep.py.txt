@@ -1,0 +1,43 @@
+"""RA-114 revision 2: hash the source DB, the earlier runs' copies (memos 94-104) and the deck; in phase
+'before', also create this run's sqlite backup COPY of the source DB, opened read-only. No Django.
+Usage: python -B rev2_prep.py <config.json> before|after   ('before' refuses if the copy already exists)."""
+import hashlib, json, os, sqlite3, sys, datetime
+CFG = json.load(open(sys.argv[1], encoding='utf-8'))
+phase = sys.argv[2]
+
+
+def sha(p):
+    h = hashlib.sha256()
+    with open(p, 'rb') as f:
+        for b in iter(lambda: f.read(1 << 20), b''):
+            h.update(b)
+    return h.hexdigest()
+
+
+def describe(p):
+    ok = os.path.exists(p)
+    return {'path': p, 'exists': ok, 'bytes': os.path.getsize(p) if ok else None, 'sha256': sha(p) if ok else None,
+            'sidecars': [s for s in ('-wal', '-journal', '-shm') if os.path.exists(p + s)]}
+
+
+out = {'phase': phase, 'mode': CFG['mode'], 'at': datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds'),
+       'source_db': describe(CFG['source_db']), 'earlier_copies': {p: describe(p) for p in CFG['forbidden_dbs']},
+       'deck': describe(CFG['deck']['path'])}
+out['deck']['matches_key'] = out['deck']['sha256'] == CFG['deck']['sha256']
+COPY = CFG['copy_db']
+if phase == 'before':
+    if os.path.exists(COPY):
+        sys.exit('run copy already exists; refusing to overwrite')
+    if not out['deck']['matches_key']:
+        sys.exit('deck hash differs from the frozen key; stopping')
+    src = sqlite3.connect('file:' + CFG['source_db'].replace('\\', '/') + '?mode=ro', uri=True)
+    dst = sqlite3.connect(COPY)
+    src.backup(dst)
+    dst.close(); src.close()
+    c = sqlite3.connect('file:' + COPY.replace('\\', '/') + '?mode=ro', uri=True)
+    out['copy'] = {'path': COPY, 'method': 'sqlite3 backup API from the source opened mode=ro', 'sha256_at_creation': sha(COPY),
+                   'integrity_check': c.execute('pragma integrity_check').fetchone()[0]}
+    c.close()
+with open(os.path.join(CFG['run_dir'], 'hashes_%s.json' % phase), 'w', encoding='utf-8', newline='\n') as f:
+    json.dump(out, f, indent=1)
+print(json.dumps({k: (v if k != 'earlier_copies' else {os.path.basename(p): d['sha256'] for p, d in v.items()}) for k, v in out.items()}, indent=1))

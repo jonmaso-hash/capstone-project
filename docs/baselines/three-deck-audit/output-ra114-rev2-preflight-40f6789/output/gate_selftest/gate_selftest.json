@@ -1,0 +1,294 @@
+{
+ "label": "OFFLINE self-test of the revision 2 gate (no Django, no network, offline stand-in replies)",
+ "passed": 15,
+ "cases": 15,
+ "results": [
+  {
+   "case": "planned sequence: 8 calls, every checkpoint accepted",
+   "pass": true,
+   "steps": [
+    [
+     "before_upload",
+     "ok"
+    ],
+    [
+     "memo",
+     "allowed"
+    ],
+    [
+     "after_memo",
+     "ok"
+    ],
+    [
+     "before_document_form",
+     "ok"
+    ],
+    [
+     "after_document_form",
+     "ok"
+    ],
+    [
+     "before_panel",
+     "ok"
+    ],
+    [
+     "after_panel",
+     "ok"
+    ],
+    [
+     "Q1",
+     "allowed"
+    ],
+    [
+     "after_marketplace_Q1",
+     "ok"
+    ],
+    [
+     "Q2",
+     "allowed"
+    ],
+    [
+     "after_marketplace_Q2",
+     "ok"
+    ],
+    [
+     "Q3",
+     "allowed"
+    ],
+    [
+     "after_marketplace_Q3",
+     "ok"
+    ],
+    [
+     "Q4",
+     "allowed"
+    ],
+    [
+     "after_marketplace_Q4",
+     "ok"
+    ],
+    [
+     "Q5",
+     "allowed"
+    ],
+    [
+     "after_marketplace_Q5",
+     "ok"
+    ],
+    [
+     "Q6",
+     "allowed"
+    ],
+    [
+     "after_marketplace_Q6",
+     "ok"
+    ],
+    [
+     "Q7",
+     "allowed"
+    ],
+    [
+     "after_marketplace_Q7",
+     "ok"
+    ],
+    [
+     "end",
+     "ok"
+    ]
+   ],
+   "final_phase": "closed",
+   "aborted": false,
+   "ledger_lines": 8,
+   "decisions": [
+    "allowed",
+    "allowed",
+    "allowed",
+    "allowed",
+    "allowed",
+    "allowed",
+    "allowed",
+    "allowed"
+   ]
+  },
+  {
+   "case": "a call before the upload checkpoint (setup allows 0) is refused and aborts",
+   "pass": true,
+   "result": "refused: phase setup allows 0 call(s); this would be 1",
+   "final_phase": "setup",
+   "aborted": true,
+   "ledger_lines": 1,
+   "decisions": [
+    "refused"
+   ]
+  },
+  {
+   "case": "after an abort every call is refused (no retry path)",
+   "pass": true,
+   "results": [
+    "refused: phase setup allows 0 call(s); this would be 1",
+    "refused: run already aborted"
+   ],
+   "final_phase": "setup",
+   "aborted": true,
+   "ledger_lines": 2,
+   "decisions": [
+    "refused",
+    "refused"
+   ]
+  },
+  {
+   "case": "a second memo call in the memo phase is refused",
+   "pass": true,
+   "results": [
+    "allowed",
+    "refused: phase memo allows 1 call(s); this would be 2"
+   ],
+   "final_phase": "memo",
+   "aborted": true,
+   "ledger_lines": 2,
+   "decisions": [
+    "allowed",
+    "refused"
+   ]
+  },
+  {
+   "case": "an extraction call in the memo phase is refused",
+   "pass": true,
+   "result": "refused: phase memo allows memo, not ask_query_extraction",
+   "final_phase": "memo",
+   "aborted": true,
+   "ledger_lines": 1,
+   "decisions": [
+    "refused"
+   ]
+  },
+  {
+   "case": "a client with SDK retries is refused",
+   "pass": true,
+   "result": "refused: client max_retries=2; must be 0",
+   "final_phase": "memo",
+   "aborted": true,
+   "ledger_lines": 1,
+   "decisions": [
+    "refused"
+   ]
+  },
+  {
+   "case": "an extraction call during the document form is refused, and its checkpoint then fails",
+   "pass": true,
+   "result": "refused: phase document_form allows 0 call(s); this would be 1",
+   "checkpoint_problem": "run aborted",
+   "final_phase": "document_form",
+   "aborted": true,
+   "ledger_lines": 2,
+   "decisions": [
+    "allowed",
+    "refused"
+   ]
+  },
+  {
+   "case": "an extraction call during the panel check is refused",
+   "pass": true,
+   "result": "refused: phase panel allows 0 call(s); this would be 1",
+   "final_phase": "panel",
+   "aborted": true,
+   "ledger_lines": 2,
+   "decisions": [
+    "allowed",
+    "refused"
+   ]
+  },
+  {
+   "case": "marketplace_Q1 with Q2 text is refused",
+   "pass": true,
+   "result": "refused: extraction text is not Q1 verbatim",
+   "final_phase": "marketplace_Q1",
+   "aborted": true,
+   "ledger_lines": 2,
+   "decisions": [
+    "allowed",
+    "refused"
+   ]
+  },
+  {
+   "case": "a second extraction for the same marketplace question is refused",
+   "pass": true,
+   "results": [
+    "allowed",
+    "refused: phase marketplace_Q1 allows 1 call(s); this would be 2"
+   ],
+   "final_phase": "marketplace_Q1",
+   "aborted": true,
+   "ledger_lines": 3,
+   "decisions": [
+    "allowed",
+    "allowed",
+    "refused"
+   ]
+  },
+  {
+   "case": "a 9th call after the eight is refused (ceiling)",
+   "pass": true,
+   "result": "refused: ceiling: call 9 of 8",
+   "final_phase": "other_principals",
+   "aborted": true,
+   "ledger_lines": 9,
+   "decisions": [
+    "allowed",
+    "allowed",
+    "allowed",
+    "allowed",
+    "allowed",
+    "allowed",
+    "allowed",
+    "allowed",
+    "refused"
+   ]
+  },
+  {
+   "case": "a checkpoint out of order aborts",
+   "pass": true,
+   "problem": "checkpoint before_document_form out of order (next is before_upload)",
+   "final_phase": "setup",
+   "aborted": true,
+   "ledger_lines": 0,
+   "decisions": []
+  },
+  {
+   "case": "a missing memo (no call in the memo phase) fails after_memo",
+   "pass": true,
+   "problem": "after_memo: ledger has 0 line(s), expected 1",
+   "final_phase": "memo",
+   "aborted": true,
+   "ledger_lines": 0,
+   "decisions": []
+  },
+  {
+   "case": "a marketplace question with no call is recorded as a deviation, not retried",
+   "pass": true,
+   "deviation": "after_marketplace_Q1: the marketplace question made no extraction call (recorded, not retried)",
+   "final_phase": "marketplace_Q2",
+   "aborted": false,
+   "ledger_lines": 1,
+   "decisions": [
+    "allowed"
+   ]
+  },
+  {
+   "case": "two processes racing for marketplace_Q1 get exactly one call",
+   "pass": true,
+   "children": [
+    "ALLOWED",
+    "REFUSED"
+   ],
+   "final_phase": "marketplace_Q1",
+   "aborted": true,
+   "ledger_lines": 3,
+   "decisions": [
+    "allowed",
+    "allowed",
+    "refused"
+   ]
+  }
+ ]
+}

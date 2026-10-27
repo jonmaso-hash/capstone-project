@@ -1,0 +1,208 @@
+{
+ "mode": "offline",
+ "note": "OFFLINE DRY RUN of RA-114 revision 2. Model replies are memo 104 recordings; network is loopback only. Not a live result. Third attempt. Attempt 1 aborted at the identity precondition (probe truncated page text; 0 calls). Attempt 2 was stopped by the memory watchdog at the 0.9 GB floor during the panel step and exposed a recorder bug (JSON POST bodies unreadable after DRF); both are preserved.",
+ "worktree": "C:\\Users\\jonathan\\Desktop\\KCV-pm-40f",
+ "expected_app_sha": "40f6789889dfeaf6b67558f3e1f9981d0a05b30a",
+ "main_env": "C:\\Users\\jonathan\\Desktop\\KCV\\.env",
+ "source_db": "C:\\Users\\jonathan\\Desktop\\KCV\\db.sqlite3",
+ "copy_db": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-of903\\76db1fe6-5688-4619-abfd-5bc2b6bec113\\scratchpad\\r29\\dry3\\db_rev2_dry3_copy.sqlite3",
+ "run_dir": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-of903\\76db1fe6-5688-4619-abfd-5bc2b6bec113\\scratchpad\\r29\\dry3",
+ "forbidden_dbs": [
+  "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV\\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\\scratchpad\\mcpost\\db_postfix_copy.sqlite3",
+  "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV\\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\\scratchpad\\mcff\\db_ff_copy.sqlite3",
+  "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV\\8edb8be9-5c85-488f-a1b8-020dd6a9a3c0\\scratchpad\\mcff3\\db_ff3_copy.sqlite3",
+  "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-np\\c8a313d5-81e1-402a-b7da-9205b6f20fab\\scratchpad\\np\\db_np_copy.sqlite3",
+  "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-np\\c8a313d5-81e1-402a-b7da-9205b6f20fab\\scratchpad\\ub\\db_ub_copy.sqlite3",
+  "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-np\\c8a313d5-81e1-402a-b7da-9205b6f20fab\\scratchpad\\of\\db_of_copy.sqlite3",
+  "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-np\\c8a313d5-81e1-402a-b7da-9205b6f20fab\\scratchpad\\f34\\db_f34_copy.sqlite3",
+  "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-np\\c8a313d5-81e1-402a-b7da-9205b6f20fab\\scratchpad\\r066\\db_r066_copy.sqlite3",
+  "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-of903\\76db1fe6-5688-4619-abfd-5bc2b6bec113\\scratchpad\\rd0b\\db_rd0b_copy.sqlite3",
+  "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-of903\\76db1fe6-5688-4619-abfd-5bc2b6bec113\\scratchpad\\rc6c\\db_rc6c_copy.sqlite3",
+  "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-of903\\76db1fe6-5688-4619-abfd-5bc2b6bec113\\scratchpad\\r512\\db_r512_copy.sqlite3",
+  "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-of903\\76db1fe6-5688-4619-abfd-5bc2b6bec113\\scratchpad\\r29\\dry1_aborted\\db_rev2_dry_copy.sqlite3",
+  "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-of903\\76db1fe6-5688-4619-abfd-5bc2b6bec113\\scratchpad\\r29\\dry2_memory_stop\\db_rev2_dry2_copy.sqlite3",
+  "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-of903\\76db1fe6-5688-4619-abfd-5bc2b6bec113\\scratchpad\\r29\\dbg\\db_dbg_copy.sqlite3"
+ ],
+ "previous_run_copy": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-of903\\76db1fe6-5688-4619-abfd-5bc2b6bec113\\scratchpad\\r512\\db_r512_copy.sqlite3",
+ "memurai": {
+  "port": 6391,
+  "broker_db": 0,
+  "cache_db": 1,
+  "config": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-of903\\76db1fe6-5688-4619-abfd-5bc2b6bec113\\scratchpad\\r29\\memurai_dry\\rev2_memurai.conf"
+ },
+ "deck": {
+  "path": "C:\\Users\\jonathan\\Downloads\\manychat_series_a_audit_deck.pptx",
+  "sha256": "be7a7171bbc84b9895a45adfbc41f2533f3d23b3a4a561c82a8d9de6b94f3ef1",
+  "source_entity": "ManyChat"
+ },
+ "accounts": {
+  "owner": "r2dry_owner",
+  "lite": "r2dry_lite",
+  "paid": "r2dry_paid",
+  "unrelated": "r2dry_investor",
+  "staff": "r2dry_staff"
+ },
+ "slug": "manychat",
+ "questions": {
+  "Q1": "How much has ManyChat raised?",
+  "Q2": "How many users does ManyChat have?",
+  "Q3": "How many messages does ManyChat send?",
+  "Q4": "Is ManyChat registered with the SEC?",
+  "Q5": "What is ManyChat's current revenue?",
+  "Q6": "When did ManyChat raise its Series A?",
+  "Q7": "Should I invest in ManyChat?"
+ },
+ "control_question": "What is the weather in Paris?",
+ "canary": "CANARY-MANYCHAT-4417",
+ "markers": [
+  "23.1",
+  "23,100,000",
+  "163,000,000",
+  "900M",
+  "275M",
+  "100M",
+  "140,000",
+  "140 000",
+  "500M",
+  "CIK",
+  "Delaware",
+  "2019",
+  "$18M",
+  "Series B",
+  "no public data",
+  "currency",
+  "verified",
+  "to date",
+  "so far",
+  "currently",
+  "Pitch Deck Hunt",
+  "Apr-16",
+  "April 2016",
+  "2015",
+  "the company states it has raised",
+  "per Pitch Deck Hunt",
+  "reported by Pitch Deck Hunt",
+  "self-reported, unverified): $23.1M",
+  "this raise",
+  "stated raise",
+  "current or planned raise",
+  "current profile, undated",
+  "as having raised",
+  "Funding raised (reported by Pitch Deck Hunt)",
+  "remaining runway",
+  "which needs a dated cash balance",
+  "per Pitch Deck Hunt, undated",
+  "self-reported figures",
+  "runway",
+  "cash",
+  "same figures",
+  "narrator of",
+  "independently",
+  "current profile, undated",
+  "any current or planned raise",
+  "profiled as",
+  "contextually dated",
+  "messages/month",
+  "measurement bases",
+  "Measurement basis to clarify",
+  "cumulative",
+  "monthly",
+  "total amount raised",
+  "historical funding",
+  "not cash on hand",
+  "dated cash",
+  "needs clarification before either is relied on",
+  "figure stated without an explicit interval",
+  "ambiguity",
+  "ambiguous",
+  "contradiction",
+  "with no explicit interval",
+  "and separately",
+  "on page 12",
+  "on page 10",
+  "same slide",
+  "same traction slide",
+  "misrepresent",
+  "conditions are stated by the company",
+  "hypotheses the evidence does not state",
+  "slide context",
+  "run rate",
+  "paying customers",
+  "stated without an explicit interval",
+  "unspecified-interval",
+  "before either is relied on",
+  "overstat",
+  "inflat"
+ ],
+ "matrix": [
+  [
+   "Z_control_home",
+   "/"
+  ],
+  [
+   "A_profile",
+   "/accounts/profile/{owner}/"
+  ],
+  [
+   "B_profile_analysis",
+   "/accounts/profile/{owner}/analysis/"
+  ],
+  [
+   "C_intel_report",
+   "/matchmaking/memo/{slug}/"
+  ],
+  [
+   "C2_company_overview",
+   "/matchmaking/memo/profile/{application_id}/"
+  ],
+  [
+   "D_ic_memo",
+   "/api/v1/zelda/documents/{doc}/ic-memo/"
+  ],
+  [
+   "E_ic_memo_dl",
+   "/api/v1/zelda/documents/{doc}/ic-memo/download/"
+  ],
+  [
+   "F_truthdelta_ui",
+   "/api/v1/zelda/documents/{doc}/verification/"
+  ],
+  [
+   "G_memo_api",
+   "/api/v1/zelda/documents/{doc}/memo/"
+  ],
+  [
+   "H_td_api",
+   "/api/v1/zelda/documents/{doc}/truth-delta/"
+  ],
+  [
+   "I_status",
+   "/api/v1/zelda/documents/{doc}/status/"
+  ],
+  [
+   "J_valuation_api",
+   "/api/v1/zelda/documents/{doc}/valuation/"
+  ],
+  [
+   "K_valuation_ui",
+   "/api/v1/zelda/valuation/{doc}/"
+  ],
+  [
+   "L_identity_status",
+   "/api/v1/zelda/identity-check/{report}/status/"
+  ],
+  [
+   "O_library",
+   "/api/v1/zelda/library/"
+  ],
+  [
+   "P_analyze_founder",
+   "/api/v1/zelda/analyze/founder/{owner}/"
+  ]
+ ],
+ "offline_recorded_calls": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-of903\\76db1fe6-5688-4619-abfd-5bc2b6bec113\\scratchpad\\r29\\m104\\09c_all_model_calls.json",
+ "memo104_matrix": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-of903\\76db1fe6-5688-4619-abfd-5bc2b6bec113\\scratchpad\\r29\\m104\\11_authorization_matrix.json",
+ "memo104_ask": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-of903\\76db1fe6-5688-4619-abfd-5bc2b6bec113\\scratchpad\\r29\\m104\\10_retrieval_ask_q1_q7.json",
+ "probe_html": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-of903\\76db1fe6-5688-4619-abfd-5bc2b6bec113\\scratchpad\\r29\\tooling\\rev2_probe.html",
+ "probe_js": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-of903\\76db1fe6-5688-4619-abfd-5bc2b6bec113\\scratchpad\\r29\\tooling\\rev2_probe.js"
+}

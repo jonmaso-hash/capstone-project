@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RA-114 revision 2 probe</title>
+<style>
+  body { font: 14px/1.45 system-ui, sans-serif; margin: 16px; max-width: 980px; background: #fff; color: #111; }
+  #state { background: #f4f4f6; padding: 8px 10px; border-radius: 6px; white-space: pre-wrap; font: 12px ui-monospace, monospace; }
+  .steps button { display: block; margin: 6px 0; padding: 6px 10px; font-size: 14px; }
+  .steps button:disabled { opacity: .45; }
+  #log { white-space: pre-wrap; font: 12px ui-monospace, monospace; border-top: 1px solid #ccc; margin-top: 12px; padding-top: 8px; }
+  .abort { color: #a00; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>RA-114 revision 2 probe</h1>
+<p>Sign in <strong>by hand</strong> in another tab of this browser as the account a step names, then return here and press
+the step. Steps unlock in the plan's order. This page never handles a password, a code or a session cookie: it sends
+same-origin requests as whoever is signed in, and the run server records them.</p>
+<div id="state">loading…</div>
+<div class="steps" id="steps"></div>
+<div id="log"></div>
+<script>window.REV2_TOKEN = '__REV2_TOKEN__';</script>
+<script src="/__rev2/probe.js"></script>
+</body>
+</html>

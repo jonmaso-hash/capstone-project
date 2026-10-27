@@ -1,0 +1,15 @@
+{
+ "phase": "setup",
+ "allowance": 0,
+ "used": 0,
+ "total": 0,
+ "abort": {
+  "at": "2026-10-27T05:14:21.820+00:00",
+  "reason": "probe: nav text does not show r2dry_owner",
+  "by": "[server pid=27604]"
+ },
+ "next_checkpoint": 0,
+ "lines_at_checkpoint": 0,
+ "doc_id": null,
+ "mode": "OFFLINE DRY RUN"
+}

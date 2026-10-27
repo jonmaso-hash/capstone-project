@@ -1,0 +1,192 @@
+"""Self-test of the revision 2 model-call gate and checkpoints (OFFLINE; no Django, no network: the offline
+stand-in answers every allowed call). Each case runs in its own fresh run directory.
+Usage: python -B rev2_gate_selftest.py <config.json> <out_dir>"""
+import json, os, shutil, subprocess, sys, tempfile
+from types import SimpleNamespace as NS
+
+CFG_PATH, OUT = os.path.abspath(sys.argv[1]), os.path.abspath(sys.argv[2])
+HERE = os.path.dirname(os.path.abspath(__file__))
+CFG = json.load(open(CFG_PATH, encoding='utf-8'))
+Q = CFG['questions']
+MEMO = dict(model='claude-sonnet-4-6', max_tokens=4000, system='You are a senior analyst at a top-tier venture capital firm',
+            messages=[{'role': 'user', 'content': 'Prepare an investment memo for ManyChat.'}])
+EXTRACT = lambda text: dict(model='claude-sonnet-4-6', max_tokens=1024, system='You translate a natural-language founder search into',
+                            messages=[{'role': 'user', 'content': text}])
+CLIENT0, CLIENT2 = NS(_client=NS(max_retries=0)), NS(_client=NS(max_retries=2))
+
+if len(sys.argv) > 3 and sys.argv[3] == 'child':           # one process of the race case
+    os.environ.update(REV2_RUN_DIR=sys.argv[4], REV2_CONFIG=CFG_PATH, REV2_OFFLINE='1', REV2_PROCESS_LABEL='[child pid=%d]' % os.getpid())
+    sys.path.insert(0, HERE)
+    import rev2_runtime as rt
+    rt.install_gate()
+    from anthropic.resources.messages.messages import Messages
+    try:
+        Messages.create(CLIENT0, **EXTRACT(Q['Q1'])); print('ALLOWED')
+    except RuntimeError as e:
+        print('REFUSED', e)
+    sys.exit(0)
+
+results = []
+
+
+def case(name):
+    def wrap(fn):
+        d = tempfile.mkdtemp(prefix='rev2gate_', dir=OUT)
+        os.environ.update(REV2_RUN_DIR=d, REV2_CONFIG=CFG_PATH, REV2_OFFLINE='1', REV2_PROCESS_LABEL='[selftest]')
+        sys.path.insert(0, HERE)
+        import importlib, rev2_runtime
+        rt = importlib.reload(rev2_runtime)
+        from anthropic.resources.messages.messages import Messages
+        if not hasattr(Messages, '_rev2_original'):
+            Messages._rev2_original = Messages.create
+        Messages.create = Messages._rev2_original
+        rt.prepare_run_dir()
+        rt.install_gate()
+
+        def call(client, kwargs):
+            try:
+                Messages.create(client, **kwargs)
+                return 'allowed'
+            except RuntimeError as e:
+                return 'refused: ' + str(e).replace('REV2 GATE REFUSED: ', '')
+        try:
+            detail = fn(rt, call)
+            ok = detail.pop('ok')
+        except Exception as e:
+            ok, detail = False, {'exception': repr(e)}
+        state, led = rt.read_state(), rt.ledger()
+        results.append({'case': name, 'pass': ok, **detail, 'final_phase': state['phase'], 'aborted': bool(state['abort']),
+                        'ledger_lines': led['lines'], 'decisions': [json.loads(l)['decision'] for l in open(os.path.join(d, 'model_calls.jsonl'))] if led['lines'] else []})
+        shutil.rmtree(d, ignore_errors=True)
+        return fn
+    return wrap
+
+
+def walk(rt, call, upto):
+    """The planned sequence up to (and including) checkpoint `upto`, with the expected calls."""
+    out = []
+    for name, *_ in rt.CHECKPOINTS:
+        if name == 'after_memo':
+            out.append(('memo', call(CLIENT0, MEMO)))
+        if name.startswith('after_marketplace_'):
+            q = name.split('_')[-1]
+            out.append((q, call(CLIENT0, EXTRACT(Q[q]))))
+        s, led, problem = rt.checkpoint(name)
+        out.append((name, problem or 'ok'))
+        if name == upto or problem:
+            break
+    return out
+
+
+@case('planned sequence: 8 calls, every checkpoint accepted')
+def _(rt, call):
+    steps = walk(rt, call, 'end')
+    return {'ok': all(v in ('ok', 'allowed') for _, v in steps) and rt.ledger()['lines'] == 8 and rt.read_state()['total'] == 8, 'steps': steps}
+
+
+@case('a call before the upload checkpoint (setup allows 0) is refused and aborts')
+def _(rt, call):
+    r = call(CLIENT0, MEMO)
+    return {'ok': r.startswith('refused') and rt.read_state()['abort'] is not None, 'result': r}
+
+
+@case('after an abort every call is refused (no retry path)')
+def _(rt, call):
+    a, b = call(CLIENT0, MEMO), call(CLIENT0, MEMO)
+    return {'ok': a.startswith('refused') and 'already aborted' in b, 'results': [a, b]}
+
+
+@case('a second memo call in the memo phase is refused')
+def _(rt, call):
+    rt.checkpoint('before_upload')
+    a, b = call(CLIENT0, MEMO), call(CLIENT0, MEMO)
+    return {'ok': a == 'allowed' and b.startswith('refused'), 'results': [a, b]}
+
+
+@case('an extraction call in the memo phase is refused')
+def _(rt, call):
+    rt.checkpoint('before_upload')
+    r = call(CLIENT0, EXTRACT(Q['Q1']))
+    return {'ok': r.startswith('refused'), 'result': r}
+
+
+@case('a client with SDK retries is refused')
+def _(rt, call):
+    rt.checkpoint('before_upload')
+    r = call(CLIENT2, MEMO)
+    return {'ok': r.startswith('refused') and 'max_retries' in r, 'result': r}
+
+
+@case('an extraction call during the document form is refused, and its checkpoint then fails')
+def _(rt, call):
+    walk(rt, call, 'before_document_form')
+    r = call(CLIENT0, EXTRACT(Q['Q1']))
+    s, led, problem = rt.checkpoint('after_document_form')
+    return {'ok': r.startswith('refused') and problem is not None, 'result': r, 'checkpoint_problem': problem}
+
+
+@case('an extraction call during the panel check is refused')
+def _(rt, call):
+    walk(rt, call, 'before_panel')
+    r = call(CLIENT0, EXTRACT(Q['Q1']))
+    return {'ok': r.startswith('refused'), 'result': r}
+
+
+@case('marketplace_Q1 with Q2 text is refused')
+def _(rt, call):
+    walk(rt, call, 'after_panel')
+    r = call(CLIENT0, EXTRACT(Q['Q2']))
+    return {'ok': r.startswith('refused') and 'verbatim' in r, 'result': r}
+
+
+@case('a second extraction for the same marketplace question is refused')
+def _(rt, call):
+    walk(rt, call, 'after_panel')
+    a, b = call(CLIENT0, EXTRACT(Q['Q1'])), call(CLIENT0, EXTRACT(Q['Q1']))
+    return {'ok': a == 'allowed' and b.startswith('refused'), 'results': [a, b]}
+
+
+@case('a 9th call after the eight is refused (ceiling)')
+def _(rt, call):
+    walk(rt, call, 'after_marketplace_Q7')
+    r = call(CLIENT0, EXTRACT(Q['Q1']))
+    return {'ok': r.startswith('refused') and 'ceiling' in r, 'result': r}
+
+
+@case('a checkpoint out of order aborts')
+def _(rt, call):
+    s, led, problem = rt.checkpoint('before_document_form')
+    return {'ok': problem is not None and rt.read_state()['abort'] is not None, 'problem': problem}
+
+
+@case('a missing memo (no call in the memo phase) fails after_memo')
+def _(rt, call):
+    rt.checkpoint('before_upload')
+    s, led, problem = rt.checkpoint('after_memo')
+    return {'ok': problem is not None, 'problem': problem}
+
+
+@case('a marketplace question with no call is recorded as a deviation, not retried')
+def _(rt, call):
+    walk(rt, call, 'after_panel')
+    s, led, problem = rt.checkpoint('after_marketplace_Q1')
+    cp = [json.loads(l) for l in open(os.path.join(os.environ['REV2_RUN_DIR'], 'checkpoints.jsonl'))][-1]
+    return {'ok': problem is None and cp['deviation'] is not None and rt.ledger()['lines'] == 1, 'deviation': cp['deviation']}
+
+
+@case('two processes racing for marketplace_Q1 get exactly one call')
+def _(rt, call):
+    walk(rt, call, 'after_panel')
+    d = os.environ['REV2_RUN_DIR']
+    procs = [subprocess.Popen([sys.executable, '-B', __file__, CFG_PATH, OUT, 'child', d], stdout=subprocess.PIPE, text=True) for _ in range(2)]
+    outs = sorted(p.communicate(timeout=120)[0].strip().splitlines()[-1].split()[0] for p in procs)
+    return {'ok': outs == ['ALLOWED', 'REFUSED'], 'children': outs}
+
+
+passed = sum(r['pass'] for r in results)
+summary = {'label': 'OFFLINE self-test of the revision 2 gate (no Django, no network, offline stand-in replies)',
+           'passed': passed, 'cases': len(results), 'results': results}
+json.dump(summary, open(os.path.join(OUT, 'gate_selftest.json'), 'w', encoding='utf-8'), indent=1, ensure_ascii=False)
+for r in results:
+    print('PASS' if r['pass'] else 'FAIL', r['case'], '| ledger', r['ledger_lines'], r['decisions'], '| aborted', r['aborted'])
+print(f'{passed}/{len(results)} passed')

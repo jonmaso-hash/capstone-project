@@ -1,0 +1,19 @@
+{
+ "label": "OFFLINE DRY RUN: headless Chrome with seeded throwaway sessions; not a live run",
+ "transcript": [
+  {
+   "step": "owner_upload",
+   "seconds": 0,
+   "phase": "setup",
+   "total": 0,
+   "ledger_lines": 0,
+   "aborted": true,
+   "whoami": "r2dry_owner",
+   "log": [
+    "2026-10-27T05:14:21.895Z step owner_upload stopped: aborted: nav text does not show r2dry_owner",
+    "2026-10-27T05:14:21.813Z ABORT: nav text does not show r2dry_owner"
+   ]
+  }
+ ],
+ "page_errors": []
+}

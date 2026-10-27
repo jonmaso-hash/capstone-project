@@ -1,0 +1,18 @@
+# RA-114 revision 2 memory watchdog. Stops the run server and worker (pids in pid files) when free RAM falls
+# below the 0.9 GB floor or the run's python processes exceed the 1500 MB threshold. Logs every 15 s.
+param([string]$RunDir, [int]$ThresholdMB = 1500, [double]$FloorGB = 0.9)
+$log = Join-Path $RunDir 'memwatch.log'
+"memwatch started $(Get-Date -Format s) threshold=${ThresholdMB}MB floor=${FloorGB}GB" | Out-File -Append -Encoding utf8 $log
+while ($true) {
+  $free = [math]::Round((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB, 2)
+  $pids = @(Get-ChildItem $RunDir -Filter '*.pid' -ErrorAction SilentlyContinue | ForEach-Object { [int](Get-Content $_.FullName) })
+  $procs = @($pids | ForEach-Object { Get-Process -Id $_ -ErrorAction SilentlyContinue })
+  $ws = [math]::Round((($procs | Measure-Object WorkingSet64 -Sum).Sum) / 1MB)
+  "$(Get-Date -Format s) free=${free}GB run_ws=${ws}MB pids=$($pids -join ',')" | Out-File -Append -Encoding utf8 $log
+  if ($procs.Count -gt 0 -and ($free -lt $FloorGB -or $ws -gt $ThresholdMB)) {
+    "$(Get-Date -Format s) LIMIT: stopping $($pids -join ',')" | Out-File -Append -Encoding utf8 $log
+    $procs | Stop-Process -Force -Confirm:$false
+  }
+  if (Test-Path (Join-Path $RunDir 'memwatch.stop')) { "memwatch stopped $(Get-Date -Format s)" | Out-File -Append -Encoding utf8 $log; break }
+  Start-Sleep -Seconds 15
+}

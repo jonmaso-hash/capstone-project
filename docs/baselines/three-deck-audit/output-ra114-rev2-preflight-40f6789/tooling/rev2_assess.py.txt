@@ -1,0 +1,200 @@
+"""Assess a revision 2 run directory, read-only (the run copy is opened mode=ro). No Django, no network.
+Usage: python -B rev2_assess.py <config.json> [out_dir]
+Writes assessment.json and assessment.txt. Every output carries the run's mode: an OFFLINE dry run's results
+come from the offline stand-in and are never live results. Grounding is reported as an AID for the independent
+grader (pages reached, required pages present); the grader decides against docs/baselines/manychat/ANSWER_KEY.md."""
+import json, os, re, sqlite3, sys
+CFG = json.load(open(sys.argv[1], encoding='utf-8'))
+RUN = CFG['run_dir']
+OUT = sys.argv[2] if len(sys.argv) > 2 else RUN
+Q = CFG['questions']
+
+
+def jl(name):
+    p = os.path.join(RUN, name)
+    return [json.loads(l) for l in open(p, encoding='utf-8')] if os.path.exists(p) else []
+
+
+state = json.load(open(os.path.join(RUN, 'gate_state.json'), encoding='utf-8'))
+MODE = state['mode']
+calls, checkpoints, requests, obs, aborts = jl('model_calls.jsonl'), jl('checkpoints.jsonl'), jl('requests.jsonl'), jl('observations.jsonl'), jl('aborts.jsonl')
+doc = state['doc_id']
+owner = CFG['accounts']['owner']
+db = sqlite3.connect('file:' + CFG['copy_db'].replace('\\', '/') + '?mode=ro', uri=True)
+chunks = {r[0]: {'document_id': r[1], 'page': r[2], 'text': r[3]} for r in
+          db.execute('select id, document_id, page_number, raw_text from zelda_api_documentchunk where document_id=?', (doc,))}
+doc_name = db.execute('select filename, source_entity from zelda_api_documentsource where id=?', (doc,)).fetchone()
+by_step = {}
+for r in requests:
+    by_step.setdefault(r['step'], []).append(r)
+one = lambda step: (by_step.get(step) or [None])[-1]
+NO_EVIDENCE = 'No relevant evidence was found in this document for that question.'
+FALLBACK = "I couldn't find specific search criteria"
+
+
+def expected_text(evidence):
+    if not evidence:
+        return NO_EVIDENCE
+    pages = sorted({e['page'] for e in evidence if e['page'] is not None})
+    where = f" (page{'s' if len(pages) != 1 else ''} {', '.join(map(str, pages))})" if pages else ''
+    n = len(evidence)
+    return (f"{n} passage{'s' if n != 1 else ''} from this document may bear on that{where}. They are the document's own "
+            f"words, shown as excerpts: what it states, not a verified answer.")
+
+
+def document_form(rec, question, search=None):
+    """Revision 1 criteria 1-6 for one document-form /ask/ record (7 is the ledger window)."""
+    if rec is None:
+        return {'present': False, 'pass': False}
+    b = rec.get('response_json') or {}
+    ev = b.get('evidence') or []
+    try:
+        sent = json.loads(rec.get('request_body_raw') or 'null')
+    except ValueError:
+        sent = None
+    c = {'request_body_exact': sent == {'q': question, 'document_id': doc},
+         'c1_200_success_doc_no_cards': rec['status'] == 200 and b.get('status') == 'success' and b.get('document_id') == doc and b.get('results') == [],
+         'c2_not_marketplace_fallback': not str(b.get('response', '')).startswith(FALLBACK),
+         'c3_grounded_byte_for_byte': all(e.get('chunk_id') in chunks and chunks[e['chunk_id']]['page'] == e.get('page')
+                                          and chunks[e['chunk_id']]['text'] == e.get('text') for e in ev),
+         'c5_no_relevant_evidence_explicit': b.get('no_relevant_evidence') is (not ev) and (bool(ev) or b.get('response') == NO_EVIDENCE),
+         'c6_nothing_composed': b.get('response') == expected_text(ev)}
+    if search is not None:
+        sb = search.get('response_json') or {}
+        c['c4_same_as_search'] = ([(e['chunk_id'], e['page'], e['text'], e['relevance']) for e in ev]
+                                  == [(r['id'], r['page'], r['text'], r['relevance']) for r in sb.get('results', [])])
+    return {'present': True, 'pass': all(c.values()), 'checks': c, 'pages': [e.get('page') for e in ev],
+            'relevance': [e.get('relevance') for e in ev], 'no_relevant_evidence': b.get('no_relevant_evidence'), 'response': b.get('response')}
+
+
+A = {'mode': MODE, 'label': ('OFFLINE DRY RUN: model replies are memo 104 recordings and the network was loopback only. These '
+                             'are not live results and decide nothing about RA-114 acceptance.') if MODE != 'LIVE' else 'LIVE RUN',
+     'document_id': doc, 'document': doc_name}
+
+# --- run integrity
+cp_names = [c['checkpoint'] for c in checkpoints]
+planned = ['before_upload', 'after_memo', 'before_document_form', 'after_document_form', 'before_panel', 'after_panel'] + \
+          [f'after_marketplace_Q{n}' for n in range(1, 8)] + ['end']
+exp_lines = dict(zip(planned, [0, 1, 1, 1, 1, 1] + list(range(2, 9)) + [8]))
+uploads = [r for r in requests if r['path'] == '/api/v1/zelda/documents/ingest/' and r['method'] == 'POST']
+A['integrity'] = {
+    'checkpoints_in_order_and_complete': cp_names == planned,
+    'checkpoint_problems': [c['problem'] for c in checkpoints if c['problem']],
+    'checkpoint_lines': {c['checkpoint']: c['ledger']['lines'] for c in checkpoints},
+    'checkpoint_lines_as_planned': all(c['ledger']['lines'] == exp_lines.get(c['checkpoint']) for c in checkpoints),
+    'checkpoint_sha256': {c['checkpoint']: c['ledger']['sha256'][:16] for c in checkpoints},
+    'deviations': [c['deviation'] for c in checkpoints if c.get('deviation')],
+    'calls_attempted': len(calls), 'calls_refused': sum(c['decision'] != 'allowed' for c in calls),
+    'calls_at_most_8': len(calls) <= 8,
+    'call_sequence': [(c['n'], c['phase'], c['kind'], c['client_max_retries']) for c in calls],
+    'calls_as_planned': [(c['phase'], c['kind']) for c in calls] == [('memo', 'memo')] + [(f'marketplace_Q{n}', 'ask_query_extraction') for n in range(1, 8)],
+    'aborts': aborts,
+    'one_upload': len(uploads) == 1 and uploads[0]['status'] == 201 and uploads[0].get('upload', {}).get('sha256') == CFG['deck']['sha256']
+                  and uploads[0]['user'] == owner and uploads[0]['phase'] == 'memo',
+    'blocked_outbound_hosts': sorted({b['host'] for b in jl('blocked_network.jsonl')}),
+    'recorder_errors': len(jl('recorder_errors.jsonl'))}
+win = lambda a, b: next((c['ledger'] for c in checkpoints if c['checkpoint'] == a), None) == next((c['ledger'] for c in checkpoints if c['checkpoint'] == b), None)
+A['integrity']['document_form_window_unchanged'] = win('before_document_form', 'after_document_form')
+A['integrity']['panel_window_unchanged'] = win('before_panel', 'after_panel')
+
+# --- RA-114 document form, per question
+A['document_form'] = {q: document_form(one(f'doc:{q}:ask'), text, one(f'doc:{q}:search')) for q, text in Q.items()}
+A['document_form_all_criteria'] = all(v['pass'] for v in A['document_form'].values()) and A['integrity']['document_form_window_unchanged']
+REQUIRED = {'Q1': [2], 'Q2': [10], 'Q3': [10, 12], 'Q6': [2]}
+PREDICTED = {'Q1': [2], 'Q2': [10], 'Q3': [10, 12], 'Q4': [], 'Q5': [2], 'Q6': [2, 1], 'Q7': []}
+A['grounding_aid'] = {q: {'pages': v.get('pages'), 'required_pages (revision 1 table)': REQUIRED.get(q, 'no page required; nothing may be composed'),
+                          'required_present': all(p in (v.get('pages') or []) for p in REQUIRED.get(q, [])),
+                          'offline_prediction (revision 2)': PREDICTED[q], 'matches_prediction': v.get('pages') == PREDICTED[q]}
+                      for q, v in A['document_form'].items()}
+
+# --- control, authorization, panel, marketplace
+ctl = one('control:paris')
+cb = (ctl or {}).get('response_json') or {}
+A['control_paris'] = {'status': (ctl or {}).get('status'), 'no_relevant_evidence': cb.get('no_relevant_evidence'),
+                      'evidence': len(cb.get('evidence') or []), 'request_body_exact': json.loads((ctl or {}).get('request_body_raw') or 'null') == {'q': CFG['control_question'], 'document_id': doc},
+                      'pass': bool(ctl) and ctl['status'] == 200 and cb.get('no_relevant_evidence') is True and not cb.get('evidence')}
+texts = [c['text'] for c in chunks.values()]
+auth = {}
+for label in ('LITE', 'PAID', 'UNRELATED'):
+    a, s = one(f'auth:{label}:ask'), one(f'auth:{label}:search')
+    leaked = any(t[:60] in json.dumps(x.get('response_json')) for x in (a, s) if x for t in texts)
+    auth[label] = {'ask': (a or {}).get('status'), 'search': (s or {}).get('status'), 'user': (a or {}).get('user'),
+                   'document_text_in_body': leaked, 'pass': bool(a and s) and a['status'] == 403 and s['status'] == 403 and not leaked}
+A['authorization'] = {**auth, 'owner_200': all(v.get('checks', {}).get('c1_200_success_doc_no_cards') for v in A['document_form'].values()),
+                      'pass': all(v['pass'] for v in auth.values())}
+panel_asks = [r for r in requests if r['phase'] == 'panel' and r['path'] == '/api/v1/zelda/ask/' and r['method'] == 'POST']
+pobs = next((o['data'] for o in reversed(obs) if o.get('step') == 'panel'), {})
+pform = document_form(panel_asks[0], Q['Q1']) if len(panel_asks) == 1 else {'pass': False}
+A['panel'] = {'ask_requests_in_panel_phase': len(panel_asks), 'response_criteria_1_6': pform,
+              'request_body_exact': pform.get('checks', {}).get('request_body_exact'),
+              'request_was_untagged_app_fetch': bool(panel_asks) and panel_asks[0]['step'] == '',
+              'observed': pobs, 'rendered_pages_match_response': [re.match(r'Page (\d+)(?: · |$)', c.get('label') or '') and int(re.match(r'Page (\d+)', c['label']).group(1))
+                                                 for c in pobs.get('rendered', [])] == pform.get('pages', []),
+              'ledger_unchanged': A['integrity']['panel_window_unchanged']}
+A['panel']['pass'] = (len(panel_asks) == 1 and pform.get('pass') and pobs.get('context_bar_shown') and pobs.get('marketplace_cards') == 0
+                      and pobs.get('context_bar_hidden_after_clear') and pobs.get('ask_posts_in_panel_after_clear') == 1
+                      and A['panel']['rendered_pages_match_response'] and A['panel']['ledger_unchanged'])
+m104 = json.load(open(CFG['memo104_ask'], encoding='utf-8'))
+mk = {}
+for q, text in Q.items():
+    r = one(f'mkt:{q}')
+    b = (r or {}).get('response_json') or {}
+    mk[q] = {'status': (r or {}).get('status'), 'request_body_exact': json.loads((r or {}).get('request_body_raw') or 'null') == {'q': text},
+             'response_equals_memo104': b.get('response') == (m104[q]['ask']['body'] or {}).get('response'),
+             'results': len(b.get('results') or []), 'response_head': str(b.get('response'))[:90]}
+A['marketplace_control'] = mk
+
+# --- matrix vs memo 104 (status, location, B2, canary; names and ids normalised)
+fx = json.load(open(os.path.join(RUN, 'fixtures.json'), encoding='utf-8'))
+ids = {'owner': owner, 'doc': str(doc), 'app': str(fx['owner_application_id'])}
+rep = next((r['path'].split('/')[5] for r in requests if r['step'].endswith(':L_identity_status')), None)
+
+
+def norm(loc, owner_name, doc_id, app_id, report_id):
+    loc = loc.replace(owner_name, '{owner}').replace(f'/{doc_id}/', '/{doc}/').replace(f'%2F{doc_id}%2F', '%2F{doc}%2F')
+    loc = loc.replace(f'/profile/{app_id}/', '/profile/{app}/').replace(f'%2Fprofile%2F{app_id}%2F', '%2Fprofile%2F{app}%2F')
+    return loc.replace(f'/{report_id}/', '/{report}/').replace(f'%2F{report_id}%2F', '%2F{report}%2F') if report_id else loc
+
+
+rows = {}
+for r in requests:
+    if r['step'].startswith('matrix:'):
+        _, who, surf = r['step'].split(':', 2)
+        m = r.get('matrix', {})
+        rows[(who, surf)] = (r['status'], norm(r['location'], owner, doc, ids['app'], rep), m.get('b2_panel'), m.get('canary_in_readable'), m.get('canary_in_raw_body'))
+old = json.load(open(CFG['memo104_matrix'], encoding='utf-8'))['matrix']
+oldrows = {(o['principal'], o['surface']): (o['status'], norm(o.get('location', ''), 'm512mc_owner', 3146, 50, 45), o.get('b2_panel'),
+                                             o.get('canary_in_readable'), o.get('canary_in_raw_body')) for o in old}
+# memo 104 recorded only status/location/raw-body canary for its POST rows (M_search, N_rag); compare those fields there.
+post_view = lambda v: (v[0], v[1], v[4])
+same_row = lambda k: (post_view(rows[k]) == post_view(oldrows[k])) if k[1] in ('M_search', 'N_rag') else rows[k] == oldrows[k]
+compared = [k for k in rows if k in oldrows]
+A['matrix'] = {'rows': len(rows), 'principals': sorted({k[0] for k in rows}), 'compared_with_memo104': len(compared),
+               'differing': [(k, rows[k], oldrows[k]) for k in compared if not same_row(k)],
+               'not_run_here': sorted({k[0] for k in oldrows} - {k[0] for k in rows}),
+               'canary_rows': sorted(k for k, v in rows.items() if v[3] or v[4]),
+               'memo104_canary_rows': sorted(k for k, v in oldrows.items() if v[3] or v[4])}
+A['walks'] = {'logouts': [(r['user_before_request'], r['status']) for r in requests if r['path'] == '/accounts/logout/' and r['method'] == 'POST'],
+              'after_logout_checks': [r['status'] for r in by_step.get('walk:after_logout', [])]}
+A['observations_stopped_steps'] = [o['data'] for o in obs if o.get('step') == 'step_stopped']
+
+json.dump(A, open(os.path.join(OUT, 'assessment.json'), 'w', encoding='utf-8'), indent=1, ensure_ascii=False, default=str)
+L = [A['label'], f"document {doc} {doc_name}", '',
+     'INTEGRITY  checkpoints complete/in order: %s  lines as planned: %s  calls %d (refused %d, <=8: %s, as planned: %s)  aborts: %d  one upload: %s' % (
+         A['integrity']['checkpoints_in_order_and_complete'], A['integrity']['checkpoint_lines_as_planned'], len(calls),
+         A['integrity']['calls_refused'], A['integrity']['calls_at_most_8'], A['integrity']['calls_as_planned'], len(aborts), A['integrity']['one_upload']),
+     '           ledger windows unchanged: document form %s, panel %s   deviations: %s' % (
+         A['integrity']['document_form_window_unchanged'], A['integrity']['panel_window_unchanged'], A['integrity']['deviations'])]
+for q, v in A['document_form'].items():
+    g = A['grounding_aid'][q]
+    L.append(f"{q} document form: criteria 1-6 {'PASS' if v['pass'] else 'FAIL ' + str([k for k, x in v.get('checks', {}).items() if not x])}"
+             f"  pages {v.get('pages')}  required present {g['required_present']}  matches offline prediction {g['matches_prediction']}")
+L += [f"control (Paris): {'PASS' if A['control_paris']['pass'] else 'FAIL'} {A['control_paris']}",
+      'authorization: ' + ('PASS ' if A['authorization']['pass'] else 'FAIL ') + json.dumps({k: (v['ask'], v['search'], v['document_text_in_body']) for k, v in auth.items()}),
+      f"panel: {'PASS' if A['panel']['pass'] else 'FAIL'} asks={len(panel_asks)} body_exact={A['panel']['request_body_exact']} rendered={[c.get('label') for c in pobs.get('rendered', [])]} "
+      f"cards={pobs.get('marketplace_cards')} bar={pobs.get('context_bar_name')!r} cleared={pobs.get('context_bar_hidden_after_clear')}",
+      'marketplace: ' + json.dumps({q: (v['status'], v['request_body_exact'], v['response_equals_memo104']) for q, v in mk.items()}),
+      f"matrix: {A['matrix']['rows']} rows, {A['matrix']['compared_with_memo104']} compared with memo 104, {len(A['matrix']['differing'])} differ; not run here: {A['matrix']['not_run_here']}; canary rows: {A['matrix']['canary_rows']}",
+      f"walks: {A['walks']}"]
+open(os.path.join(OUT, 'assessment.txt'), 'w', encoding='utf-8', newline='\n').write('\n'.join(L) + '\n')
+print('\n'.join(L))

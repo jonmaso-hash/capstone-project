@@ -1,0 +1,442 @@
+"""RA-114 revision 2 run runtime (run tooling, not application code). Imported by rev2_run.py in the
+server and the worker. Three parts:
+
+1. MODEL-CALL GATE. Every anthropic Messages.create call is decided BEFORE it reaches the network:
+   * the run's phase (set only by the ordered checkpoints below) allows a number of calls of one kind;
+     memo: 1 memo call; marketplace_Qn: 1 query-extraction call whose user message is exactly Qn; every
+     other phase: 0;
+   * the run total never exceeds 8;
+   * the client must have max_retries == 0 (no hidden SDK retries);
+   * after an abort, nothing is allowed.
+   Every attempt, allowed or refused, is one line in model_calls.jsonl, written before the call. A refusal
+   writes its line, sets the abort and raises; there is no retry path. The state is shared by the server and
+   the worker through gate_state.json under a file lock.
+
+2. REQUEST RECORDER + PROBE ENDPOINTS (outermost Django middleware). Records every request's method, path,
+   principal, status and Location, the JSON bodies of /api/v1/zelda/ requests and responses, the ingest
+   upload's file hash, and for probe-tagged matrix requests the marker/canary flags and readable text.
+   It never records headers, cookies, CSRF tokens, or any body outside those cases (so no sign-in, MFA
+   setup, recovery-code or password page content). It serves /__rev2/ (probe page, run state, ordered
+   checkpoints, observations, abort) and refuses application requests after an abort.
+
+3. OFFLINE STAND-IN (dry run only). Replaces the network call with memo 104's recorded replies, and blocks
+   every non-loopback socket. Results produced this way are OFFLINE evidence, never live results.
+"""
+import datetime, hashlib, html, json, os, re, socket, time, secrets
+
+RUN_DIR = os.environ['REV2_RUN_DIR']
+CFG = json.load(open(os.environ['REV2_CONFIG'], encoding='utf-8'))
+OFFLINE = os.environ.get('REV2_OFFLINE') == '1'
+LABEL = os.environ.get('REV2_PROCESS_LABEL', 'process')
+P = lambda name: os.path.join(RUN_DIR, name)
+CEILING = 8
+QUESTIONS = CFG['questions']
+
+# The ordered checkpoints (revision 1 + 2 ledger points). (name, expected ledger lines or None, next phase,
+# calls allowed in it). None: lines must equal the previous checkpoint's plus the calls the gate allowed since.
+CHECKPOINTS = [('before_upload', 0, 'memo', 1),
+               ('after_memo', 1, 'owner_matrix', 0),
+               ('before_document_form', 1, 'document_form', 0),
+               ('after_document_form', 1, 'controls', 0),
+               ('before_panel', 1, 'panel', 0),
+               ('after_panel', 1, 'marketplace_Q1', 1)]
+CHECKPOINTS += [(f'after_marketplace_Q{n}', None, f'marketplace_Q{n + 1}' if n < 7 else 'other_principals', 1 if n < 7 else 0)
+                for n in range(1, 8)]
+CHECKPOINTS += [('end', None, 'closed', 0)]
+PHASE_KIND = {'memo': 'memo', **{f'marketplace_Q{n}': 'ask_query_extraction' for n in range(1, 8)}}
+
+
+def now():
+    return datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='milliseconds')
+
+
+class Locked:
+    """Cross-process lock (server + worker) on gate.lock."""
+    def __enter__(self):
+        import msvcrt
+        self.f = open(P('gate.lock'), 'a+b')
+        for _ in range(600):
+            try:
+                self.f.seek(0)
+                msvcrt.locking(self.f.fileno(), msvcrt.LK_NBLCK, 1)
+                return self
+            except OSError:
+                time.sleep(0.05)
+        raise RuntimeError('REV2: gate lock unavailable')
+
+    def __exit__(self, *a):
+        import msvcrt
+        self.f.seek(0)
+        msvcrt.locking(self.f.fileno(), msvcrt.LK_UNLCK, 1)
+        self.f.close()
+
+
+def read_state():
+    try:
+        return json.load(open(P('gate_state.json'), encoding='utf-8'))
+    except FileNotFoundError:
+        return {'phase': 'setup', 'allowance': 0, 'used': 0, 'total': 0, 'abort': None, 'next_checkpoint': 0,
+                'lines_at_checkpoint': 0, 'doc_id': None, 'mode': 'OFFLINE DRY RUN' if OFFLINE else 'LIVE'}
+
+
+def write_state(s):
+    tmp = P('gate_state.json.tmp')
+    with open(tmp, 'w', encoding='utf-8', newline='\n') as f:
+        json.dump(s, f, indent=1)
+    os.replace(tmp, P('gate_state.json'))
+
+
+def ledger():
+    try:
+        data = open(P('model_calls.jsonl'), 'rb').read()
+    except FileNotFoundError:
+        data = b''
+    return {'lines': data.count(b'\n'), 'sha256': hashlib.sha256(data).hexdigest()}
+
+
+def append(name, record):
+    with open(P(name), 'a', encoding='utf-8', newline='\n') as f:
+        f.write(json.dumps(record, ensure_ascii=False, default=str) + '\n')
+
+
+def set_abort(s, reason):
+    if not s.get('abort'):
+        s['abort'] = {'at': now(), 'reason': reason, 'by': LABEL}
+        append('aborts.jsonl', s['abort'])
+
+
+def classify(kwargs):
+    system = kwargs.get('system')
+    system = system if isinstance(system, str) else json.dumps(system, default=str)
+    if system.startswith('You are a senior analyst'):
+        return 'memo'
+    if system.startswith('You translate a natural-language founder search'):
+        return 'ask_query_extraction'
+    return 'other'
+
+
+def user_text(kwargs):
+    msgs = kwargs.get('messages') or []
+    content = msgs[0].get('content') if msgs else None
+    return content if isinstance(content, str) else json.dumps(content, default=str)
+
+
+# ---------------------------------------------------------------- 1. gate
+def install_gate():
+    from anthropic.resources.messages.messages import Messages
+    original = Messages.create
+
+    def create(self, *args, **kwargs):
+        kind, text = classify(kwargs), user_text(kwargs)
+        retries = getattr(getattr(self, '_client', None), 'max_retries', None)
+        with Locked():
+            s = read_state()
+            reason = None
+            if s.get('abort'):
+                reason = 'run already aborted'
+            elif s['total'] >= CEILING:
+                reason = f'ceiling: call {s["total"] + 1} of {CEILING}'
+            elif s['used'] >= s['allowance']:
+                reason = f'phase {s["phase"]} allows {s["allowance"]} call(s); this would be {s["used"] + 1}'
+            elif kind != PHASE_KIND.get(s['phase']):
+                reason = f'phase {s["phase"]} allows {PHASE_KIND.get(s["phase"])}, not {kind}'
+            elif kind == 'ask_query_extraction' and text != QUESTIONS[s['phase'].split('_')[1]]:
+                reason = f'extraction text is not {s["phase"].split("_")[1]} verbatim'
+            elif retries != 0:
+                reason = f'client max_retries={retries}; must be 0'
+            record = {'n': s['total'] + 1, 'at': now(), 'process': LABEL, 'phase': s['phase'], 'kind': kind,
+                      'model': kwargs.get('model'), 'max_tokens': kwargs.get('max_tokens'), 'client_max_retries': retries,
+                      'user_message_sha256': hashlib.sha256(text.encode()).hexdigest(),
+                      'user_message_head': text[:120], 'decision': 'refused' if reason else 'allowed',
+                      'reason': reason, 'mode': s['mode']}
+            append('model_calls.jsonl', record)
+            if reason:
+                set_abort(s, 'model call refused: ' + reason)
+                write_state(s)
+                raise RuntimeError('REV2 GATE REFUSED: ' + reason)
+            s['used'] += 1
+            s['total'] += 1
+            write_state(s)
+        started = now()
+        try:
+            response = (offline_reply(kind, kwargs) if OFFLINE else original(self, *args, **kwargs))
+        except Exception as e:
+            append('model_call_results.jsonl', {'n': record['n'], 'started': started, 'error': type(e).__name__,
+                                                'detail': str(e)[:300]})
+            raise
+        append('model_call_results.jsonl', {
+            'n': record['n'], 'started': started, 'ended': now(), 'offline_stand_in': OFFLINE,
+            'id': getattr(response, 'id', None), 'model': getattr(response, 'model', None),
+            'stop_reason': getattr(response, 'stop_reason', None),
+            'text': [getattr(b, 'text', None) for b in (getattr(response, 'content', None) or [])],
+            'usage': {k: getattr(getattr(response, 'usage', None), k, None) for k in ('input_tokens', 'output_tokens')},
+            'request': {k: v for k, v in kwargs.items()}})
+        return response
+
+    Messages.create = create
+    print('REV2-GATE installed', LABEL, 'offline' if OFFLINE else 'LIVE', flush=True)
+
+
+# ---------------------------------------------------------------- 3. offline stand-in
+RECORDED = None
+
+
+def offline_reply(kind, kwargs):
+    """memo 104's recorded reply for the same kind of call (f73bef5 09c_all_model_calls.json)."""
+    from types import SimpleNamespace as NS
+    global RECORDED
+    if RECORDED is None:
+        RECORDED = json.load(open(CFG['offline_recorded_calls'], encoding='utf-8'))['calls']
+    pick = {'memo': RECORDED[0], 'ask_query_extraction': RECORDED[1]}.get(kind)
+    if pick is None:
+        raise RuntimeError('offline stand-in has no reply for kind ' + kind)
+    r = pick['response']
+    return NS(id='offline-' + r['id'], model=r['model'], stop_reason=r['stop_reason'], type='message', role='assistant',
+              content=[NS(type='text', text=t) for t in r['text']],
+              usage=NS(input_tokens=r['usage']['input_tokens'], output_tokens=r['usage']['output_tokens']))
+
+
+def block_network():
+    """Dry run: refuse every socket connection that is not loopback (Memurai, the run server)."""
+    real = socket.socket.connect
+
+    def connect(self, address):
+        host = address[0] if isinstance(address, tuple) else address
+        if host not in ('127.0.0.1', 'localhost', '::1'):
+            append('blocked_network.jsonl', {'at': now(), 'process': LABEL, 'host': str(host)})
+            raise OSError('REV2 offline: outbound connection blocked to %s' % host)
+        return real(self, address)
+    socket.socket.connect = connect
+    print('REV2-NETWORK loopback only', LABEL, flush=True)
+
+
+# ---------------------------------------------------------------- 2. recorder and endpoints
+B2 = 'Profile and deck figures to review'
+TOKEN = None
+
+
+def readable(t):
+    t = re.sub(r'(?is)<(script|style)\b.*?</\1>', ' ', t)
+    t = re.sub(r'(?s)<[^>]+>', ' ', t)
+    return re.sub(r'\s+', ' ', html.unescape(t)).strip()
+
+
+def whoami(request):
+    from importlib import import_module
+    from django.conf import settings
+    from django.contrib.auth import get_user
+    from types import SimpleNamespace as NS
+    key = request.COOKIES.get(settings.SESSION_COOKIE_NAME)
+    if not key:
+        return {'authenticated': False}
+    session = import_module(settings.SESSION_ENGINE).SessionStore(session_key=key)
+    user = get_user(NS(session=session))
+    if not user.is_authenticated:
+        return {'authenticated': False}
+    return {'authenticated': True, 'username': user.username, 'user_id': user.pk, 'is_staff': user.is_staff,
+            'staff_mfa_stamp_present': isinstance(session.get('staff_mfa_verified'), dict)}
+
+
+def json_response(data, status=200):
+    from django.http import HttpResponse
+    r = HttpResponse(json.dumps(data, default=str), status=status, content_type='application/json')
+    r['Cache-Control'] = 'no-store'
+    return r
+
+
+def checkpoint(name):
+    with Locked():
+        s = read_state()
+        led = ledger()
+        if s.get('abort'):
+            return s, led, 'run aborted'
+        i = s['next_checkpoint']
+        if i >= len(CHECKPOINTS) or CHECKPOINTS[i][0] != name:
+            set_abort(s, f'checkpoint {name} out of order (next is {CHECKPOINTS[i][0] if i < len(CHECKPOINTS) else "none"})')
+            write_state(s)
+            return s, led, s['abort']['reason']
+        cp, expected, phase, allowance = CHECKPOINTS[i]
+        if expected is None:
+            expected = s['lines_at_checkpoint'] + s['used']
+        problem = None
+        if led['lines'] != expected:
+            problem = f'{name}: ledger has {led["lines"]} line(s), expected {expected}'
+        refused = [json.loads(l) for l in open(P('model_calls.jsonl'), encoding='utf-8')] if led['lines'] else []
+        if any(r['decision'] != 'allowed' for r in refused):
+            problem = problem or f'{name}: a refused call is in the ledger'
+        deviation = None
+        if name.startswith('after_marketplace_') and s['used'] == 0:
+            deviation = f'{name}: the marketplace question made no extraction call (recorded, not retried)'
+        record = {'checkpoint': name, 'at': now(), 'ledger': led, 'expected_lines': expected, 'phase_ended': s['phase'],
+                  'calls_in_phase': s['used'], 'next_phase': phase, 'next_allowance': allowance, 'problem': problem,
+                  'deviation': deviation, 'doc_id': s.get('doc_id'), 'mode': s['mode']}
+        append('checkpoints.jsonl', record)
+        if problem:
+            set_abort(s, problem)
+        else:
+            s.update(phase=phase, allowance=allowance, used=0, next_checkpoint=i + 1, lines_at_checkpoint=led['lines'])
+        write_state(s)
+        return s, led, problem
+
+
+def run_ids(doc_id):
+    """Read-only: the ids the matrix URLs need (the owner's profile, the run document's identity report)."""
+    from matchmaking.models import Application
+    from zelda_api.entity_verification_models import EntityVerificationReport
+    app = Application.objects.filter(user__username=CFG['accounts']['owner']).values_list('id', flat=True).first()
+    report = (EntityVerificationReport.objects.filter(document_id=doc_id).order_by('-id').values_list('id', flat=True).first()
+              if doc_id else None)
+    return {'owner': CFG['accounts']['owner'], 'doc': doc_id, 'application_id': app, 'report': report, 'slug': CFG['slug']}
+
+
+def public_state(request):
+    s, led = read_state(), ledger()
+    nxt = CHECKPOINTS[s['next_checkpoint']][0] if s['next_checkpoint'] < len(CHECKPOINTS) else None
+    asks = {}
+    try:
+        for line in open(P('requests.jsonl'), encoding='utf-8'):
+            r = json.loads(line)
+            if r['path'] == '/api/v1/zelda/ask/' and r['method'] == 'POST':
+                asks[r['phase']] = asks.get(r['phase'], 0) + 1
+    except FileNotFoundError:
+        pass
+    return {**{k: s[k] for k in ('phase', 'allowance', 'used', 'total', 'abort', 'doc_id', 'mode')},
+            'next_checkpoint': nxt, 'ledger': led, 'whoami': whoami(request), 'ask_posts_by_phase': asks,
+            'ids': run_ids(s.get('doc_id')),
+            'accounts': CFG['accounts'], 'questions': QUESTIONS, 'control_question': CFG['control_question'],
+            'matrix': CFG['matrix'], 'entity': CFG['deck']['source_entity'], 'deck_filename': os.path.basename(CFG['deck']['path'])}
+
+
+class RecorderMiddleware:
+    def __init__(self, get_response):
+        global TOKEN
+        self.get_response = get_response
+        TOKEN = open(P('probe_token.txt'), encoding='utf-8').read().strip()
+
+    def endpoint(self, request):
+        from django.http import HttpResponse
+        path = request.path
+        if path == '/__rev2/probe/':
+            page = open(CFG['probe_html'], encoding='utf-8').read().replace('__REV2_TOKEN__', TOKEN)
+            r = HttpResponse(page, content_type='text/html; charset=utf-8')
+            # Same opener policy as the application's pages, so the panel popup stays scriptable from here.
+            r['Cross-Origin-Opener-Policy'] = 'same-origin-allow-popups'
+            r['Cache-Control'] = 'no-store'
+            return r
+        if path == '/__rev2/probe.js':
+            r = HttpResponse(open(CFG['probe_js'], encoding='utf-8').read(), content_type='text/javascript; charset=utf-8')
+            r['Cache-Control'] = 'no-store'
+            return r
+        if request.headers.get('X-Rev2-Token') != TOKEN or request.get_host() not in ('127.0.0.1:8000', 'localhost:8000'):
+            return json_response({'error': 'probe token required'}, 403)
+        if path == '/__rev2/state':
+            return json_response(public_state(request))
+        if path == '/__rev2/deck' and request.method == 'GET':
+            s = read_state()
+            data = open(CFG['deck']['path'], 'rb').read()
+            if s['phase'] != 'memo' or s.get('doc_id') or hashlib.sha256(data).hexdigest() != CFG['deck']['sha256']:
+                return json_response({'error': 'deck is served once, in phase memo, and only with the frozen hash'}, 409)
+            return HttpResponse(data, content_type='application/octet-stream')
+        body = json.loads(request.body or b'{}')
+        if path == '/__rev2/checkpoint' and request.method == 'POST':
+            s, led, problem = checkpoint(body.get('name'))
+            return json_response({'ok': not problem, 'problem': problem, 'state': public_state(request)})
+        if path == '/__rev2/record' and request.method == 'POST':
+            append('observations.jsonl', {'at': now(), 'phase': read_state()['phase'], 'whoami': whoami(request), **body})
+            return json_response({'ok': True})
+        if path == '/__rev2/abort' and request.method == 'POST':
+            with Locked():
+                s = read_state()
+                set_abort(s, 'probe: ' + str(body.get('reason'))[:500])
+                write_state(s)
+            return json_response({'ok': True, 'state': public_state(request)})
+        return json_response({'error': 'unknown'}, 404)
+
+    def __call__(self, request):
+        if request.path.startswith('/__rev2/'):
+            return self.endpoint(request)
+        s = read_state()
+        if s.get('abort') and request.path not in ('/accounts/logout/',):
+            from django.http import HttpResponse
+            return HttpResponse('REV2: run aborted; application requests refused.', status=503, content_type='text/plain')
+        started, phase = now(), s['phase']
+        before = whoami(request).get('username') if request.path == '/accounts/logout/' else None
+        body = None
+        # JSON bodies are read BEFORE the view: Django caches them, so DRF still parses them. (Read afterwards,
+        # request.body raises RawPostDataException; the first dry run lost every JSON POST that way.) Multipart
+        # uploads are never read early (UploadSizeLimitMiddleware must see them first).
+        if (request.method == 'POST' and request.path.startswith('/api/v1/zelda/') and 'json' in (request.content_type or '')
+                and int(request.META.get('CONTENT_LENGTH') or 0) <= 1_000_000):
+            try:
+                body = request.body.decode('utf-8', 'replace')[:20000]
+            except Exception as e:
+                body = 'UNREADABLE: ' + repr(e)[:200]
+        response = self.get_response(request)
+        try:
+            self.record(request, response, started, phase, before, body)
+        except Exception as e:           # recording never changes a response
+            append('recorder_errors.jsonl', {'at': now(), 'path': request.path, 'error': repr(e)[:300]})
+        return response
+
+    def record(self, request, response, started, phase, user_before=None, body=None):
+        user = getattr(request, 'user', None)
+        tag = request.headers.get('X-Rev2-Step', '')
+        rec = {'at': started, 'phase': phase, 'step': tag, 'method': request.method, 'path': request.path,
+               'user_before_request': user_before,
+               'query': request.META.get('QUERY_STRING', ''), 'user': user.username if user and user.is_authenticated else None,
+               'user_id': user.pk if user and user.is_authenticated else None, 'status': response.status_code,
+               'location': response.get('Location', ''), 'content_type': response.get('Content-Type', ''),
+               'streaming': bool(getattr(response, 'streaming', False))}
+        if not rec['streaming']:
+            rec['bytes'] = len(response.content)
+        zelda = request.path.startswith('/api/v1/zelda/')
+        problems = []
+        if body is not None:
+            rec['request_body_raw'] = body
+        if zelda and request.method == 'POST' and request.path == '/api/v1/zelda/documents/ingest/':
+            try:
+                f = request.FILES.get('file')
+                if f is not None:
+                    f.seek(0)
+                    rec['upload'] = {'name': f.name, 'size': f.size, 'sha256': hashlib.sha256(f.read()).hexdigest(),
+                                     'fields': {k: request.POST.get(k) for k in ('source_entity', 'document_type')}}
+            except Exception as e:
+                problems.append('upload: ' + repr(e)[:200])
+        if zelda and not rec['streaming'] and 'json' in rec['content_type']:
+            try:
+                rec['response_json'] = json.loads(response.content)
+            except ValueError as e:
+                problems.append('response_json: ' + repr(e)[:200])
+        if problems:
+            rec['record_problems'] = problems
+        if request.path == '/api/v1/zelda/documents/ingest/' and response.status_code == 201:
+            doc = (rec.get('response_json') or {}).get('document_id')
+            with Locked():
+                s = read_state()
+                if s.get('doc_id'):
+                    set_abort(s, f'a second document ({doc}) was ingested; the run has one upload')
+                elif phase != 'memo' or user is None or user.username != CFG['accounts']['owner']:
+                    set_abort(s, f'ingest outside the upload step (phase {phase}, user {rec["user"]})')
+                else:
+                    s['doc_id'] = doc
+                write_state(s)
+        if tag.startswith('matrix:') and not rec['streaming']:
+            body = response.content.decode('utf-8', 'replace')
+            text = readable(body) if 'html' in rec['content_type'] else body
+            canary = CFG['canary']
+            rec['matrix'] = {'visible_markers': [m for m in CFG['markers'] if m.lower() in text.lower()],
+                             'b2_panel': B2 in text, 'canary_in_readable': canary in text, 'canary_in_raw_body': canary in body}
+            if response.status_code == 200 and 'html' in rec['content_type']:
+                rec['readable_text'] = text[:20000]
+        append('requests.jsonl', rec)
+
+
+def prepare_run_dir():
+    """Called by the server once: a fresh probe token, a fresh state. Refuses an existing state."""
+    if os.path.exists(P('gate_state.json')):
+        print('REV2: run state already exists; reusing it (restart).', flush=True)
+    else:
+        write_state(read_state())
+    if not os.path.exists(P('probe_token.txt')):
+        with open(P('probe_token.txt'), 'w', encoding='utf-8') as f:
+            f.write(secrets.token_hex(16))
