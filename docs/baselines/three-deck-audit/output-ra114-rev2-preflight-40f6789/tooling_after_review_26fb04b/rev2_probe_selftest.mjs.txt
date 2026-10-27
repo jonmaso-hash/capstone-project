@@ -1,0 +1,60 @@
+// OFFLINE self-test of the probe's upload step (review of 26fb04b, finding 3): exhausted polling must stop the
+// attempt, never request after_memo. Runs the real rev2_probe.js in a vm sandbox with stubbed fetch, DOM and
+// timers (no server, no browser). Usage: node rev2_probe_selftest.mjs <rev2_probe.js> <out.json>
+import { readFileSync, writeFileSync } from 'node:fs';
+import vm from 'node:vm';
+
+const [probePath, outPath] = process.argv.slice(2);
+const source = readFileSync(probePath, 'utf8');
+
+async function scenario(name, statusAt) {
+  const els = {}, checkpoints = [], aborts = [], polls = [];
+  const el = id => (els[id] ||= { id, textContent: '', disabled: false, children: [], className: '',
+    append(c) { this.children.push(c); if (c.id) els[c.id] = c; }, prepend(c) { this.children.unshift(c); } });
+  const state = { phase: 'setup', allowance: 0, used: 0, total: 0, abort: null, doc_id: null, mode: 'OFFLINE SELFTEST',
+    next_checkpoint: 'before_upload', ledger: { lines: 0, sha256: '0'.repeat(64) }, ask_posts_by_phase: {},
+    whoami: { authenticated: true, username: 'r2dry_owner', is_staff: false }, accounts: { owner: 'r2dry_owner' },
+    questions: {}, ids: {}, matrix: [], entity: 'ManyChat', deck_filename: 'deck.pptx' };
+  const res = (status, body, raw) => ({ status, type: 'basic', json: async () => body, text: async () => raw ?? JSON.stringify(body), blob: async () => new Blob(['deck']) });
+  const fetch = async (url, opts = {}) => {
+    const body = opts.body && typeof opts.body === 'string' ? JSON.parse(opts.body) : null;
+    if (url === '/__rev2/state') return res(200, structuredClone(state));
+    if (url === '/__rev2/checkpoint') {
+      checkpoints.push(body.name);
+      if (body.name === 'before_upload') Object.assign(state, { phase: 'memo', allowance: 1 });
+      if (body.name === 'after_memo') Object.assign(state, { phase: 'owner_matrix', allowance: 0 });
+      return res(200, { ok: true, problem: null, state: structuredClone(state) });
+    }
+    if (url === '/__rev2/abort') { aborts.push(body.reason); state.abort = { reason: body.reason }; return res(200, { ok: true, state }); }
+    if (url === '/__rev2/record') return res(200, { ok: true });
+    if (url === '/__rev2/deck') return res(200, null);
+    if (url === '/home/') return res(200, null, '<nav><span class="account-name">r2dry_owner</span></nav>');
+    if (url === '/api/v1/zelda/documents/ingest/') { state.doc_id = 3147; return res(201, { document_id: 3147 }); }
+    if (url.endsWith('/status/')) { polls.push(1); return res(200, statusAt(polls.length)); }
+    throw new Error('unexpected fetch ' + url);
+  };
+  const sandbox = { window: { REV2_TOKEN: 't' }, document: { getElementById: el, createElement: () => ({ id: '', textContent: '' }), cookie: 'csrftoken=x' },
+    DOMParser: class { parseFromString(h) { return { body: { textContent: h.replace(/<[^>]+>/g, ' ') } }; } },
+    fetch, setTimeout: f => Promise.resolve().then(f), console, File, FormData, Blob, structuredClone, Date, JSON, Object, Number, Promise, Error, String };
+  vm.createContext(sandbox);
+  vm.runInContext(source, sandbox);
+  await new Promise(r => setImmediate(r));
+  await sandbox.window.REV2.go('owner_upload');
+  return { scenario: name, polls: polls.length, checkpoints, aborts };
+}
+
+const results = [
+  await scenario('status stays "processing" for every poll', () => ({ status: 'processing' })),
+  await scenario('analyzed with a memo on the 3rd poll', n => (n >= 3 ? { status: 'analyzed', memo_available: true } : { status: 'processing' })),
+  await scenario('analyzed but no memo, every poll', () => ({ status: 'analyzed' })),
+  await scenario('pipeline error', () => ({ status: 'error' })),
+];
+const expect = [
+  r => !r.checkpoints.includes('after_memo') && r.aborts.length === 1 && r.polls === 180,
+  r => r.checkpoints.includes('after_memo') && r.aborts.length === 0 && r.polls === 3,
+  r => !r.checkpoints.includes('after_memo') && r.aborts.length === 1,
+  r => !r.checkpoints.includes('after_memo') && r.aborts.length === 1 && r.polls === 1,
+];
+results.forEach((r, i) => { r.pass = expect[i](r); console.log(r.pass ? 'PASS' : 'FAIL', r.scenario, '| polls', r.polls, '| checkpoints', r.checkpoints.join(','), '| aborts', r.aborts.join(' / ').slice(0, 110)); });
+writeFileSync(outPath, JSON.stringify({ label: 'OFFLINE self-test of rev2_probe.js upload polling (vm sandbox, stubbed fetch)', probe: probePath, results }, null, 1));
+console.log(`${results.filter(r => r.pass).length}/${results.length} passed`);

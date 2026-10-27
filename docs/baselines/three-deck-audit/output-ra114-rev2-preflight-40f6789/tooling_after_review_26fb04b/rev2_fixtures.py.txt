@@ -1,0 +1,76 @@
+"""RA-114 revision 2 fixtures, run on the run COPY via `rev2_run.py <cfg> script rev2_fixtures.py`.
+Adapted from f73bef5's setup_fixtures.py, with two changes:
+  * no password is read or set here: every account gets an UNUSABLE password; the operator sets each one
+    in their own terminal (`rev2_run.py <cfg> setpassword <username>`) before signing in by hand;
+  * one more account, an unrelated investor, for revision 1's authorization probe.
+The staff account is created without staff MFA; the operator enrolls it through the real setup page in the
+browser, on the copy only (so staff MFA stays enforced; nothing is bypassed or scripted).
+Also raises each zelda_api table's SQLite AUTOINCREMENT counter to the previous run copy's, so this run's
+document and memo ids are new (touches only sqlite_sequence in this copy)."""
+import json, sqlite3
+from datetime import timedelta
+from django.apps import apps
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db import connection
+from django.utils import timezone
+from allauth.account.models import EmailAddress
+from matchmaking.models import Application, InvestorApplication, FIELD_PRIVATE, NEW_PROFILE_FIELD_VISIBILITY
+from billing.models import Subscription
+
+A = CFG['accounts']
+import os
+same = lambda x, y: os.path.normcase(os.path.abspath(x)) == os.path.normcase(os.path.abspath(y))
+assert same(str(settings.DATABASES['default']['NAME']), CFG['copy_db']), 'not the run copy'
+U = get_user_model()
+assert not U.objects.filter(username__in=A.values()).exists(), 'run accounts already exist'
+
+
+def mk(name, **kw):
+    u = U.objects.create_user(name, email=f'{name}@rev2.test', password=None, **kw)   # unusable password
+    EmailAddress.objects.create(user=u, email=u.email, verified=True, primary=True)
+    return u
+
+
+owner = mk(A['owner'])
+vis = dict(NEW_PROFILE_FIELD_VISIBILITY); vis['reason_for_capital'] = FIELD_PRIVATE
+app = Application.objects.create(user=owner, founder_name='Rerun Owner', email=owner.email, field_visibility=vis,
+                                 company_name='ManyChat', prior_amount_raised=163000000, raising_amount=0,
+                                 description='Disposable profile for the RA-114 revision 2 run.', sector='Software',
+                                 stage='Series A', reason_for_capital=CFG['canary'] + ' private reason for capital')
+lite = mk(A['lite'])
+InvestorApplication.objects.create(user=lite, full_name='Lite Investor', email=lite.email, company_name='Lite Capital',
+                                   investment_focus='Consumer', investment_stage='Growth')
+paid = mk(A['paid'])
+InvestorApplication.objects.create(user=paid, full_name='Paid Investor', email=paid.email, company_name='Paid Capital',
+                                   investment_focus='Consumer', investment_stage='Growth', is_premium=True)
+sub = Subscription.objects.create(user=paid, plan='INVESTOR_PREMIUM', stripe_customer_id='cus_rev2_local_mc',
+                                  stripe_subscription_id='sub_rev2_local_mc', status='active',
+                                  current_period_end=timezone.now() + timedelta(days=30))
+unrelated = mk(A['unrelated'])
+InvestorApplication.objects.create(user=unrelated, full_name='Unrelated Investor', email=unrelated.email,
+                                   company_name='Unrelated Capital', investment_focus='Healthcare', investment_stage='Seed')
+staff = mk(A['staff'], is_staff=True)
+
+prev = sqlite3.connect('file:' + CFG['previous_run_copy'].replace('\\', '/') + '?mode=ro', uri=True)
+bumped = {}
+with connection.cursor() as cur:
+    for table in sorted({m._meta.db_table for m in apps.get_app_config('zelda_api').get_models()}):
+        row = prev.execute('select seq from sqlite_sequence where name=?', (table,)).fetchone()
+        if not row:
+            continue
+        cur.execute('select seq from sqlite_sequence where name=%s', [table])
+        mine = cur.fetchone()
+        if mine and mine[0] < row[0]:
+            cur.execute('update sqlite_sequence set seq=%s where name=%s', [row[0], table])
+            bumped[table] = [mine[0], row[0]]
+prev.close()
+app.refresh_from_db()
+out = {'accounts': {k: {'user_id': U.objects.get(username=v).pk, 'username': v,
+                        'has_usable_password': U.objects.get(username=v).has_usable_password()} for k, v in A.items()},
+       'owner_application_id': app.id, 'paid_subscription': {'plan': sub.plan, 'status': sub.status},
+       'staff_is_staff': staff.is_staff, 'canary_field': 'reason_for_capital',
+       'canary_visibility': app.field_visibility.get('reason_for_capital'), 'sequences_bumped': bumped,
+       'same_name_profiles': list(Application.objects.filter(company_name__iexact='ManyChat').values_list('id', flat=True))}
+open(CFG['run_dir'] + r'\fixtures.json', 'w', encoding='utf-8').write(json.dumps(out, indent=1))
+print('FIXTURES ' + json.dumps(out))

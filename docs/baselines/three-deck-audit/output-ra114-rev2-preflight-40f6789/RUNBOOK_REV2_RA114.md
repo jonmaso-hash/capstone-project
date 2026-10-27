@@ -103,6 +103,11 @@ Then:
 
 ## Abort rules (enforced by the tooling; no step retries anything)
 
+**Tooling:** use `tooling_after_review_26fb04b/` (review of `26fb04b`). It adds three rules to the ones below:
+- **A failed or truncated call stops the run:** an exception, or any `stop_reason` other than `end_turn`, persists the abort.
+- **Every checkpoint requires a completed result for every allowed call,** and `after_memo` is confirmed on the server, read-only: the document is `analyzed` with a memo.
+- **Upload polling that ends without confirmed completion aborts the attempt.**
+
 **The gate refuses**, writes a ledger line, aborts the run and raises:
 - any call outside its phase's allowance (0 in setup, matrix, document form, controls, panel and after the last question);
 - a call of the wrong kind;

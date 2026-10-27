@@ -1,0 +1,145 @@
+"""RA-114 revision 2 run wrapper (run tooling, not application code). Adapted from the memo-104 run's
+run_r512.py (f73bef5). Usage: python -B rev2_run.py <config.json> <mode> [args]
+
+Modes: check | migrate | server | worker | script <path> [args] | setpassword <username>
+
+Isolation, enforced before Django serves or consumes anything (any failure: REFUSING TO START, exit 1):
+  * code: the worktree's application files equal config.expected_app_sha (docs/ and *.pyc excluded);
+  * DB: this run's sqlite copy (config.copy_db), never the source DB or any earlier run's copy;
+  * broker/results/cache: the run's own temporary Memurai instance (config.memurai, a separate port and
+    process), never the installed instance on 6379;
+  * paid keys blank in os.environ; ANTHROPIC_*_MAX_RETRIES forced to 0 (no hidden SDK retries);
+  * no pending migrations.
+Offline (config.mode == "offline"): a placeholder API key, so the real key is never loaded; the network is
+loopback only; Celery runs eagerly in the server (no worker); model replies come from the offline stand-in.
+Credentials: none are read from files. setpassword prompts on the operator's own terminal (getpass) and
+only for the run's own accounts on the run copy.
+"""
+import os, sys, json, subprocess
+CFG_PATH, mode, rest = os.path.abspath(sys.argv[1]), sys.argv[2], sys.argv[3:]
+CFG = json.load(open(CFG_PATH, encoding='utf-8'))
+OFFLINE = CFG['mode'] == 'offline'
+HERE = os.path.dirname(os.path.abspath(__file__))
+WT, RUN_DIR = CFG['worktree'], CFG['run_dir']
+os.makedirs(RUN_DIR, exist_ok=True)
+PAID = ['FILED_API_KEY', 'COMPANYENRICH_API_KEY', 'NEWS_API_KEY', 'DATA4B2B_API_KEY', 'USPTO_ODP_API_KEY', 'CRUNCHBASE_API_KEY']
+port, broker_db, cache_db = CFG['memurai']['port'], CFG['memurai']['broker_db'], CFG['memurai']['cache_db']
+env = {'CELERY_BROKER_URL': f'redis://127.0.0.1:{port}/{broker_db}', 'CELERY_RESULT_BACKEND': f'redis://127.0.0.1:{port}/{cache_db}',
+       'CACHE_URL': f'redis://127.0.0.1:{port}/{cache_db}',
+       'DATABASE_URL': 'sqlite:///' + CFG['copy_db'].replace('\\', '/'), 'DJANGO_SETTINGS_MODULE': 'config.settings',
+       'ANTHROPIC_WEB_REQUEST_MAX_RETRIES': '0', 'ANTHROPIC_BACKGROUND_MAX_RETRIES': '0',
+       'REV2_RUN_DIR': RUN_DIR, 'REV2_CONFIG': CFG_PATH, 'REV2_OFFLINE': '1' if OFFLINE else '0',
+       'REV2_PROCESS_LABEL': '[%s pid=%d]' % (mode, os.getpid()), 'PYTHONDONTWRITEBYTECODE': '1'}
+env.update({k: '' for k in PAID})
+if OFFLINE:
+    env.update({'ANTHROPIC_API_KEY': 'offline-dry-run-placeholder-not-a-key', 'CELERY_TASK_ALWAYS_EAGER': 'True',
+                'HF_HUB_OFFLINE': '1', 'TRANSFORMERS_OFFLINE': '1'})
+else:
+    env['CELERY_TASK_ALWAYS_EAGER'] = 'False'
+os.environ.update(env)
+os.chdir(WT)
+sys.path.insert(0, WT)
+sys.path.insert(0, HERE)
+import rev2_runtime                     # reads REV2_* above
+if OFFLINE:
+    rev2_runtime.block_network()
+import environ
+environ.Env.read_env(CFG['main_env'])  # does not override the values set above
+import django
+django.setup()
+from django.conf import settings
+from django.db import connection
+label = env['REV2_PROCESS_LABEL']
+problems = []
+expected = CFG['expected_app_sha']
+code_changes = subprocess.run(['git', 'diff', '--name-only', expected, '--', '.', ':(exclude)docs', ':(exclude)*.pyc'],
+                              capture_output=True, text=True, cwd=WT).stdout.split()
+head = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True, cwd=WT).stdout.strip()
+print('CODE-CHECK', label, 'head=%s' % head, 'app_files_differing_from_%s=%d' % (expected[:7], len(code_changes)), flush=True)
+if code_changes:
+    problems.append('application files differ from %s: %s' % (expected[:7], code_changes[:5]))
+keys = {k: bool(getattr(settings, k, None) or os.environ.get(k)) for k in PAID}
+print('ENV-CHECK', label, 'paid_keys_set=%s' % keys, 'mode=%s' % CFG['mode'],
+      'retries web=%s background=%s' % (settings.ANTHROPIC_WEB_REQUEST_MAX_RETRIES, settings.ANTHROPIC_BACKGROUND_MAX_RETRIES), flush=True)
+problems += ['paid key set ' + k for k, v in keys.items() if v]
+if settings.ANTHROPIC_WEB_REQUEST_MAX_RETRIES != 0 or settings.ANTHROPIC_BACKGROUND_MAX_RETRIES != 0:
+    problems.append('SDK retries are not 0')
+if OFFLINE and settings.ANTHROPIC_API_KEY != env['ANTHROPIC_API_KEY']:
+    problems.append('offline run did not get the placeholder key')
+if not OFFLINE and (not settings.ANTHROPIC_API_KEY or settings.ANTHROPIC_API_KEY == 'offline-dry-run-placeholder-not-a-key'):
+    problems.append('live run has no API key')
+for name in ('CELERY_BROKER_URL', 'CELERY_RESULT_BACKEND'):
+    uri = getattr(settings, name)
+    print('BROKER-CHECK', label, name, uri, flush=True)
+    if not uri.startswith(f'redis://127.0.0.1:{port}/'):
+        problems.append('not the run instance: ' + name)
+cache_loc = str(settings.CACHES['default'].get('LOCATION'))
+print('CACHE-CHECK', label, cache_loc, flush=True)
+if f'127.0.0.1:{port}/' not in cache_loc:
+    problems.append('cache is not the run instance')
+try:
+    import redis
+    info = redis.Redis(host='127.0.0.1', port=port).info('server')
+    print('MEMURAI-CHECK', label, 'port=%s pid=%s config=%s' % (info.get('tcp_port'), info.get('process_id'), info.get('config_file')), flush=True)
+    if os.path.normcase(str(info.get('config_file'))) != os.path.normcase(CFG['memurai']['config'].replace('\\', '/')):
+        problems.append('the instance on %s is not the run instance' % port)
+except Exception as e:
+    problems.append('run Memurai instance unreachable: %r' % e)
+norm = lambda p: os.path.normcase(os.path.abspath(p))
+db_name = str(settings.DATABASES['default']['NAME'])
+print('DB-CHECK', label, 'name=%s is_copy=%s' % (db_name, norm(db_name) == norm(CFG['copy_db'])), flush=True)
+if norm(db_name) != norm(CFG['copy_db']) or any(norm(db_name) == norm(p) for p in CFG['forbidden_dbs'] + [CFG['source_db']]):
+    problems.append("database is not this run's copy")
+from django.db.migrations.executor import MigrationExecutor
+pending = MigrationExecutor(connection).migration_plan(MigrationExecutor(connection).loader.graph.leaf_nodes())
+print('SCHEMA-CHECK', label, 'pending=%d' % len(pending), flush=True)
+if pending and mode != 'migrate':
+    problems.append('%d pending migrations' % len(pending))
+print('EAGER-CHECK', label, 'CELERY_TASK_ALWAYS_EAGER=%s' % settings.CELERY_TASK_ALWAYS_EAGER, flush=True)
+if OFFLINE != bool(settings.CELERY_TASK_ALWAYS_EAGER):
+    problems.append('eager mode does not match the run mode')
+if problems:
+    print('REFUSING TO START', label, problems, flush=True)
+    sys.exit(1)
+
+from django.core.management import call_command
+if mode in ('server', 'worker'):
+    open(os.path.join(RUN_DIR, mode + '.pid'), 'w').write(str(os.getpid()))   # for rev2_memwatch.ps1
+if mode == 'check':
+    print('CHECK OK', label)
+elif mode == 'migrate':
+    call_command('migrate')   # the run copy only (DB-CHECK above)
+elif mode == 'server':
+    rev2_runtime.prepare_run_dir()
+    rev2_runtime.install_gate()
+    settings.MIDDLEWARE = ['rev2_runtime.RecorderMiddleware'] + list(settings.MIDDLEWARE)
+    call_command('runserver', '127.0.0.1:8000', use_reloader=False)
+elif mode == 'worker':
+    if OFFLINE:
+        sys.exit('offline runs have no worker (Celery is eager)')
+    rev2_runtime.install_gate()
+    from config.celery import app
+    print('WORKER-IDENTITY', label, 'name=rev2mc@%h pool=solo concurrency=1', flush=True)
+    app.worker_main(['worker', '-l', 'info', '--pool=solo', '--concurrency=1', '-n', 'rev2mc@%h', '-Q', 'celery'])
+elif mode == 'script':
+    rev2_runtime.install_gate()
+    path = rest[0]
+    sys.argv = [path] + rest[1:]
+    exec(compile(open(path, encoding='utf-8').read(), path, 'exec'), {'__name__': '__main__', 'CFG': CFG})
+elif mode == 'setpassword':
+    import getpass
+    from django.contrib.auth import get_user_model
+    name = rest[0]
+    if name not in CFG['accounts'].values():
+        sys.exit('not one of this run\'s accounts')
+    if not sys.stdin.isatty():
+        sys.exit('run this in your own terminal; the password is typed, never passed or stored')
+    a, b = getpass.getpass('New password for %s: ' % name), getpass.getpass('Again: ')
+    if not a or a != b:
+        sys.exit('passwords differ or are empty; nothing changed')
+    u = get_user_model().objects.get(username=name)
+    u.set_password(a)
+    u.save(update_fields=['password'])
+    print('password set for', name, 'on the run copy')
+else:
+    raise SystemExit('unknown mode ' + mode)

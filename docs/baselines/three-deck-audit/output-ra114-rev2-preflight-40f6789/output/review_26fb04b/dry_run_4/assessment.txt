@@ -1,0 +1,18 @@
+OFFLINE DRY RUN: model replies are memo 104 recordings and the network was loopback only. These are not live results and decide nothing about RA-114 acceptance.
+document 3147 ('manychat_series_a_audit_deck.pptx', 'ManyChat')
+
+INTEGRITY  checkpoints complete/in order: True  lines as planned: True  calls 8 (refused 0, <=8: True, as planned: True)  aborts: 0  one upload: True
+           ledger windows unchanged: document form True, panel True   deviations: []
+Q1 document form: criteria 1-6 PASS  pages [2]  required present True  matches offline prediction True
+Q2 document form: criteria 1-6 PASS  pages [10]  required present True  matches offline prediction True
+Q3 document form: criteria 1-6 PASS  pages [10, 12]  required present True  matches offline prediction True
+Q4 document form: criteria 1-6 PASS  pages []  required present True  matches offline prediction True
+Q5 document form: criteria 1-6 PASS  pages [2]  required present True  matches offline prediction True
+Q6 document form: criteria 1-6 PASS  pages [2, 1]  required present True  matches offline prediction True
+Q7 document form: criteria 1-6 PASS  pages []  required present True  matches offline prediction True
+control (Paris): PASS {'status': 200, 'no_relevant_evidence': True, 'evidence': 0, 'request_body_exact': True, 'pass': True}
+authorization: PASS {"LITE": [403, 403, false], "PAID": [403, 403, false], "UNRELATED": [403, 403, false]}
+panel: PASS asks=1 body_exact=True rendered=['Page 2 · Why this deck fits the audit leg'] cards=0 bar='ManyChat' cleared=True
+marketplace: {"Q1": [200, true, true], "Q2": [200, true, true], "Q3": [200, true, true], "Q4": [200, true, true], "Q5": [200, true, true], "Q6": [200, true, true], "Q7": [200, true, true]}
+matrix: 72 rows, 72 compared with memo 104, 0 differ; not run here: ['STAFF']; canary rows: [('OWNER', 'A_profile')]
+walks: {'logouts': [], 'after_logout_checks': [302, 302, 302, 302]}

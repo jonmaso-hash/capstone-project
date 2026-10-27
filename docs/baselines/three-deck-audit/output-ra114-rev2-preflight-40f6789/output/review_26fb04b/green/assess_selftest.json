@@ -1,0 +1,33 @@
+{
+ "label": "OFFLINE self-test of the assessor on dry run 3 records",
+ "assessor": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-of903\\76db1fe6-5688-4619-abfd-5bc2b6bec113\\scratchpad\\r29\\tooling\\rev2_assess.py",
+ "results": [
+  {
+   "variant": "unchanged",
+   "Q1_document_form_pass": true,
+   "Q1_c4": true,
+   "panel_pass": true,
+   "panel_criteria_1_6_pass": true,
+   "panel_c4": true,
+   "pass": true
+  },
+  {
+   "variant": "q1_search_missing",
+   "Q1_document_form_pass": false,
+   "Q1_c4": false,
+   "panel_pass": false,
+   "panel_criteria_1_6_pass": false,
+   "panel_c4": false,
+   "pass": true
+  },
+  {
+   "variant": "q1_search_mismatching",
+   "Q1_document_form_pass": false,
+   "Q1_c4": false,
+   "panel_pass": false,
+   "panel_criteria_1_6_pass": false,
+   "panel_c4": false,
+   "pass": true
+  }
+ ]
+}

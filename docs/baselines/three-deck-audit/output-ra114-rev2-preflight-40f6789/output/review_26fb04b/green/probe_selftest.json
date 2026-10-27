@@ -1,0 +1,49 @@
+{
+ "label": "OFFLINE self-test of rev2_probe.js upload polling (vm sandbox, stubbed fetch)",
+ "probe": "C:\\Users\\jonathan\\AppData\\Local\\Temp\\claude\\C--Users-jonathan-Desktop-KCV-of903\\76db1fe6-5688-4619-abfd-5bc2b6bec113\\scratchpad\\r29\\tooling\\rev2_probe.js",
+ "results": [
+  {
+   "scenario": "status stays \"processing\" for every poll",
+   "polls": 180,
+   "checkpoints": [
+    "before_upload"
+   ],
+   "aborts": [
+    "upload: document 3147 was not confirmed analyzed with a memo within 15 minutes"
+   ],
+   "pass": true
+  },
+  {
+   "scenario": "analyzed with a memo on the 3rd poll",
+   "polls": 3,
+   "checkpoints": [
+    "before_upload",
+    "after_memo"
+   ],
+   "aborts": [],
+   "pass": true
+  },
+  {
+   "scenario": "analyzed but no memo, every poll",
+   "polls": 180,
+   "checkpoints": [
+    "before_upload"
+   ],
+   "aborts": [
+    "upload: document 3147 was not confirmed analyzed with a memo within 15 minutes"
+   ],
+   "pass": true
+  },
+  {
+   "scenario": "pipeline error",
+   "polls": 1,
+   "checkpoints": [
+    "before_upload"
+   ],
+   "aborts": [
+    "document pipeline reported error"
+   ],
+   "pass": true
+  }
+ ]
+}

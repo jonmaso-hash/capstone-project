@@ -1,0 +1,86 @@
+// OFFLINE DRY RUN ONLY: drive the revision 2 probe page in headless Chrome (throwaway profile, every host but
+// 127.0.0.1 unresolvable) by pressing its buttons in the plan's order, switching accounts with the seeded
+// throwaway session cookies (no password typed). In the live run a person signs in by hand instead and presses
+// the same buttons. Cookies are never printed. Usage: node rev2_dry_driver.mjs <run_dir> <chrome.exe> [negative]
+import { spawn } from 'node:child_process';
+import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+const [runDir, chromePath, extra] = process.argv.slice(2);
+const seed = JSON.parse(readFileSync(join(runDir, 'dry_sessions.local.json'), 'utf8'));
+const base = 'http://127.0.0.1:8000';
+const profile = mkdtempSync(join(tmpdir(), 'rev2-dry-'));
+const debugPort = 9335;
+const chrome = spawn(chromePath, ['--headless=new', `--remote-debugging-port=${debugPort}`, `--user-data-dir=${profile}`,
+  '--no-first-run', '--no-default-browser-check', '--window-size=1400,1000', '--disable-popup-blocking',
+  '--disable-gpu', '--disable-extensions', '--renderer-process-limit=2', '--js-flags=--max-old-space-size=192',
+  '--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1', 'about:blank'], { stdio: 'ignore' });
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let target;
+for (let i = 0; i < 50 && !target; i++) { await sleep(200); try { target = (await (await fetch(`http://127.0.0.1:${debugPort}/json`)).json()).find(t => t.type === 'page'); } catch {} }
+const ws = new WebSocket(target.webSocketDebuggerUrl);
+await new Promise(r => ws.addEventListener('open', r));
+let nextId = 0; const pending = new Map(); const errors = [];
+ws.addEventListener('message', ev => {
+  const m = JSON.parse(ev.data);
+  if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); }
+  if (m.method === 'Runtime.exceptionThrown') errors.push(m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text);
+});
+const send = (method, params = {}) => new Promise(r => { const id = ++nextId; pending.set(id, r); ws.send(JSON.stringify({ id, method, params })); });
+const evaluate = async expr => {
+  const r = await send('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true, userGesture: true });
+  if (r.result.exceptionDetails) throw new Error(r.result.exceptionDetails.exception?.description || 'eval error');
+  return r.result.result.value;
+};
+await send('Page.enable'); await send('Runtime.enable'); await send('Network.enable');
+const account = async role => {
+  await send('Network.deleteCookies', { name: seed.cookie_name, domain: '127.0.0.1' });
+  if (role) await send('Network.setCookie', { name: seed.cookie_name, value: seed.sessions[role], domain: '127.0.0.1', path: '/' });
+};
+const openProbe = async () => {
+  await send('Page.navigate', { url: `${base}/__rev2/probe/` });
+  for (let i = 0; i < 100; i++) { await sleep(200); try { if (await evaluate(`!!(window.REV2 && window.REV2.state())`)) return; } catch {} }
+  throw new Error('probe page did not load');
+};
+const transcript = [];
+const press = async (stepId) => {
+  const t0 = Date.now();
+  await evaluate(`REV2.go(${JSON.stringify(stepId)})`);
+  const st = await evaluate('REV2.refresh()');
+  const lastLog = await evaluate(`[...document.querySelectorAll('#log div')].slice(0, 3).map(d => d.textContent)`);
+  const entry = { step: stepId, seconds: Math.round((Date.now() - t0) / 1000), phase: st.phase, total: st.total, ledger_lines: st.ledger.lines,
+                  aborted: !!st.abort, whoami: st.whoami.authenticated ? st.whoami.username : null, log: lastLog };
+  transcript.push(entry);
+  console.log(JSON.stringify(entry).slice(0, 400));
+  return st;
+};
+
+const plan = extra === 'negative'
+  ? [['owner', 'owner_marketplace']]                       // after the run: phase is closed, so this must be refused
+  : [['owner', 'owner_upload'], ['owner', 'owner_matrix'], ['owner', 'owner_document_form'], ['owner', 'owner_control'],
+     ['owner', 'owner_panel'], ['owner', 'owner_marketplace'],
+     [null, 'signed_out_check'], ['lite', 'lite'], [null, 'signed_out_check'], ['paid', 'paid'], [null, 'signed_out_check'],
+     ['unrelated', 'unrelated'], [null, 'signed_out_check'], [null, 'anon'], [null, 'end']];
+for (const [role, step] of plan) {
+  await account(role);
+  await openProbe();
+  const st = await press(step);
+  if (st.abort && extra !== 'negative') { console.log('RUN ABORTED: ' + st.abort.reason); break; }
+}
+if (extra === 'negative') {
+  // A direct marketplace question after the run is closed: the gate must refuse it before any call.
+  await account('owner'); await openProbe();
+  const r = await evaluate(`fetch('/api/v1/zelda/ask/', {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json',
+      'X-CSRFToken': (document.cookie.match(/csrftoken=([^;]+)/) || [])[1], 'X-Rev2-Step': 'negative:after_close'},
+      body: JSON.stringify({q: REV2.state().questions.Q1})}).then(r => r.status)`);
+  const after = await evaluate(`fetch('/home/').then(r => r.status)`);
+  const st = await evaluate('REV2.refresh()');
+  transcript.push({ negative: 'marketplace question after the run closed', ask_status: r, next_app_request_status: after,
+                    aborted: st.abort, ledger_lines: st.ledger.lines, total: st.total });
+  console.log(JSON.stringify(transcript.at(-1)));
+}
+writeFileSync(join(runDir, extra === 'negative' ? 'dry_driver_negative.json' : 'dry_driver.json'),
+  JSON.stringify({ label: 'OFFLINE DRY RUN: headless Chrome with seeded throwaway sessions; not a live run', transcript, page_errors: errors }, null, 1));
+ws.close(); chrome.kill(); await sleep(500);
+try { rmSync(profile, { recursive: true, force: true }); } catch {}

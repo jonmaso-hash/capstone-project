@@ -1,0 +1,24 @@
+"""OFFLINE DRY RUN ONLY: seed throwaway sessions for the dry-run accounts on the dry-run copy, so headless Chrome
+can press the probe's buttons without any password being typed. Refuses a live config. Writes the session keys
+to <run_dir>/dry_sessions.local.json for the driver; that file is never printed and never committed. The staff
+account gets no session (staff MFA is not emulated offline; the staff step is not exercised in the dry run).
+Run via: rev2_run.py <dry config> script rev2_dry_sessions.py"""
+import json, os
+from importlib import import_module
+from django.conf import settings
+from django.contrib.auth import get_user_model, BACKEND_SESSION_KEY, HASH_SESSION_KEY, SESSION_KEY
+
+assert CFG['mode'] == 'offline', 'dry run only'
+same = lambda x, y: os.path.normcase(os.path.abspath(x)) == os.path.normcase(os.path.abspath(y))
+assert same(str(settings.DATABASES['default']['NAME']), CFG['copy_db']), 'not the dry-run copy'
+Store = import_module(settings.SESSION_ENGINE).SessionStore
+keys = {}
+for role in ('owner', 'lite', 'paid', 'unrelated'):
+    u = get_user_model().objects.get(username=CFG['accounts'][role])
+    s = Store()
+    s[SESSION_KEY], s[BACKEND_SESSION_KEY], s[HASH_SESSION_KEY] = str(u.pk), settings.AUTHENTICATION_BACKENDS[0], u.get_session_auth_hash()
+    s.save()
+    keys[role] = s.session_key
+with open(os.path.join(CFG['run_dir'], 'dry_sessions.local.json'), 'w', encoding='utf-8') as f:
+    json.dump({'cookie_name': settings.SESSION_COOKIE_NAME, 'sessions': keys}, f)
+print('seeded throwaway sessions for', sorted(keys), '(keys written to the local file, not printed)')

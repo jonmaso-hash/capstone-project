@@ -1,0 +1,12 @@
+# RA-114 revision 2: a separate, temporary Memurai instance for one run.
+# Loopback only, no persistence, small memory cap. The installed service on 6379 and its data are not touched.
+port 6391
+bind 127.0.0.1
+protected-mode yes
+databases 2
+save ""
+appendonly no
+maxmemory 64mb
+maxmemory-policy noeviction
+dir "<RUN_DIR>/memurai"
+logfile "<RUN_DIR>/memurai/memurai_6391.log"

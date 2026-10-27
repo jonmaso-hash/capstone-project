@@ -1,5 +1,12 @@
 # RA-114 revision 2: preflight package for independent review (`40f6789`)
 
+> **Updated after the review of `26fb04b`.** Three tooling issues were fixed:
+> - a failed or truncated model call now stops the run;
+> - criterion 4 is required, for the panel too;
+> - exhausted upload polling stops the attempt.
+>
+> Each fix has RED (at `26fb04b`) and GREEN evidence, plus a fresh offline dry run 4. See `output/review_26fb04b/README.md`. **The tooling to use is `tooling_after_review_26fb04b/`.** `tooling/` is kept as dry runs 1–3 used it. Section 6 (CI) is resolved by the reviewer's reading of the job log. The sections below are otherwise as written at `26fb04b`.
+
 **Status:** preparation only. **The live run has not been executed.** No live model call was made, the worker was never started, nothing was deployed, and the source application database and MFA were not changed.
 - **Offline:** every result below comes from **offline dry runs**. Model replies were memo 104's recorded replies, served by a stand-in, and the network was loopback only. They test the tooling and the procedure. **They are not live results and decide nothing about RA-114.**
 - **Revision 2's seven predicted grounding passes remain predictions.**
@@ -144,7 +151,11 @@ The dry run ingested the frozen deck offline. Its **12 chunks are identical** (i
 
 **Sources unchanged:** the source DB, all earlier copies and the deck have equal hashes before and after (`hashes_before/after.json`).
 
-## 6. Panel tests in merged-main CI: **unresolved**
+## 6. Panel tests in merged-main CI: **resolved by the reviewer** (review of `26fb04b`)
+
+The reviewer read job `122011320251`: all seven `tests_assistant_panel_ask` tests ran and passed, with 3,963 tests passing overall. That reading was not repeated from this machine, where the log still requires sign-in. What follows is the original text at `26fb04b`, kept for the record.
+
+### As written at `26fb04b`: unresolved
 
 The job log shows whether `tests_assistant_panel_ask`'s seven tests ran or skipped (`node is not installed`). It is not reachable here:
 - the API log endpoint returns 403;
@@ -170,5 +181,5 @@ It is preserved by the pushed tag `ra114/base-live-procedure-1aab9e3`, plus a by
    - (b) accept the runbook's method changes (manual sign-in, in-browser probe, temporary Memurai).
 3. **Chrome `b60b1997` connected** for the browser gate, with popups allowed for 127.0.0.1:8000.
 4. **Memory:** start with ≥ 1.2 GB free and other applications closed. Offline, Chrome plus the popup drove free RAM to the floor once.
-5. **CI panel-test execution unresolved** (section 6).
+5. ~~CI panel-test execution unresolved~~: resolved by the reviewer (section 6).
 6. **On run day:** base precondition 3 (452 OK, `check`, `makemigrations --check`) at the execution SHA, serially.

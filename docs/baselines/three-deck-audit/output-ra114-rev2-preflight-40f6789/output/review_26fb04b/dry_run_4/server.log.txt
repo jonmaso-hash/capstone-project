@@ -1,0 +1,400 @@
+REV2-NETWORK loopback only [server pid=5884]
+CODE-CHECK [server pid=5884] head=26fb04b6b69a92b773a99ef6baf9a656fd764f45 app_files_differing_from_40f6789=0
+ENV-CHECK [server pid=5884] paid_keys_set={'FILED_API_KEY': False, 'COMPANYENRICH_API_KEY': False, 'NEWS_API_KEY': False, 'DATA4B2B_API_KEY': False, 'USPTO_ODP_API_KEY': False, 'CRUNCHBASE_API_KEY': False} mode=offline retries web=0 background=0
+BROKER-CHECK [server pid=5884] CELERY_BROKER_URL redis://127.0.0.1:6391/0
+BROKER-CHECK [server pid=5884] CELERY_RESULT_BACKEND redis://127.0.0.1:6391/1
+CACHE-CHECK [server pid=5884] redis://127.0.0.1:6391/1
+MEMURAI-CHECK [server pid=5884] port=6391 pid=2404 config=C:/Users/jonathan/AppData/Local/Temp/claude/C--Users-jonathan-Desktop-KCV-of903/76db1fe6-5688-4619-abfd-5bc2b6bec113/scratchpad/r29/memurai_dry/rev2_memurai.conf
+DB-CHECK [server pid=5884] name=C:/Users/jonathan/AppData/Local/Temp/claude/C--Users-jonathan-Desktop-KCV-of903/76db1fe6-5688-4619-abfd-5bc2b6bec113/scratchpad/r29/dry4/db_rev2_dry4_copy.sqlite3 is_copy=True
+SCHEMA-CHECK [server pid=5884] pending=0
+EAGER-CHECK [server pid=5884] CELERY_TASK_ALWAYS_EAGER=True
+REV2-GATE installed [server pid=5884] offline
+2026-10-26 22:52:33,946 INFO django.server - "GET /__rev2/probe/ HTTP/1.1" 200 1333
+2026-10-26 22:52:35,761 INFO django.server - "GET /__rev2/probe/ HTTP/1.1" 200 1333
+2026-10-26 22:52:35,815 INFO django.server - "GET /__rev2/probe.js HTTP/1.1" 200 15709
+2026-10-26 22:52:35,935 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2028
+2026-10-26 22:52:36,168 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2028
+2026-10-26 22:52:39,671 WARNING django.request - Not Found: /favicon.ico
+2026-10-26 22:52:39,672 WARNING django.server - "GET /favicon.ico HTTP/1.1" 404 10151
+2026-10-26 22:52:40,642 INFO django.server - "GET /home/ HTTP/1.1" 200 172881
+2026-10-26 22:52:40,702 INFO django.server - "POST /__rev2/checkpoint HTTP/1.1" 200 2064
+2026-10-26 22:52:40,712 INFO django.server - "GET /__rev2/deck HTTP/1.1" 200 175622
+2026-10-26 22:52:41,606 INFO zelda_api.signals - DocumentSource created: manychat_series_a_audit_deck.pptx
+2026-10-26 22:52:41,733 INFO zelda_api.tasks - [Celery] Starting pipeline processing for document 3147
+2026-10-26 22:52:41,738 INFO zelda_api.intelligence_pipeline - Starting pipeline v2 for manychat_series_a_audit_deck.pptx
+2026-10-26 22:52:41,870 INFO zelda_api.intelligence_pipeline - Chunking: manychat_series_a_audit_deck.pptx
+2026-10-26 22:52:41,883 INFO zelda_api.intelligence_pipeline - Cleared existing chunks for 3147
+2026-10-26 22:52:42,038 INFO zelda_api.intelligence_pipeline - Created 12 chunks
+2026-10-26 22:52:42,051 INFO zelda_api.intelligence_pipeline - Embedding: manychat_series_a_audit_deck.pptx
+2026-10-26 22:52:42,232 INFO zelda_api.intelligence_pipeline - Embedded 12 chunks
+2026-10-26 22:52:42,247 INFO zelda_api.intelligence_pipeline - Analyzing: manychat_series_a_audit_deck.pptx
+2026-10-26 22:52:42,454 INFO zelda_api.intelligence_pipeline - Extracted 4 insights with dynamic confidence
+2026-10-26 22:52:42,500 INFO zelda_api.intelligence_pipeline - Triggering Truth Delta: manychat_series_a_audit_deck.pptx
+2026-10-26 22:52:42,502 INFO zelda_api.truth_delta_tasks - [Truth Delta] Extracting claims from insights for document 3147
+2026-10-26 22:52:42,572 INFO zelda_api.truth_delta_tasks - [Truth Delta] Created 4 claims from insights
+2026-10-26 22:52:42,595 INFO zelda_api.truth_delta_sources - No Crunchbase API key configured — skipping this source.
+2026-10-26 22:52:42,595 INFO zelda_api.truth_delta_sources - Skipping crunchbase — not configured or unreachable.
+2026-10-26 22:52:42,596 INFO zelda_api.truth_delta_sources - No News API key configured — skipping this source.
+2026-10-26 22:52:42,596 INFO zelda_api.truth_delta_sources - Skipping news — not configured or unreachable.
+2026-10-26 22:52:42,596 INFO zelda_api.truth_delta_sources - Fetching ManyChat from SEC EDGAR
+2026-10-26 22:52:42,890 WARNING zelda_api.sec_identity - SEC request failed for https://www.sec.gov/cgi-bin/browse-edgar: HTTPSConnectionPool(host='www.sec.gov', port=443): Max retries exceeded with url: /cgi-bin/browse-edgar?action=getcompany&company=ManyChat&owner=include&count=10&output=atom (Caused by NewConnectionError("HTTPSConnection(host='www.sec.gov', port=443): Failed to establish a new connection: REV2 offline: outbound connection blocked to 23.38.168.72"))
+2026-10-26 22:52:42,891 INFO zelda_api.truth_delta_sources - No external data found for ManyChat
+2026-10-26 22:52:43,014 INFO zelda_api.truth_delta_sources - No News API key configured — skipping this source.
+2026-10-26 22:52:43,775 INFO zelda_api.intelligence_pipeline - [Anthropic usage] memo for document 3147: input_tokens=3771, output_tokens=2304
+2026-10-26 22:52:43,894 INFO zelda_api.intelligence_pipeline - Memo questions_for_management: funding-source fidelity ['attribution:Pitch Deck Hunt'] for document 3147
+2026-10-26 22:52:44,197 INFO zelda_api.intelligence_pipeline - Memo business_model_analysis: measurement-basis wording ['basis_heading_scope'] for document 3147
+2026-10-26 22:52:44,406 INFO zelda_api.intelligence_pipeline - Claude memo generated for document 3147
+2026-10-26 22:52:44,418 INFO zelda_api.tasks - Memo generated for document 3147
+2026-10-26 22:52:44,422 INFO zelda_api.tasks - Document manychat_series_a_audit_deck.pptx processed for user r2dry_owner
+2026-10-26 22:52:44,533 INFO celery.app.trace - Task zelda_api.tasks.notify_document_processed[dae333a9-6b32-4146-8fc5-c9ffd0dfbf18] succeeded in 0.11386539996601641s: {'status': 'notified', 'user_id': 321}
+2026-10-26 22:52:44,533 INFO celery.app.trace - Task zelda_api.tasks.generate_intelligence_memo[2cabc801-3b39-4b01-a785-a7cbf85db139] succeeded in 1.433526499895379s: {'status': 'success', 'memo_id': 105}
+2026-10-26 22:52:44,534 INFO celery.app.trace - Task zelda_api.truth_delta_tasks.verify_document_truth_delta[110145df-6f8b-4179-93be-cf76feb8e0be] succeeded in 1.9608819999266416s: {'status': 'success', 'document_id': 3147, 'report_id': 99}
+2026-10-26 22:52:44,534 INFO celery.app.trace - Task zelda_api.truth_delta_tasks.extract_claims_from_insights[c64279b6-3320-45c1-9a89-7e9e176892a5] succeeded in 2.0325889999512583s: {'status': 'success', 'claims_created': 4}
+2026-10-26 22:52:44,534 INFO zelda_api.intelligence_pipeline - Truth Delta queued for document 3147
+2026-10-26 22:52:44,760 WARNING zelda_api.sec_identity - SEC request failed for https://www.sec.gov/cgi-bin/browse-edgar: HTTPSConnectionPool(host='www.sec.gov', port=443): Max retries exceeded with url: /cgi-bin/browse-edgar?action=getcompany&company=ManyChat&owner=include&count=10&output=atom (Caused by NewConnectionError("HTTPSConnection(host='www.sec.gov', port=443): Failed to establish a new connection: REV2 offline: outbound connection blocked to 23.38.168.72"))
+2026-10-26 22:52:44,772 INFO celery.app.trace - Task zelda_api.entity_verification_tasks.verify_entity_integrity[e80b0a97-029f-4039-a07c-f34377ca07ba] succeeded in 0.20611270004883409s: {'status': 'success', 'document_id': 3147, 'report_id': 46}
+2026-10-26 22:52:44,773 INFO zelda_api.intelligence_pipeline - Entity Integrity queued for document 3147
+2026-10-26 22:52:44,773 INFO zelda_api.intelligence_pipeline - Pipeline complete for manychat_series_a_audit_deck.pptx; memo follows verification
+2026-10-26 22:52:44,773 INFO zelda_api.tasks - [Celery] Pipeline complete for document 3147
+2026-10-26 22:52:44,774 INFO celery.app.trace - Task zelda_api.tasks.process_document_pipeline[b2549373-184a-4774-aab1-002f68f4c395] succeeded in 3.0408809001091868s: {'status': 'success', 'document_id': 3147, 'chunks': 12, 'insights': 4}
+2026-10-26 22:52:44,786 INFO django.server - "POST /api/v1/zelda/documents/ingest/ HTTP/1.1" 201 364
+2026-10-26 22:52:44,871 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2022
+2026-10-26 22:52:44,905 INFO django.server - "GET /api/v1/zelda/documents/3147/status/ HTTP/1.1" 200 269
+2026-10-26 22:52:44,918 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:52:45,146 INFO django.server - "POST /__rev2/checkpoint HTTP/1.1" 200 2080
+2026-10-26 22:52:45,168 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:52:45,192 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2040
+2026-10-26 22:52:45,216 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2040
+2026-10-26 22:52:45,253 INFO django.server - "GET /__rev2/probe/ HTTP/1.1" 200 1333
+2026-10-26 22:52:45,273 INFO django.server - "GET /__rev2/probe.js HTTP/1.1" 200 15709
+2026-10-26 22:52:45,304 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2040
+2026-10-26 22:52:45,488 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2040
+2026-10-26 22:52:45,567 INFO django.server - "GET /home/ HTTP/1.1" 200 172881
+2026-10-26 22:52:45,661 INFO django.server - "GET / HTTP/1.1" 200 172881
+2026-10-26 22:52:46,321 INFO django.server - "GET /accounts/profile/r2dry_owner/ HTTP/1.1" 200 189768
+2026-10-26 22:52:46,444 INFO django.server - "GET /accounts/profile/r2dry_owner/analysis/ HTTP/1.1" 200 154253
+2026-10-26 22:52:46,495 WARNING django.request - Not Found: /matchmaking/memo/manychat/
+2026-10-26 22:52:46,496 WARNING django.server - "GET /matchmaking/memo/manychat/ HTTP/1.1" 404 14113
+2026-10-26 22:52:46,686 WARNING django.request - Forbidden (Permission denied): /matchmaking/memo/profile/50/
+Traceback (most recent call last):
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\jonathan\Desktop\KCV\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\jonathan\Desktop\KCV-pm-40f\matchmaking\views.py", line 2552, in company_overview_view
+    return _company_overview(request, get_object_or_404(Application, pk=application_id))
+  File "C:\Users\jonathan\Desktop\KCV-pm-40f\matchmaking\views.py", line 2591, in _company_overview
+    raise PermissionDenied("Access to proprietary asset intelligence reports is restricted.")
+django.core.exceptions.PermissionDenied: Access to proprietary asset intelligence reports is restricted.
+2026-10-26 22:52:46,777 WARNING django.server - "GET /matchmaking/memo/profile/50/ HTTP/1.1" 403 135
+2026-10-26 22:52:46,950 INFO django.server - "GET /api/v1/zelda/documents/3147/ic-memo/ HTTP/1.1" 200 166173
+2026-10-26 22:52:46,976 INFO django.server - "GET /api/v1/zelda/documents/3147/ic-memo/download/ HTTP/1.1" 302 0
+2026-10-26 22:52:47,200 INFO django.server - "GET /api/v1/zelda/documents/3147/verification/ HTTP/1.1" 200 60084
+2026-10-26 22:52:47,224 INFO django.server - "GET /api/v1/zelda/documents/3147/memo/ HTTP/1.1" 200 141
+2026-10-26 22:52:47,252 INFO django.server - "GET /api/v1/zelda/documents/3147/truth-delta/ HTTP/1.1" 200 2019
+2026-10-26 22:52:47,270 INFO django.server - "GET /api/v1/zelda/documents/3147/status/ HTTP/1.1" 200 269
+2026-10-26 22:52:47,396 INFO django.server - "GET /api/v1/zelda/documents/3147/valuation/ HTTP/1.1" 202 70
+2026-10-26 22:52:47,429 WARNING django.request - Not Found: /api/v1/zelda/valuation/3147/
+2026-10-26 22:52:47,430 WARNING django.server - "GET /api/v1/zelda/valuation/3147/ HTTP/1.1" 404 16519
+2026-10-26 22:52:47,448 INFO django.server - "GET /api/v1/zelda/identity-check/46/status/ HTTP/1.1" 200 87
+2026-10-26 22:52:47,549 INFO django.server - "GET /api/v1/zelda/library/ HTTP/1.1" 200 790
+2026-10-26 22:52:47,565 WARNING django.request - Forbidden: /api/v1/zelda/analyze/founder/r2dry_owner/
+2026-10-26 22:52:47,566 WARNING django.server - "GET /api/v1/zelda/analyze/founder/r2dry_owner/ HTTP/1.1" 403 58
+2026-10-26 22:52:47,593 INFO django.server - "POST /api/v1/zelda/documents/3147/search/ HTTP/1.1" 200 807
+2026-10-26 22:52:47,617 INFO django.server - "POST /api/v1/zelda/documents/3147/rag/ HTTP/1.1" 200 894
+2026-10-26 22:52:47,629 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:52:47,650 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:52:47,699 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2040
+2026-10-26 22:52:47,730 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2040
+2026-10-26 22:52:47,873 INFO django.server - "GET /__rev2/probe/ HTTP/1.1" 200 1333
+2026-10-26 22:52:47,892 INFO django.server - "GET /__rev2/probe.js HTTP/1.1" 200 15709
+2026-10-26 22:52:47,922 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2040
+2026-10-26 22:52:48,119 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2040
+2026-10-26 22:52:48,183 INFO django.server - "GET /home/ HTTP/1.1" 200 172881
+2026-10-26 22:52:48,241 INFO django.server - "POST /__rev2/checkpoint HTTP/1.1" 200 2080
+2026-10-26 22:52:48,277 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 928
+2026-10-26 22:52:48,301 INFO django.server - "POST /api/v1/zelda/documents/3147/search/ HTTP/1.1" 200 807
+2026-10-26 22:52:48,323 INFO django.server - "POST /api/v1/zelda/documents/3147/rag/ HTTP/1.1" 200 894
+2026-10-26 22:52:48,345 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 661
+2026-10-26 22:52:48,368 INFO django.server - "POST /api/v1/zelda/documents/3147/search/ HTTP/1.1" 200 544
+2026-10-26 22:52:48,390 INFO django.server - "POST /api/v1/zelda/documents/3147/rag/ HTTP/1.1" 200 617
+2026-10-26 22:52:48,413 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 958
+2026-10-26 22:52:48,438 INFO django.server - "POST /api/v1/zelda/documents/3147/search/ HTTP/1.1" 200 854
+2026-10-26 22:52:48,461 INFO django.server - "POST /api/v1/zelda/documents/3147/rag/ HTTP/1.1" 200 966
+2026-10-26 22:52:48,482 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 174
+2026-10-26 22:52:48,507 INFO django.server - "POST /api/v1/zelda/documents/3147/search/ HTTP/1.1" 200 126
+2026-10-26 22:52:48,529 INFO django.server - "POST /api/v1/zelda/documents/3147/rag/ HTTP/1.1" 200 203
+2026-10-26 22:52:48,551 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 929
+2026-10-26 22:52:48,572 INFO django.server - "POST /api/v1/zelda/documents/3147/search/ HTTP/1.1" 200 814
+2026-10-26 22:52:48,638 INFO django.server - "POST /api/v1/zelda/documents/3147/rag/ HTTP/1.1" 200 901
+2026-10-26 22:52:48,760 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 1230
+2026-10-26 22:52:48,782 INFO django.server - "POST /api/v1/zelda/documents/3147/search/ HTTP/1.1" 200 1128
+2026-10-26 22:52:48,804 INFO django.server - "POST /api/v1/zelda/documents/3147/rag/ HTTP/1.1" 200 1253
+2026-10-26 22:52:48,829 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 174
+2026-10-26 22:52:48,851 INFO django.server - "POST /api/v1/zelda/documents/3147/search/ HTTP/1.1" 200 118
+2026-10-26 22:52:48,874 INFO django.server - "POST /api/v1/zelda/documents/3147/rag/ HTTP/1.1" 200 195
+2026-10-26 22:52:48,886 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:52:48,944 INFO django.server - "POST /__rev2/checkpoint HTTP/1.1" 200 2086
+2026-10-26 22:52:48,967 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:52:48,991 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2046
+2026-10-26 22:52:49,016 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2046
+2026-10-26 22:52:49,167 INFO django.server - "GET /__rev2/probe/ HTTP/1.1" 200 1333
+2026-10-26 22:52:49,189 INFO django.server - "GET /__rev2/probe.js HTTP/1.1" 200 15709
+2026-10-26 22:52:49,223 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2046
+2026-10-26 22:52:49,405 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2046
+2026-10-26 22:52:49,526 INFO django.server - "GET /home/ HTTP/1.1" 200 172881
+2026-10-26 22:52:49,574 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 174
+2026-10-26 22:52:49,587 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:52:49,609 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:52:49,666 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2061
+2026-10-26 22:52:49,701 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2061
+2026-10-26 22:52:49,854 INFO django.server - "GET /__rev2/probe/ HTTP/1.1" 200 1333
+2026-10-26 22:52:49,873 INFO django.server - "GET /__rev2/probe.js HTTP/1.1" 200 15709
+2026-10-26 22:52:49,911 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2061
+2026-10-26 22:52:50,105 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2061
+2026-10-26 22:52:50,168 INFO django.server - "GET /home/ HTTP/1.1" 200 172881
+2026-10-26 22:52:50,231 INFO django.server - "POST /__rev2/checkpoint HTTP/1.1" 200 2097
+2026-10-26 22:52:50,462 INFO django.server - "GET /home/ HTTP/1.1" 200 172881
+2026-10-26 22:52:51,134 INFO django.server - "GET /static/img/brand/interlink-mark.svg HTTP/1.1" 200 2678
+2026-10-26 22:52:51,135 INFO django.server - "GET /static/css/home.css HTTP/1.1" 200 7879
+2026-10-26 22:52:51,136 INFO django.server - "GET /static/css/base.css HTTP/1.1" 200 3632
+2026-10-26 22:52:51,176 INFO django.server - "GET /static/js/home-role-journeys.js HTTP/1.1" 200 995
+2026-10-26 22:52:51,188 INFO django.server - "GET /static/js/zelda_products.js HTTP/1.1" 200 18115
+2026-10-26 22:52:51,188 INFO django.server - "GET /static/js/matchmaking.js HTTP/1.1" 200 14727
+2026-10-26 22:52:51,519 INFO django.server - "GET /notifications/api/unread-count/ HTTP/1.1" 200 12
+2026-10-26 22:52:51,597 INFO django.server - "GET /api/v1/zelda/journey-status/ HTTP/1.1" 200 892
+2026-10-26 22:52:51,634 INFO django.server - "GET /api/v1/zelda/journey-status/ HTTP/1.1" 200 892
+2026-10-26 22:52:51,664 INFO django.server - "GET /notifications/api/unread-count/ HTTP/1.1" 200 12
+2026-10-26 22:52:52,477 INFO django.server - "GET /api/v1/zelda/library/?page=1 HTTP/1.1" 200 790
+2026-10-26 22:52:53,592 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2057
+2026-10-26 22:52:53,621 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 928
+2026-10-26 22:52:54,471 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2069
+2026-10-26 22:52:56,448 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2069
+2026-10-26 22:53:00,440 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2069
+2026-10-26 22:53:00,461 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:00,500 INFO django.server - "POST /__rev2/checkpoint HTTP/1.1" 200 2127
+2026-10-26 22:53:00,527 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:00,555 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2087
+2026-10-26 22:53:00,583 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2087
+2026-10-26 22:53:00,761 INFO django.server - "GET /__rev2/probe/ HTTP/1.1" 200 1333
+2026-10-26 22:53:00,778 INFO django.server - "GET /__rev2/probe.js HTTP/1.1" 200 15709
+2026-10-26 22:53:00,812 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2087
+2026-10-26 22:53:01,003 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2087
+2026-10-26 22:53:01,091 INFO django.server - "GET /home/ HTTP/1.1" 200 172881
+2026-10-26 22:53:01,868 INFO zelda_api.intelligence_pipeline - [Anthropic usage] nl query extraction for ad-hoc request: input_tokens=347, output_tokens=8
+2026-10-26 22:53:01,871 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 165
+2026-10-26 22:53:01,998 INFO django.server - "POST /__rev2/checkpoint HTTP/1.1" 200 2148
+2026-10-26 22:53:02,771 INFO zelda_api.intelligence_pipeline - [Anthropic usage] nl query extraction for ad-hoc request: input_tokens=347, output_tokens=8
+2026-10-26 22:53:02,774 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 165
+2026-10-26 22:53:02,872 INFO django.server - "POST /__rev2/checkpoint HTTP/1.1" 200 2169
+2026-10-26 22:53:03,553 INFO zelda_api.intelligence_pipeline - [Anthropic usage] nl query extraction for ad-hoc request: input_tokens=347, output_tokens=8
+2026-10-26 22:53:03,555 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 165
+2026-10-26 22:53:03,651 INFO django.server - "POST /__rev2/checkpoint HTTP/1.1" 200 2190
+2026-10-26 22:53:04,343 INFO zelda_api.intelligence_pipeline - [Anthropic usage] nl query extraction for ad-hoc request: input_tokens=347, output_tokens=8
+2026-10-26 22:53:04,346 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 165
+2026-10-26 22:53:04,453 INFO django.server - "POST /__rev2/checkpoint HTTP/1.1" 200 2211
+2026-10-26 22:53:05,157 INFO zelda_api.intelligence_pipeline - [Anthropic usage] nl query extraction for ad-hoc request: input_tokens=347, output_tokens=8
+2026-10-26 22:53:05,161 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 165
+2026-10-26 22:53:05,274 INFO django.server - "POST /__rev2/checkpoint HTTP/1.1" 200 2232
+2026-10-26 22:53:06,068 INFO zelda_api.intelligence_pipeline - [Anthropic usage] nl query extraction for ad-hoc request: input_tokens=347, output_tokens=8
+2026-10-26 22:53:06,071 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 165
+2026-10-26 22:53:06,180 INFO django.server - "POST /__rev2/checkpoint HTTP/1.1" 200 2253
+2026-10-26 22:53:06,846 INFO zelda_api.intelligence_pipeline - [Anthropic usage] nl query extraction for ad-hoc request: input_tokens=347, output_tokens=8
+2026-10-26 22:53:06,849 INFO django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 200 165
+2026-10-26 22:53:06,962 INFO django.server - "POST /__rev2/checkpoint HTTP/1.1" 200 2259
+2026-10-26 22:53:06,992 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:07,021 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2219
+2026-10-26 22:53:07,050 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2219
+2026-10-26 22:53:07,080 INFO django.server - "GET /__rev2/probe/ HTTP/1.1" 200 1333
+2026-10-26 22:53:07,098 INFO django.server - "GET /__rev2/probe.js HTTP/1.1" 200 15709
+2026-10-26 22:53:07,132 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2124
+2026-10-26 22:53:07,310 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2124
+2026-10-26 22:53:07,321 INFO django.server - "GET /accounts/profile/r2dry_owner/ HTTP/1.1" 302 0
+2026-10-26 22:53:07,328 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:07,337 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:07,384 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2124
+2026-10-26 22:53:07,408 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2124
+2026-10-26 22:53:07,432 INFO django.server - "GET /__rev2/probe/ HTTP/1.1" 200 1333
+2026-10-26 22:53:07,498 INFO django.server - "GET /__rev2/probe.js HTTP/1.1" 200 15709
+2026-10-26 22:53:07,550 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2218
+2026-10-26 22:53:07,722 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2218
+2026-10-26 22:53:07,902 INFO django.server - "GET /home/ HTTP/1.1" 200 150397
+2026-10-26 22:53:07,983 INFO django.server - "GET / HTTP/1.1" 200 150397
+2026-10-26 22:53:08,192 INFO django.server - "GET /accounts/profile/r2dry_owner/ HTTP/1.1" 200 155100
+2026-10-26 22:53:08,207 INFO django.server - "GET /accounts/profile/r2dry_owner/analysis/ HTTP/1.1" 302 0
+2026-10-26 22:53:08,255 WARNING django.request - Not Found: /matchmaking/memo/manychat/
+2026-10-26 22:53:08,256 WARNING django.server - "GET /matchmaking/memo/manychat/ HTTP/1.1" 404 14113
+2026-10-26 22:53:11,618 INFO django.server - "GET /matchmaking/memo/profile/50/ HTTP/1.1" 200 141028
+2026-10-26 22:53:11,663 WARNING django.request - Not Found: /api/v1/zelda/documents/3147/ic-memo/
+2026-10-26 22:53:11,664 WARNING django.server - "GET /api/v1/zelda/documents/3147/ic-memo/ HTTP/1.1" 404 15295
+2026-10-26 22:53:11,708 WARNING django.request - Not Found: /api/v1/zelda/documents/3147/ic-memo/download/
+2026-10-26 22:53:11,709 WARNING django.server - "GET /api/v1/zelda/documents/3147/ic-memo/download/ HTTP/1.1" 404 15653
+2026-10-26 22:53:11,801 INFO django.server - "GET /api/v1/zelda/documents/3147/verification/ HTTP/1.1" 200 54509
+2026-10-26 22:53:11,859 INFO django.server - "GET /api/v1/zelda/documents/3147/memo/ HTTP/1.1" 200 4138
+2026-10-26 22:53:11,900 INFO django.server - "GET /api/v1/zelda/documents/3147/truth-delta/ HTTP/1.1" 200 2019
+2026-10-26 22:53:11,917 WARNING django.request - Forbidden: /api/v1/zelda/documents/3147/status/
+2026-10-26 22:53:11,918 WARNING django.server - "GET /api/v1/zelda/documents/3147/status/ HTTP/1.1" 403 26
+2026-10-26 22:53:11,934 WARNING django.request - Forbidden: /api/v1/zelda/documents/3147/valuation/
+2026-10-26 22:53:11,935 WARNING django.server - "GET /api/v1/zelda/documents/3147/valuation/ HTTP/1.1" 403 26
+2026-10-26 22:53:11,967 WARNING django.request - Not Found: /api/v1/zelda/valuation/3147/
+2026-10-26 22:53:11,968 WARNING django.server - "GET /api/v1/zelda/valuation/3147/ HTTP/1.1" 404 16519
+2026-10-26 22:53:11,990 WARNING django.request - Not Found: /api/v1/zelda/identity-check/46/status/
+2026-10-26 22:53:11,991 WARNING django.server - "GET /api/v1/zelda/identity-check/46/status/ HTTP/1.1" 404 23
+2026-10-26 22:53:12,060 INFO django.server - "GET /api/v1/zelda/library/ HTTP/1.1" 200 813
+2026-10-26 22:53:12,105 INFO django.server - "GET /api/v1/zelda/analyze/founder/r2dry_owner/ HTTP/1.1" 200 130
+2026-10-26 22:53:12,120 WARNING django.request - Forbidden: /api/v1/zelda/documents/3147/search/
+2026-10-26 22:53:12,121 WARNING django.server - "POST /api/v1/zelda/documents/3147/search/ HTTP/1.1" 403 26
+2026-10-26 22:53:12,136 WARNING django.request - Forbidden: /api/v1/zelda/documents/3147/rag/
+2026-10-26 22:53:12,137 WARNING django.server - "POST /api/v1/zelda/documents/3147/rag/ HTTP/1.1" 403 26
+2026-10-26 22:53:12,150 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:12,179 WARNING django.request - Forbidden: /api/v1/zelda/ask/
+2026-10-26 22:53:12,180 WARNING django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 403 46
+2026-10-26 22:53:12,194 WARNING django.request - Forbidden: /api/v1/zelda/documents/3147/search/
+2026-10-26 22:53:12,195 WARNING django.server - "POST /api/v1/zelda/documents/3147/search/ HTTP/1.1" 403 26
+2026-10-26 22:53:12,206 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:12,227 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:12,278 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2241
+2026-10-26 22:53:12,309 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2241
+2026-10-26 22:53:12,338 INFO django.server - "GET /__rev2/probe/ HTTP/1.1" 200 1333
+2026-10-26 22:53:12,359 INFO django.server - "GET /__rev2/probe.js HTTP/1.1" 200 15709
+2026-10-26 22:53:12,392 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2147
+2026-10-26 22:53:12,583 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2147
+2026-10-26 22:53:12,595 INFO django.server - "GET /accounts/profile/r2dry_owner/ HTTP/1.1" 302 0
+2026-10-26 22:53:12,602 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:12,612 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:12,661 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2147
+2026-10-26 22:53:12,691 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2147
+2026-10-26 22:53:12,717 INFO django.server - "GET /__rev2/probe/ HTTP/1.1" 200 1333
+2026-10-26 22:53:12,741 INFO django.server - "GET /__rev2/probe.js HTTP/1.1" 200 15709
+2026-10-26 22:53:12,784 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2241
+2026-10-26 22:53:12,969 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2241
+2026-10-26 22:53:13,099 INFO django.server - "GET /home/ HTTP/1.1" 200 150397
+2026-10-26 22:53:13,173 INFO django.server - "GET / HTTP/1.1" 200 150397
+2026-10-26 22:53:13,405 INFO django.server - "GET /accounts/profile/r2dry_owner/ HTTP/1.1" 200 155101
+2026-10-26 22:53:13,420 INFO django.server - "GET /accounts/profile/r2dry_owner/analysis/ HTTP/1.1" 302 0
+2026-10-26 22:53:13,465 WARNING django.request - Not Found: /matchmaking/memo/manychat/
+2026-10-26 22:53:13,466 WARNING django.server - "GET /matchmaking/memo/manychat/ HTTP/1.1" 404 14113
+2026-10-26 22:53:13,560 INFO django.server - "GET /matchmaking/memo/profile/50/ HTTP/1.1" 200 141028
+2026-10-26 22:53:13,602 WARNING django.request - Not Found: /api/v1/zelda/documents/3147/ic-memo/
+2026-10-26 22:53:13,603 WARNING django.server - "GET /api/v1/zelda/documents/3147/ic-memo/ HTTP/1.1" 404 15295
+2026-10-26 22:53:13,646 WARNING django.request - Not Found: /api/v1/zelda/documents/3147/ic-memo/download/
+2026-10-26 22:53:13,647 WARNING django.server - "GET /api/v1/zelda/documents/3147/ic-memo/download/ HTTP/1.1" 404 15653
+2026-10-26 22:53:13,854 INFO django.server - "GET /api/v1/zelda/documents/3147/verification/ HTTP/1.1" 200 54509
+2026-10-26 22:53:13,910 INFO django.server - "GET /api/v1/zelda/documents/3147/memo/ HTTP/1.1" 200 4138
+2026-10-26 22:53:13,946 INFO django.server - "GET /api/v1/zelda/documents/3147/truth-delta/ HTTP/1.1" 200 2019
+2026-10-26 22:53:13,960 WARNING django.request - Forbidden: /api/v1/zelda/documents/3147/status/
+2026-10-26 22:53:13,961 WARNING django.server - "GET /api/v1/zelda/documents/3147/status/ HTTP/1.1" 403 26
+2026-10-26 22:53:13,975 WARNING django.request - Forbidden: /api/v1/zelda/documents/3147/valuation/
+2026-10-26 22:53:13,976 WARNING django.server - "GET /api/v1/zelda/documents/3147/valuation/ HTTP/1.1" 403 26
+2026-10-26 22:53:14,006 WARNING django.request - Not Found: /api/v1/zelda/valuation/3147/
+2026-10-26 22:53:14,007 WARNING django.server - "GET /api/v1/zelda/valuation/3147/ HTTP/1.1" 404 16519
+2026-10-26 22:53:14,027 WARNING django.request - Not Found: /api/v1/zelda/identity-check/46/status/
+2026-10-26 22:53:14,027 WARNING django.server - "GET /api/v1/zelda/identity-check/46/status/ HTTP/1.1" 404 23
+2026-10-26 22:53:14,092 INFO django.server - "GET /api/v1/zelda/library/ HTTP/1.1" 200 813
+2026-10-26 22:53:14,251 INFO django.server - "GET /api/v1/zelda/analyze/founder/r2dry_owner/ HTTP/1.1" 200 130
+2026-10-26 22:53:14,267 WARNING django.request - Forbidden: /api/v1/zelda/documents/3147/search/
+2026-10-26 22:53:14,268 WARNING django.server - "POST /api/v1/zelda/documents/3147/search/ HTTP/1.1" 403 26
+2026-10-26 22:53:14,284 WARNING django.request - Forbidden: /api/v1/zelda/documents/3147/rag/
+2026-10-26 22:53:14,285 WARNING django.server - "POST /api/v1/zelda/documents/3147/rag/ HTTP/1.1" 403 26
+2026-10-26 22:53:14,297 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:14,321 WARNING django.request - Forbidden: /api/v1/zelda/ask/
+2026-10-26 22:53:14,322 WARNING django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 403 46
+2026-10-26 22:53:14,336 WARNING django.request - Forbidden: /api/v1/zelda/documents/3147/search/
+2026-10-26 22:53:14,337 WARNING django.server - "POST /api/v1/zelda/documents/3147/search/ HTTP/1.1" 403 26
+2026-10-26 22:53:14,348 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:14,366 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:14,414 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2241
+2026-10-26 22:53:14,442 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2241
+2026-10-26 22:53:14,592 INFO django.server - "GET /__rev2/probe/ HTTP/1.1" 200 1333
+2026-10-26 22:53:14,612 INFO django.server - "GET /__rev2/probe.js HTTP/1.1" 200 15709
+2026-10-26 22:53:14,642 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2147
+2026-10-26 22:53:14,849 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2147
+2026-10-26 22:53:14,864 INFO django.server - "GET /accounts/profile/r2dry_owner/ HTTP/1.1" 302 0
+2026-10-26 22:53:14,871 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:14,880 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:14,927 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2147
+2026-10-26 22:53:14,954 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2147
+2026-10-26 22:53:14,977 INFO django.server - "GET /__rev2/probe/ HTTP/1.1" 200 1333
+2026-10-26 22:53:14,994 INFO django.server - "GET /__rev2/probe.js HTTP/1.1" 200 15709
+2026-10-26 22:53:15,027 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2245
+2026-10-26 22:53:15,220 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2245
+2026-10-26 22:53:15,300 INFO django.server - "GET /home/ HTTP/1.1" 200 150413
+2026-10-26 22:53:15,326 WARNING django.request - Forbidden: /api/v1/zelda/ask/
+2026-10-26 22:53:15,327 WARNING django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 403 46
+2026-10-26 22:53:15,340 WARNING django.request - Forbidden: /api/v1/zelda/documents/3147/search/
+2026-10-26 22:53:15,341 WARNING django.server - "POST /api/v1/zelda/documents/3147/search/ HTTP/1.1" 403 26
+2026-10-26 22:53:15,351 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:15,373 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:15,427 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2245
+2026-10-26 22:53:15,459 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2245
+2026-10-26 22:53:15,621 INFO django.server - "GET /__rev2/probe/ HTTP/1.1" 200 1333
+2026-10-26 22:53:15,641 INFO django.server - "GET /__rev2/probe.js HTTP/1.1" 200 15709
+2026-10-26 22:53:15,672 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2147
+2026-10-26 22:53:15,870 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2147
+2026-10-26 22:53:15,881 INFO django.server - "GET /accounts/profile/r2dry_owner/ HTTP/1.1" 302 0
+2026-10-26 22:53:15,888 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:15,898 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:15,949 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2147
+2026-10-26 22:53:15,976 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2147
+2026-10-26 22:53:15,996 INFO django.server - "GET /__rev2/probe/ HTTP/1.1" 200 1333
+2026-10-26 22:53:16,012 INFO django.server - "GET /__rev2/probe.js HTTP/1.1" 200 15709
+2026-10-26 22:53:16,043 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2147
+2026-10-26 22:53:16,233 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2147
+2026-10-26 22:53:16,401 INFO django.server - "GET / HTTP/1.1" 200 36156
+2026-10-26 22:53:16,414 INFO django.server - "GET /accounts/profile/r2dry_owner/ HTTP/1.1" 302 0
+2026-10-26 22:53:16,423 INFO django.server - "GET /accounts/profile/r2dry_owner/analysis/ HTTP/1.1" 302 0
+2026-10-26 22:53:16,433 INFO django.server - "GET /matchmaking/memo/manychat/ HTTP/1.1" 302 0
+2026-10-26 22:53:16,442 INFO django.server - "GET /matchmaking/memo/profile/50/ HTTP/1.1" 302 0
+2026-10-26 22:53:16,451 INFO django.server - "GET /api/v1/zelda/documents/3147/ic-memo/ HTTP/1.1" 302 0
+2026-10-26 22:53:16,460 INFO django.server - "GET /api/v1/zelda/documents/3147/ic-memo/download/ HTTP/1.1" 302 0
+2026-10-26 22:53:16,469 INFO django.server - "GET /api/v1/zelda/documents/3147/verification/ HTTP/1.1" 302 0
+2026-10-26 22:53:16,478 WARNING django.request - Forbidden: /api/v1/zelda/documents/3147/memo/
+2026-10-26 22:53:16,479 WARNING django.server - "GET /api/v1/zelda/documents/3147/memo/ HTTP/1.1" 403 58
+2026-10-26 22:53:16,489 WARNING django.request - Forbidden: /api/v1/zelda/documents/3147/truth-delta/
+2026-10-26 22:53:16,490 WARNING django.server - "GET /api/v1/zelda/documents/3147/truth-delta/ HTTP/1.1" 403 58
+2026-10-26 22:53:16,500 WARNING django.request - Forbidden: /api/v1/zelda/documents/3147/status/
+2026-10-26 22:53:16,501 WARNING django.server - "GET /api/v1/zelda/documents/3147/status/ HTTP/1.1" 403 58
+2026-10-26 22:53:16,512 WARNING django.request - Forbidden: /api/v1/zelda/documents/3147/valuation/
+2026-10-26 22:53:16,513 WARNING django.server - "GET /api/v1/zelda/documents/3147/valuation/ HTTP/1.1" 403 58
+2026-10-26 22:53:16,526 INFO django.server - "GET /api/v1/zelda/valuation/3147/ HTTP/1.1" 302 0
+2026-10-26 22:53:16,537 INFO django.server - "GET /api/v1/zelda/identity-check/46/status/ HTTP/1.1" 302 0
+2026-10-26 22:53:16,547 WARNING django.request - Forbidden: /api/v1/zelda/library/
+2026-10-26 22:53:16,548 WARNING django.server - "GET /api/v1/zelda/library/ HTTP/1.1" 403 58
+2026-10-26 22:53:16,559 WARNING django.request - Forbidden: /api/v1/zelda/analyze/founder/r2dry_owner/
+2026-10-26 22:53:16,560 WARNING django.server - "GET /api/v1/zelda/analyze/founder/r2dry_owner/ HTTP/1.1" 403 58
+2026-10-26 22:53:16,572 WARNING django.request - Forbidden: /api/v1/zelda/documents/3147/search/
+2026-10-26 22:53:16,575 WARNING django.server - "POST /api/v1/zelda/documents/3147/search/ HTTP/1.1" 403 58
+2026-10-26 22:53:16,588 WARNING django.request - Forbidden: /api/v1/zelda/documents/3147/rag/
+2026-10-26 22:53:16,589 WARNING django.server - "POST /api/v1/zelda/documents/3147/rag/ HTTP/1.1" 403 58
+2026-10-26 22:53:16,601 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:16,625 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:16,679 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2147
+2026-10-26 22:53:16,711 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2147
+2026-10-26 22:53:16,734 INFO django.server - "GET /__rev2/probe/ HTTP/1.1" 200 1333
+2026-10-26 22:53:16,754 INFO django.server - "GET /__rev2/probe.js HTTP/1.1" 200 15709
+2026-10-26 22:53:16,783 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2147
+2026-10-26 22:53:17,004 INFO django.server - "POST /__rev2/checkpoint HTTP/1.1" 200 2176
+2026-10-26 22:53:17,015 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:17,040 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2136
+2026-10-26 22:53:17,072 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2136
+2026-10-26 22:53:41,382 INFO django.server - "GET /__rev2/probe/ HTTP/1.1" 200 1333
+2026-10-26 22:53:41,422 INFO django.server - "GET /__rev2/probe.js HTTP/1.1" 200 15709
+2026-10-26 22:53:41,478 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2231
+2026-10-26 22:53:41,566 WARNING django.request - Not Found: /favicon.ico
+2026-10-26 22:53:41,567 WARNING django.server - "GET /favicon.ico HTTP/1.1" 404 10151
+2026-10-26 22:53:41,655 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2231
+2026-10-26 22:53:41,743 INFO django.server - "GET /home/ HTTP/1.1" 200 172881
+2026-10-26 22:53:41,776 INFO django.server - "POST /__rev2/record HTTP/1.1" 200 12
+2026-10-26 22:53:41,843 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2231
+2026-10-26 22:53:41,881 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2231
+2026-10-26 22:53:41,959 INFO django.server - "GET /__rev2/probe/ HTTP/1.1" 200 1333
+2026-10-26 22:53:41,978 INFO django.server - "GET /__rev2/probe.js HTTP/1.1" 200 15709
+2026-10-26 22:53:42,012 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2231
+2026-10-26 22:53:42,964 ERROR zelda_api.views - Ask Zelda pipeline error: REV2 GATE REFUSED: ceiling: call 9 of 8
+2026-10-26 22:53:42,966 ERROR django.request - Internal Server Error: /api/v1/zelda/ask/
+2026-10-26 22:53:42,967 ERROR django.server - "POST /api/v1/zelda/ask/ HTTP/1.1" 500 77
+2026-10-26 22:53:43,114 ERROR django.request - Service Unavailable: /home/
+2026-10-26 22:53:43,115 ERROR django.server - "GET /home/ HTTP/1.1" 503 48
+2026-10-26 22:53:43,198 INFO django.server - "GET /__rev2/state HTTP/1.1" 200 2360

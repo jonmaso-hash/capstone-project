@@ -1,0 +1,55 @@
+"""OFFLINE self-test of rev2_assess.py criterion 4 (review of 26fb04b, finding 2), on dry run 3's own records:
+unchanged; the captured Q1 /search/ record removed; and that record's results altered to mismatch. The panel's and
+Q1's criterion 4 must pass only when the matching /search/ is present.
+Usage: python -B rev2_assess_selftest.py <dry3 config> <rev2_assess.py to test> <out_dir>"""
+import json, os, shutil, subprocess, sys
+CFG_PATH, ASSESS, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
+cfg = json.load(open(CFG_PATH, encoding='utf-8'))
+SRC = cfg['run_dir']
+results = []
+
+
+def run(name, mutate):
+    d = os.path.join(OUT, name)
+    shutil.rmtree(d, ignore_errors=True)
+    os.makedirs(d)
+    for f in os.listdir(SRC):
+        if f.endswith(('.jsonl', '.json')):
+            shutil.copy(os.path.join(SRC, f), d)
+    reqs = [json.loads(l) for l in open(os.path.join(d, 'requests.jsonl'), encoding='utf-8')]
+    reqs = mutate(reqs)
+    with open(os.path.join(d, 'requests.jsonl'), 'w', encoding='utf-8', newline='\n') as f:
+        f.writelines(json.dumps(r, ensure_ascii=False) + '\n' for r in reqs)
+    c = dict(cfg, run_dir=d)                     # copy_db stays dry run 3's copy (read-only)
+    cp = os.path.join(d, 'cfg.json')
+    json.dump(c, open(cp, 'w', encoding='utf-8'))
+    subprocess.run([sys.executable, '-B', ASSESS, cp], capture_output=True, text=True, env=dict(os.environ, PYTHONIOENCODING='utf-8'))
+    a = json.load(open(os.path.join(d, 'assessment.json'), encoding='utf-8'))
+    pf = a['panel']['response_criteria_1_6']
+    results.append({'variant': name, 'Q1_document_form_pass': a['document_form']['Q1']['pass'],
+                    'Q1_c4': a['document_form']['Q1'].get('checks', {}).get('c4_same_as_search'),
+                    'panel_pass': a['panel']['pass'], 'panel_criteria_1_6_pass': pf.get('pass'),
+                    'panel_c4': pf.get('checks', {}).get('c4_same_as_search', 'NOT CHECKED')})
+
+
+def drop_q1_search(reqs):
+    return [r for r in reqs if r['step'] != 'doc:Q1:search']
+
+
+def alter_q1_search(reqs):
+    for r in reqs:
+        if r['step'] == 'doc:Q1:search':
+            r['response_json']['results'][0]['relevance'] = r['response_json']['results'][0]['relevance'] + 0.25
+    return reqs
+
+
+run('unchanged', lambda r: r)
+run('q1_search_missing', drop_q1_search)
+run('q1_search_mismatching', alter_q1_search)
+expect = {'unchanged': (True, True), 'q1_search_missing': (False, False), 'q1_search_mismatching': (False, False)}
+for r in results:
+    r['pass'] = (r['panel_pass'], r['Q1_document_form_pass']) == expect[r['variant']] and r['panel_c4'] != 'NOT CHECKED'
+    print('PASS' if r['pass'] else 'FAIL', r['variant'], '| panel', r['panel_pass'], 'c4', r['panel_c4'], '| Q1', r['Q1_document_form_pass'], 'c4', r['Q1_c4'])
+json.dump({'label': 'OFFLINE self-test of the assessor on dry run 3 records', 'assessor': ASSESS, 'results': results},
+          open(os.path.join(OUT, 'assess_selftest.json'), 'w', encoding='utf-8'), indent=1)
+print(f"{sum(r['pass'] for r in results)}/{len(results)} passed")
