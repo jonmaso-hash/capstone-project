@@ -1,0 +1,43 @@
+merge commit  40f6789889dfeaf6b67558f3e1f9981d0a05b30a  parents b27836439ca0e6aa9acc1ca6feaeae1be80b6415 a5164d4b7eb72de4223ff5c2bbc854eb4de7f603
+origin/main   40f6789889dfeaf6b67558f3e1f9981d0a05b30a
+tree 40f6789  5f5744553730877f7d18a73dd4596f13c96b168e
+tree a5164d4  5f5744553730877f7d18a73dd4596f13c96b168e  (PR head; identical tree = the merge added nothing)
+b124c6b (validation SHA) ancestor of main: yes
+
+== git diff --stat b124c6b 40f6789 (all paths)
+ .../output/scripts/verify_panel_server.py.txt      | 124 ++++++++
+ .../output/suite_ram.txt                           |  16 +
+ 40 files changed, 2969 insertions(+)
+
+== outside docs/
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 407ff8f..a07d68c 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -180,4 +180,7 @@ jobs:
+           zelda_api.tests_filed_authority
+           zelda_api.tests_filed_outcomes
+           zelda_api.tests_registry_source
++          zelda_api.tests_ask_document
++          zelda_api.tests_assistant_panel_ask
++          zelda_api.tests_document_retrieval_ranking
+ 
+
+== sha256 of the RA-114 application and test files, b124c6b vs 40f6789
+same df50eb56f7d6c6c65d71d6e7edad8d064f9caf84f16ad1b822e76658cf5a42f3 templates/includes/zelda_ai_assistant_enhanced.html
+same f3127de8353306fa0b4ad31bc01aacbc71104ced1b37c3095b8b0be7e59ab455 zelda_api/data/document_retrieval/memo104_chunks.json
+same e381363b21e3b7390dd0d05e492bb3975e3e86049723e7e1293a886ccfb086e9 zelda_api/js_tests/assistant_panel_ask.js
+same a0a99ba549ab6a3ad12781b57b2a95947dbe590e37510a8bdcc5759b35c1af39 zelda_api/js_tests/assistant_panel_escaping.js
+same 76dd6fc727bc5087b5b3da5f20f8aac9b72b763bb1337d223f6f3848b19a9802 zelda_api/js_tests/panel_source.js
+same 731704c155dcd84e1dfb72f1311f42ced917420eae419ffcc7dc9454f6e9d81b zelda_api/retrieval.py
+same a8beb4cfa1b2d860541747ec0b7973351ea509c50c625ad3bc15b1a3d9a767e6 zelda_api/tests_ask_document.py
+same 0b14b507ef479cef42ba0adec6d4248cecbff38f3ae765ff91e7d71c15bbcad3 zelda_api/tests_assistant_panel_ask.py
+same de54e71348a46c68e7d7b145874f5de75a5d9547deea930e2e0c59e9769cc923 zelda_api/tests_assistant_panel_escaping.py
+same 5ddd825082f447d585f3d5b55a1cca635257163a5fb7abe86b940b241304fdea zelda_api/tests_document_retrieval_ranking.py
+same 43ddbb1742e57573863b5792a9c38ce1553235834b3bf8f17a40c1ef5df3200a zelda_api/tests_retrieval.py
+same f17b33855c6bc37899fd83cba82540d5f09536a7c8decd75d5b1d7a8945e93e1 zelda_api/views.py
+
+== live-plan files identical to the reviewed copies
+1d547bfec0d3b45a464a16ae21eb7ae70cf726c15f593795b73ca411a6d464c0 1d547bfec0d3b45a464a16ae21eb7ae70cf726c15f593795b73ca411a6d464c0 docs/baselines/three-deck-audit/output-ra114-ranking-panel-9ee8d3d/NEXT_LIVE_VALIDATION_REV2_RA114.md
+1a5461e64f959b23a240e6cc98a7cbcf8fd429f843d9de6691ac73721b859c6f 1a5461e64f959b23a240e6cc98a7cbcf8fd429f843d9de6691ac73721b859c6f docs/baselines/three-deck-audit/output-ra114-ask-document-e4d17d7/NEXT_LIVE_VALIDATION_REV_RA114.md
+base procedure (1aab9e3) on main: NO - only on origin/docs/post-merge-verification-b278364

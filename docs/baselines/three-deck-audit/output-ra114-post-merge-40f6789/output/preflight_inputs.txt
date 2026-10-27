@@ -1,0 +1,36 @@
+Preflight inputs, read-only, 2026-10-27T04:38:58Z. Nothing started, nothing written outside this folder.
+
+== deck
+175622 bytes
+be7a7171bbc84b9895a45adfbc41f2533f3d23b3a4a561c82a8d9de6b94f3ef1 */c/Users/jonathan/Downloads/manychat_series_a_audit_deck.pptx
+answer-key sha256: be7a7171bbc84b9895a45adfbc41f2533f3d23b3a4a561c82a8d9de6b94f3ef1 (f73bef5 00_setup.json)
+
+== source dev DB (opened mode=ro)
+9121792 bytes, mtime 2026-10-11T02:08:42
+5a0b8c1c2fb180ddcd5a75c34e2bb25ead369935ef6a4db1b0c7a0dbdfd7e9a2
+m512mc_* accounts present: 0
+documents: (83, 3133)
+
+== Memurai (config databases=16)
+db0 keys=5 kombu_only=no
+db1 keys=3 kombu_only=yes
+db2 keys=14 kombu_only=no
+db3 keys=7 kombu_only=no
+db4 keys=7 kombu_only=no
+db5 keys=4 kombu_only=no
+db6 keys=77 kombu_only=no
+db7 keys=4 kombu_only=no
+db8 keys=3 kombu_only=yes
+db9 keys=7 kombu_only=no
+db10 keys=4 kombu_only=no
+db11 keys=3 kombu_only=yes
+db12 keys=4 kombu_only=no
+db13 keys=4 kombu_only=no
+db14 keys=4 kombu_only=no
+db15 keys=4 kombu_only=no
+
+== Chrome extension: connected browsers = [] (list_connected_browsers); the browser gate on Chrome b60b1997 is not available now
+
+== free RAM GB: 1.93 (plan: >= 1.2 at start, 0.9 floor)
+
+== Node for the panel tests: v25.1.0 at /c/Program Files/nodejs/node
