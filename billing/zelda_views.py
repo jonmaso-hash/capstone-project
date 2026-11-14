@@ -577,6 +577,13 @@ def retry_order(request, order_id):
         order = get_object_or_404(ZeldaOrder.objects.select_for_update(), pk=order_id, user=request.user)
         if order.status != 'failed' or not order.paid_at:
             return JsonResponse({'error': 'This report is not available for retry.'}, status=409)
+        if order.valuation_document_id:
+            from zelda_api.vector_models import DocumentSource
+
+            # Reconciliation can run before the queued valuation starts.
+            DocumentSource.objects.filter(pk=order.valuation_document_id, status='error').update(
+                status='ingested', error_message=''
+            )
         order.status = 'paid'
         order.save(update_fields=['status'])
         transaction.on_commit(lambda: fulfill_zelda_order.delay(str(order.id)))
