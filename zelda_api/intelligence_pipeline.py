@@ -145,6 +145,7 @@ EVIDENCE_LEVEL_INSTRUCTION = (
 # so the semantics can be read and tested without this file. See
 # zelda_api/financial_metrics.py and tests_financial_fact_semantics.py.
 from .financial_metrics import revenue_field_for, states_other_metric
+from .financial_statements import names_deferred_revenue
 
 
 class ZeldaIntelligencePipelineV2:
@@ -1332,7 +1333,15 @@ class ZeldaIntelligencePipelineV2:
                 document=document_source
             ).order_by('-confidence_score')
 
+            from .financial_statements import read_income_statement
+            from .valuation_gate import apply_statement_facts, gate_valuation
+
             structured_context = self._build_structured_context(document_source, insights)
+            # A filing's own consolidated statement outranks any sentence-level
+            # revenue: it carries the line item, period, currency, scale and page.
+            statement = read_income_statement(document_source.raw_text_full or '')
+            if statement:
+                apply_statement_facts(structured_context, statement, document_source.id)
             sections = self._call_claude_for_valuation(document_source, structured_context, insights)
 
             if 'error' in sections:
@@ -1340,6 +1349,7 @@ class ZeldaIntelligencePipelineV2:
                 # this, update_or_create's .get(..., default) fallbacks would
                 # silently write a "successful" report full of placeholder text.
                 raise Exception(sections['error'])
+            sections = gate_valuation(sections, structured_context, statement, document_source.raw_text_full or '')
 
             report, created = BusinessValuationReport.objects.update_or_create(
                 document=document_source,
@@ -1373,9 +1383,13 @@ class ZeldaIntelligencePipelineV2:
         from .anthropic_client import background_anthropic_client
         client = background_anthropic_client()
 
+        # A deferred-revenue balance trimmed to "$14.8 billion and $13.7
+        # billion" reads as revenue to the model; leave it out entirely.
+        admissible = [ins for ins in insights[:25] if not names_deferred_revenue(
+            f'{ins.insight_text} {self._insight_source_sentence(ins)}')]
         insights_list = "\n".join([
             f"{i+1}. [{ins.category} | {ins.confidence_score:.0f}% confidence] {ins.insight_text}"
-            for i, ins in enumerate(insights[:25])
+            for i, ins in enumerate(admissible)
         ])
 
         missing = "\n".join([f"• {m}" for m in facts.get('missing_fields', [])]) or "• None identified"
@@ -1399,7 +1413,14 @@ class ZeldaIntelligencePipelineV2:
     6. Every section must be grounded in the provided insights or facts.
     7. valuation_low and valuation_high MUST be plain numbers (no currency symbols, no commas)
     derived from standard valuation methods (revenue multiple, EBITDA multiple, etc.) applied
-    to the disclosed financials — never guess a number with no basis in the source data."""
+    to the disclosed financials — never guess a number with no basis in the source data.
+    8. A multiple needs a basis stated in the submitted documents. Quote that sentence verbatim in
+    multiple_basis. If the documents state no multiple, set valuation_low, valuation_high and
+    multiple_basis to null; do not use a "typical" or assumed multiple.
+    9. When verified_financials are present, use those figures exactly as given, with their periods.
+    Deferred revenue is never revenue, and a figure with no stated period is never annual revenue.
+    verified_financials list only what Zelda verified; never say the documents omit a figure
+    because it is absent from that list."""
 
         user_prompt = f"""Prepare a business valuation report for {facts['company']}.
 
@@ -1419,7 +1440,10 @@ class ZeldaIntelligencePipelineV2:
 
     Write the report using ONLY the above information. Return a JSON object with these exact keys:
     business_overview, financial_summary, risk_report, valuation_summary, valuation_low,
-    valuation_high, confidence
+    valuation_high, multiple_basis, confidence
+
+    multiple_basis: {{"quote": "<sentence copied verbatim from the documents that states the multiple>"}},
+    or null when the documents state no multiple.
 
     ### Instructions per section:
 
@@ -1471,6 +1495,18 @@ class ZeldaIntelligencePipelineV2:
         except Exception as e:
             logger.error(f"Claude API error in valuation report generation: {str(e)}")
             return {'error': f'Valuation report generation failed: {str(e)}'}
+
+    @staticmethod
+    def _insight_source_sentence(insight) -> str:
+        """The sentence of the insight's source chunk that contains its text, or ''."""
+        chunk = insight.source_chunks.first() if insight.pk else None
+        text, needle = (chunk.raw_text if chunk else ''), (insight.insight_text or '').strip()[:40]
+        at = text.find(needle) if needle else -1
+        if at < 0:
+            return ''
+        start = max(text.rfind('. ', 0, at), text.rfind('\n', 0, at)) + 1
+        end = text.find('. ', at)
+        return text[start:end if end >= 0 else len(text)]
 
     @staticmethod
     def _values_agree(document_value: str, profile_value: str) -> bool:
@@ -1648,6 +1684,10 @@ class ZeldaIntelligencePipelineV2:
                 # claim category genuinely means ARR. Do not unify them.
                 pattern = bare_amount_pattern if insight.category == 'Revenue' else revenue_pattern
                 m = pattern.search(text) if not states_other_metric(text) else None
+                # The extractor can trim "total deferred revenue of $14.8 billion"
+                # down to "$14.8 billion"; the source sentence still says what it is.
+                if m and names_deferred_revenue(f'{text} {self._insight_source_sentence(insight)}'):
+                    m = None
                 if m:
                     facts[revenue_field_for(text)] = m.group(0).strip()
                     document_source_insight['revenue'] = insight
