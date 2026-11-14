@@ -387,6 +387,28 @@ class ZeldaProductTests(TestCase):
                 response=self.client.post(reverse('billing:zelda_order_retry',args=[order.id]))
         self.assertEqual(response.status_code,200);generate.assert_called_once();checkout.assert_not_called()
 
+    def test_retry_paid_valuation_clears_the_previous_error_before_queueing(self):
+        document = DocumentSource.objects.create(
+            uploaded_by=self.user, filename='valuation.txt', document_type='business_valuation',
+            valuation_tier='full', status='error', error_message='Prior failure',
+        )
+        paid_at = timezone.now()
+        order = self.order(
+            status='failed', paid_at=paid_at, product='valuation', reports=['valuation'],
+            amount=99, valuation_document=document,
+        )
+        with mock.patch('billing.tasks.fulfill_zelda_order.delay') as generate, \
+                mock.patch('stripe.checkout.Session.create') as checkout:
+            with self.captureOnCommitCallbacks(execute=True):
+                response = self.client.post(reverse('billing:zelda_order_retry', args=[order.id]))
+        self.assertEqual(response.status_code, 200)
+        generate.assert_called_once_with(str(order.id))
+        checkout.assert_not_called()
+        order.refresh_from_db()
+        document.refresh_from_db()
+        self.assertEqual((order.status, order.paid_at, order.valuation_document_id), ('paid', paid_at, document.id))
+        self.assertEqual((document.status, document.error_message), ('ingested', ''))
+
     def test_external_document_never_borrows_matching_uploader_profile(self):
         from matchmaking.models import Application
         from zelda_api.grounded_context import profile_for_document
