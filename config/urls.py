@@ -7,6 +7,9 @@ from matchmaking.views import global_search, explore_feed
 from matchmaking.enterprise_views import EnterpriseFounderSearchView, EnterprisePlatformStatsView
 from django.views.generic import TemplateView
 from django.shortcuts import render
+from django.views.decorators.csp import csp_override, csp_report_only_override
+from allauth.socialaccount.providers.google.views import oauth2_login as google_oauth2_login
+from config.browser_policy import GOOGLE_SIGNIN_ORIGIN, with_form_action
 from accounts.views import RateLimitedPasswordResetView, admin_login_redirect
 from growth.views import robots_txt
 from growth.sitemaps import InvestorDirectorySitemap, FounderDirectorySitemap, InsightReportSitemap
@@ -16,6 +19,14 @@ sitemaps = {
     'founder_directories': FounderDirectorySitemap,
     'insight_reports': InsightReportSitemap,
 }
+
+
+# Only the Google sign-in confirmation form may submit to a flow that ends on
+# Google's origin. The view, CSRF-protected POST and login-on-GET refusal are
+# allauth's own; every other form keeps the site-wide form-action 'self'.
+google_login = csp_override(with_form_action(settings.SECURE_CSP, GOOGLE_SIGNIN_ORIGIN))(
+    csp_report_only_override(with_form_action(settings.SECURE_CSP_REPORT_ONLY, GOOGLE_SIGNIN_ORIGIN))(
+        google_oauth2_login))
 
 
 def memo_dashboard_view(request, startup_name):
@@ -37,6 +48,9 @@ urlpatterns = [
     # accounts/facebook/login/, accounts/linkedin_oauth2/login/, + callbacks) —
     # allauth's own generic login/signup/logout paths are shadowed by the two
     # includes above (first match wins), same as contrib.auth's already were.
+    # Ahead of allauth.urls so this wrapper serves the URL; allauth's own
+    # google_login name still reverses to the same path.
+    path('accounts/google/login/', google_login),
     path('accounts/', include('allauth.urls')),
     path('matchmaking/', include('matchmaking.urls')),
     # Public front door — the anonymous Elevator Pitches feed. Kept top-level

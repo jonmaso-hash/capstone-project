@@ -1,6 +1,10 @@
 """Browser resource policy for the application's actual integrations."""
 from django.utils.csp import CSP
 
+# allauth's Google confirmation page POSTs to its own URL, which answers with a
+# redirect to this origin. Browsers apply form-action to that redirect too.
+GOOGLE_SIGNIN_ORIGIN = 'https://accounts.google.com'
+
 
 def policies(bucket='', region='us-east-1'):
     # Signed S3 URLs may use either global or regional virtual-host addressing.
@@ -36,6 +40,15 @@ def policies(bucket='', region='us-east-1'):
     # uploaded to a reporting service. This candidate does not block handlers.
     report_only = {**enforced, 'script-src-attr': [CSP.NONE]}
     return enforced, report_only
+
+
+def with_form_action(policy, *origins):
+    """A copy of ``policy`` whose form-action also permits ``origins``.
+
+    Every other directive is the same list object as in ``policy``. Apply it
+    per view, never to the site-wide policy.
+    """
+    return {**policy, 'form-action': [*policy['form-action'], *origins]}
 
 
 PERMISSIONS_POLICY = ', '.join([
