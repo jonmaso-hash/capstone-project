@@ -49,6 +49,19 @@
         box.scrollIntoView({block: 'nearest', behavior: 'smooth'});
     }
 
+    function selectedReports(panel) {
+        return Array.from(panel.querySelectorAll('[name="pack-report"]:checked')).map(input => input.value);
+    }
+
+    function valuationBlockReason(panel, reports) {
+        const product = panel.dataset.product;
+        if (product === 'valuation' || product === 'complete_bundle'
+            || (product === 'three_pack' && reports.includes('valuation'))) {
+            return evidence?.valuation_block_reason || '';
+        }
+        return '';
+    }
+
     function sync() {
         panels.forEach(panel => {
             const selected = panel.querySelector('.zelda-selected-evidence');
@@ -60,9 +73,12 @@
 
             const checkout = panel.querySelector('.zelda-product-checkout');
             if (checkout) {
-                const packValid = panel.dataset.product !== 'three_pack'
-                    || panel.querySelectorAll('[name="pack-report"]:checked').length === 3;
-                checkout.disabled = !evidence || !packValid || pendingEvidence > 0;
+                const reports = selectedReports(panel);
+                const packValid = panel.dataset.product !== 'three_pack' || reports.length === 3;
+                const blockReason = valuationBlockReason(panel, reports);
+                checkout.disabled = !evidence || !packValid || Boolean(blockReason) || pendingEvidence > 0;
+                const evidenceStatus = panel.querySelector('.zelda-valuation-evidence-status');
+                if (evidenceStatus) evidenceStatus.textContent = blockReason;
             }
 
             const redeem = panel.querySelector('.zelda-credit-redeem');
@@ -172,7 +188,7 @@
                             });
                             statusBox.className = 'small text-success';
                             select.textContent = 'Company selected';
-                            statusBox.textContent = `Found: ${evidence.company}. Scroll down to finish checkout.`;
+                            statusBox.textContent = `Found: ${evidence.company}. Review the evidence and any upload requirements below.`;
                         } catch (error) {
                             statusBox.className = 'small text-danger';
                             statusBox.textContent = error.message;
@@ -273,7 +289,7 @@
                                     if (companyInput) companyInput.value = evidence.company;
                                 });
                                 select.textContent = 'Company selected';
-                                status(panel, `Found: ${evidence.company}. Scroll down to finish checkout.`, 'success', 'search');
+                                status(panel, `Found: ${evidence.company}. Review the evidence and any upload requirements below.`, 'success', 'search');
                             } catch (error) {
                                 status(panel, error.message, 'error', 'search');
                             } finally {
@@ -297,14 +313,15 @@
         if (checkout) {
             checkout.addEventListener('click', async event => {
                 const button = event.currentTarget;
-                if (!evidence || pendingEvidence) return;
+                const reports = selectedReports(panel);
+                if (!evidence || pendingEvidence || valuationBlockReason(panel, reports)) return;
                 button.disabled = true;
                 status(panel, 'Opening Stripe Checkout…');
                 try {
                     const data = await post(config.dataset.checkoutUrl, {
                         product: panel.dataset.product,
                         document_id: evidence.document_id,
-                        reports: Array.from(panel.querySelectorAll('[name="pack-report"]:checked')).map(input => input.value),
+                        reports,
                     }, true);
                     window.location.assign(data.checkout_url || data.order_url);
                 } catch (error) {

@@ -179,6 +179,79 @@ class ZeldaProductTests(TestCase):
         self.assertContains(page, 'id="order-checkout"')
         self.assertContains(page, reverse('billing:zelda_checkout'))
 
+    def registration_snapshot(self):
+        from django.core import signing
+
+        token = signing.dumps({'name': 'Apple Inc.', 'cik': '0000320193'}, salt='zelda-company-selection')
+        with mock.patch('zelda_api.sec_identity.company_record', return_value={'name': 'Apple Inc.'}):
+            response = self.client.post(reverse('billing:zelda_intake'), {'subject_token': token})
+        self.assertEqual(response.status_code, 201)
+        return response.json()
+
+    def test_registration_snapshot_cannot_start_a_valuation_checkout(self):
+        evidence = self.registration_snapshot()
+        self.assertIn('Upload an annual report', evidence['valuation_block_reason'])
+        with mock.patch('stripe.checkout.Session.create') as create:
+            for product, reports in (
+                ('valuation', []),
+                ('complete_bundle', []),
+                ('three_pack', ['valuation', 'entity', 'ic_memo']),
+            ):
+                with self.subTest(product=product):
+                    response = self.checkout(document_id=evidence['document_id'], product=product, reports=reports)
+                    self.assertEqual(response.status_code, 422)
+                    self.assertEqual(response.json()['error'], evidence['valuation_block_reason'])
+        create.assert_not_called()
+        self.assertFalse(ZeldaOrder.objects.exists())
+
+    def test_valuation_checkout_accepts_an_upload_for_the_selected_sec_company(self):
+        from django.core import signing
+
+        token = signing.dumps({'name': 'Apple Inc.', 'cik': '0000320193'}, salt='zelda-company-selection')
+        response = self.client.post(reverse('billing:zelda_intake'), {
+            'subject_token': token,
+            'file': SimpleUploadedFile('financials.txt', b'Fiscal 2025 revenue: USD 100m. Net income: USD 10m.'),
+        })
+        self.assertEqual(response.status_code, 201)
+        evidence = response.json()
+        self.assertEqual(evidence['valuation_block_reason'], '')
+        with mock.patch('billing.zelda_views.stripe_price', return_value='price_valuation'), \
+                mock.patch('stripe.checkout.Session.create', return_value={
+                    'id': 'cs_valuation', 'url': 'https://checkout.stripe.com/c/valuation',
+                }) as create:
+            self.assertEqual(self.checkout(document_id=evidence['document_id'], product='valuation').status_code, 200)
+        create.assert_called_once()
+
+    def test_snapshot_checkout_does_not_reopen_an_existing_unpaid_session(self):
+        evidence = self.registration_snapshot()
+        order = self.order(
+            source_document_id=evidence['document_id'], product='valuation', reports=['valuation'], amount=99,
+        )
+        with mock.patch('stripe.checkout.Session.retrieve', return_value=self.event(
+                order, status='open', payment_status='unpaid', url='https://checkout.stripe.com/c/open'
+        )), mock.patch('stripe.checkout.Session.create') as create:
+            response = self.checkout(document_id=evidence['document_id'], product='valuation')
+        self.assertEqual(response.status_code, 422)
+        create.assert_not_called()
+        order.refresh_from_db()
+        self.assertEqual(order.status, 'awaiting_payment')
+
+    def test_snapshot_checkout_recovers_completed_payment(self):
+        evidence = self.registration_snapshot()
+        order = self.order(
+            source_document_id=evidence['document_id'], product='valuation', reports=['valuation'], amount=99,
+        )
+        with mock.patch('stripe.checkout.Session.retrieve', return_value=self.event(order)), \
+                mock.patch('stripe.checkout.Session.create') as create, \
+                mock.patch('billing.tasks.fulfill_zelda_order.delay') as generate:
+            with self.captureOnCommitCallbacks(execute=True):
+                response = self.checkout(document_id=evidence['document_id'], product='valuation')
+        self.assertEqual(response.json(), {'order_url': reverse('billing:zelda_order', args=[order.id])})
+        create.assert_not_called()
+        generate.assert_called_once_with(str(order.id))
+        order.refresh_from_db()
+        self.assertEqual(order.status, 'paid')
+
     def test_checkout_refuses_other_users_evidence_and_invalid_pack(self):
         self.client.force_login(self.other)
         self.assertEqual(self.checkout().status_code,404)
