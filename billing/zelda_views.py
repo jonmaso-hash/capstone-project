@@ -19,6 +19,20 @@ from .zelda_catalog import PRODUCTS, REPORTS, ALL_STRIPE_PRODUCTS, DILIGENCE_PRO
 
 logger = logging.getLogger(__name__)
 
+SEC_SNAPSHOT_FILENAME = 'SEC registration snapshot.txt'
+VALUATION_EVIDENCE_REQUIRED = (
+    'An SEC registration snapshot only identifies the company. '
+    'Upload an annual report, financial statements, or a financial model before buying a valuation.'
+)
+
+
+def _is_sec_registration_snapshot(document):
+    return (
+        bool(document.external_cik)
+        and document.filename == SEC_SNAPSHOT_FILENAME
+        and document.raw_text_full.startswith('SEC registration snapshot for ')
+    )
+
 
 class ProductPaymentConfigurationError(ValueError):
     pass
@@ -181,7 +195,7 @@ def product_intake(request):
                f"Incorporation jurisdiction: {record.get('stateOfIncorporation', 'not disclosed')}. "
                f"Source: https://www.sec.gov/edgar/browse/?CIK={cik}. "
                "This snapshot establishes registry context only; it does not disclose current revenue, customers, employees or valuation. Upload company documents for substantive financial and claim analysis.")
-        pages, filename, evidence_label = 1, 'SEC registration snapshot.txt', 'SEC registration snapshot only'
+        pages, filename, evidence_label = 1, SEC_SNAPSHOT_FILENAME, 'SEC registration snapshot only'
     else:
         return JsonResponse({'error': 'Upload a document or select a company from external search.'}, status=400)
     if not has_usable_text(raw):
@@ -195,7 +209,10 @@ def product_intake(request):
     except DatabaseError:
         logger.exception('Could not save Zelda product evidence for user %s', request.user.pk)
         return JsonResponse({'error': 'The server could not save your document. Please try again shortly. Nothing was purchased.'}, status=503)
-    return JsonResponse({'document_id': doc.id, 'company': name, 'evidence': evidence_label}, status=201)
+    return JsonResponse({
+        'document_id': doc.id, 'company': name, 'evidence': evidence_label,
+        'valuation_block_reason': VALUATION_EVIDENCE_REQUIRED if _is_sec_registration_snapshot(doc) else '',
+    }, status=201)
 
 
 @login_required
@@ -232,6 +249,9 @@ def product_checkout(request):
                     return JsonResponse({'error': 'This evidence already has a different pack selection. Upload a fresh evidence set for a different pack.'}, status=409)
                 if order and order.status != 'awaiting_payment':
                     return JsonResponse({'order_url': reverse('billing:zelda_order', args=[order.id])})
+                valuation_blocked = 'valuation' in reports and _is_sec_registration_snapshot(doc)
+                if valuation_blocked and (not order or not order.stripe_session_id):
+                    return JsonResponse({'error': VALUATION_EVIDENCE_REQUIRED}, status=422)
                 if not order:
                     order = ZeldaOrder.objects.create(user=request.user, source_document=doc, product=product,
                                                      reports=reports, amount=ALL_STRIPE_PRODUCTS[product][1])
@@ -255,6 +275,8 @@ def product_checkout(request):
                 continue
             if checkout_state == 'complete':
                 return JsonResponse({'order_url': reverse('billing:zelda_order', args=[order.id])})
+            if valuation_blocked:
+                return JsonResponse({'error': VALUATION_EVIDENCE_REQUIRED}, status=422)
             if not session.get('url'):
                 raise ProductPaymentConfigurationError('Open Checkout session has no hosted URL')
             return JsonResponse({'checkout_url': session['url']})
