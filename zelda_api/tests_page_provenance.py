@@ -135,6 +135,17 @@ class ChunkingRuleTests(SimpleTestCase):
         self.assertTrue(chunks)
         self.assertEqual({page for _, page, _ in chunks}, {None})
 
+    def test_long_unmarked_line_preserves_text_and_bounds_title(self):
+        text = (
+            'SEC registration snapshot for Example Inc. CIK 0000000001. '
+            'Registered name: Example Inc. Incorporation jurisdiction: Delaware. '
+            'This snapshot establishes registry context only and does not disclose '
+            'current revenue, customers, employees or valuation. '
+            'Upload company documents for substantive financial and claim analysis.'
+        )
+        self.assertGreater(len(text), 255)
+        self.assertEqual(chunker().chunk(text), [(text, None, text[:100])])
+
 
 class DownstreamInheritanceTests(TestCase):
     """Chunks, claims and retrieval all carry the extracted slide number unchanged."""
