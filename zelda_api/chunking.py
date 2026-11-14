@@ -121,7 +121,7 @@ class DocumentChunker:
             # name repeated at the top of every slide.
             title_candidates = [line for line in slide_lines if line != running_header] if running_header else slide_lines
             title = title_candidates[0] if title_candidates else (slide_lines[0] if slide_lines else f"Slide {idx+1}")
-            chunks.append((slide_text, idx + 1, title))
+            chunks.append((slide_text, idx + 1, title[:100]))
 
         return chunks
     
