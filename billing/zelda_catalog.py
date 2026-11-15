@@ -24,7 +24,8 @@ REPORTS = {
     'valuation': (
         'Business valuation',
         99,
-        'A model-based business valuation, with financial context, assumptions and limitations. Not an appraisal or transaction price.',
+        'Verified financials from your documents, with assumptions and limitations, and a numeric valuation range only when '
+        'the documents support one. Not an appraisal or transaction price.',
     ),
 }
 
