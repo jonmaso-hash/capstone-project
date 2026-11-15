@@ -62,9 +62,65 @@ def apply_statement_facts(facts, statement, document_id):
     return facts
 
 
+_NET_MARGIN_MENTION = re.compile(
+    r'(?<!gross )(?<!operating )\b(?:net(?:\s+(?:profit|income))?|profit)\s+margins?\b[^.;%\n]{0,60}?(\d+(?:\.\d+)?)\s*%'
+    r'|(\d+(?:\.\d+)?)\s*%\s+net\b(?:\s+(?:profit\s+|income\s+)?margins?\b'
+    r'|(?!\s+(?:sales|revenues?|income|earnings|cash|loss(?:es)?|assets|debt|proceeds|of|interest|new|retention|'
+    r'dollar|change|growth|increase|decrease|additions?|adds?|promoter)\b))',
+    re.IGNORECASE)
+# A sentence ends at . ! or ? that is not a decimal point ("$478.834 billion").
+_SENTENCE = re.compile(r'(?:[^.!?\n]|[.!?](?=\d))+(?:[.!?]+(?!\d)\s*|$)')
+_SENTENCE_END = re.compile(r'^(.*?)([.!?]*)(\s*)$', re.DOTALL)
+MODEL_SECTIONS = ('business_overview', 'financial_summary', 'risk_report', 'valuation_summary')
+
+
+def _matching_net_margin(written, margins):
+    """The verified net margin a written percentage states, at the precision it was written."""
+    places = len(written.split('.')[1]) if '.' in written else 0
+    stated = Decimal(written)
+    return next((ratio for ratio in margins if _percent(ratio.value, places) == stated), None)
+
+
+def govern_net_margin(text, statement):
+    """Keep a net margin only when it is the verified same-period ratio, and cite it.
+
+    A sentence stating any other net margin, or any net margin when no income
+    statement was verified, is removed: the model is not a source.
+    """
+    if not text:
+        return text
+    margins = statement.net_margins() if statement else []
+    kept = []
+    for line in text.split('\n'):
+        out = []
+        for sentence in _SENTENCE.findall(line):
+            mentions = list(_NET_MARGIN_MENTION.finditer(sentence))
+            if not mentions:
+                out.append(sentence)
+                continue
+            ratios = [_matching_net_margin(m.group(1) or m.group(2), margins) for m in mentions]
+            if not all(ratios):
+                continue
+            citation = '; '.join(dict.fromkeys(
+                f'{r.name} {_percent(r.value, 1)}%, computed as {r.formula}, PDF page {r.source_page}' for r in ratios))
+            body, punctuation, space = _SENTENCE_END.match(sentence).groups()
+            out.append(f'{body} (verified: {citation}){punctuation}{space}')
+        if not line.strip():
+            kept.append(line)
+        elif ''.join(out).strip():
+            # A line emptied by removal is dropped rather than left blank.
+            kept.append(''.join(out).rstrip())
+    return '\n'.join(kept)
+
+
 def gate_valuation(sections, facts, statement, raw_text):
     """Keep a numeric range only when its revenue and its multiple both rest on evidence."""
     sections = dict(sections)
+    # Model-written text first; the deterministic sections written below
+    # carry their own citations.
+    for field in MODEL_SECTIONS:
+        if isinstance(sections.get(field), str):
+            sections[field] = govern_net_margin(sections[field], statement)
     if statement:
         sections['financial_summary'] = '\n'.join([
             statement.heading(), *statement.summary_lines(),

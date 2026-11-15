@@ -146,6 +146,7 @@ EVIDENCE_LEVEL_INSTRUCTION = (
 # zelda_api/financial_metrics.py and tests_financial_fact_semantics.py.
 from .financial_metrics import revenue_field_for, states_other_metric
 from .financial_statements import names_deferred_revenue
+from .capital_events import describes_capital_return
 
 
 class ZeldaIntelligencePipelineV2:
@@ -899,6 +900,14 @@ class ZeldaIntelligencePipelineV2:
         """
         cleaned = re.sub(r'^[A-Z][a-z]+\s*:\s*', '', sentence).strip()
 
+        # A repurchase authorization or a dividend is capital going out, even
+        # when the sentence goes on to say the dividend was "raised". Binding
+        # by distance alone turned "a new share repurchase program of up to
+        # $100 billion and raised its quarterly dividend" into a $100 billion
+        # capital raise. Funding owns no figure in such a sentence.
+        if category == 'Funding' and describes_capital_return(cleaned):
+            return None
+
         # Field binding first, for the categories that carry figures. A
         # sentence holding figures must yield the one this category OWNS, or
         # nothing: a plausible wrong number survives every downstream layer,
@@ -1385,8 +1394,15 @@ class ZeldaIntelligencePipelineV2:
 
         # A deferred-revenue balance trimmed to "$14.8 billion and $13.7
         # billion" reads as revenue to the model; leave it out entirely.
-        admissible = [ins for ins in insights[:25] if not names_deferred_revenue(
-            f'{ins.insight_text} {self._insight_source_sentence(ins)}')]
+        # Likewise a Funding insight whose source is a buyback or dividend
+        # (one saved before the extractor learned the difference).
+        def admissible_insight(ins):
+            source = f'{ins.insight_text} {self._insight_source_sentence(ins)}'
+            if names_deferred_revenue(source):
+                return False
+            return not (ins.category == 'Funding' and describes_capital_return(source))
+
+        admissible = [ins for ins in insights[:25] if admissible_insight(ins)]
         insights_list = "\n".join([
             f"{i+1}. [{ins.category} | {ins.confidence_score:.0f}% confidence] {ins.insight_text}"
             for i, ins in enumerate(admissible)
@@ -1420,7 +1436,11 @@ class ZeldaIntelligencePipelineV2:
     9. When verified_financials are present, use those figures exactly as given, with their periods.
     Deferred revenue is never revenue, and a figure with no stated period is never annual revenue.
     verified_financials list only what Zelda verified; never say the documents omit a figure
-    because it is absent from that list."""
+    because it is absent from that list.
+    10. Do not compute ratios yourself. State a net margin only as it appears in verified_financials;
+    if it is not there, leave net margin out.
+    11. A share repurchase (buyback) authorization or a dividend returns capital to shareholders.
+    It is never a capital raise, a funding round or proceeds."""
 
         user_prompt = f"""Prepare a business valuation report for {facts['company']}.
 
@@ -1694,6 +1714,10 @@ class ZeldaIntelligencePipelineV2:
 
             if not facts['raise_amount']:
                 m = raise_amount_pattern.search(text)
+                # "$100 billion and raise[d its quarterly dividend]" satisfies the
+                # pattern; the insight's source sentence says it is a buyback.
+                if m and describes_capital_return(f'{text} {self._insight_source_sentence(insight)}'):
+                    m = None
                 if m:
                     facts['raise_amount'] = m.group(0).strip()
                     document_source_insight['raise_amount'] = insight

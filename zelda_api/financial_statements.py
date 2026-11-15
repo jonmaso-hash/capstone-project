@@ -183,6 +183,25 @@ class IncomeStatement:
             f'{margin.line_item} {margin.reported_text()} / {sales.line_item} {sales.reported_text()}',
             self.source_page)
 
+    def net_margins(self):
+        """Net income / net sales for each period the statement reports both, latest first.
+
+        Both figures come from the same column, so the ratio never mixes periods.
+        """
+        if 'net_sales' not in self.figures or 'net_income' not in self.figures:
+            return []
+        ratios = []
+        for sales, income in zip(self.figures['net_sales'], self.figures['net_income']):
+            if sales.period_end != income.period_end or sales.reported <= 0:
+                continue
+            ratios.append((sales.period_end, DerivedRatio(
+                f'Net margin, FY{sales.fiscal_year}',
+                income.reported / sales.reported * 100,
+                f'{income.line_item} {income.reported_text()} / {sales.line_item} {sales.reported_text()}, '
+                f'both for the fiscal year ended {sales.period_end:%B} {sales.period_end.day}, {sales.period_end.year}',
+                self.source_page)))
+        return [ratio for _, ratio in sorted(ratios, key=lambda pair: pair[0], reverse=True)]
+
     def summary_lines(self):
         """Report bullets; each carries its line item, period, currency, scale and page."""
         lines = []
@@ -208,6 +227,11 @@ class IncomeStatement:
         income = self.latest('net_income')
         if income:
             lines.append(figure(income))
+            latest = next((ratio for ratio in self.net_margins()
+                           if ratio.name.endswith(f'FY{income.fiscal_year}')), None)
+            if latest:
+                lines.append(f'• {latest.name}: {_percent(latest.value, 1)}% '
+                             f'(computed as {latest.formula}; PDF page {latest.source_page})')
         return lines
 
     def heading(self):

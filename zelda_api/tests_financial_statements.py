@@ -19,6 +19,7 @@ from django.test import SimpleTestCase, TestCase
 from .financial_statements import names_deferred_revenue, read_income_statement
 from .intelligence_pipeline import ZeldaIntelligencePipelineV2
 from .utils import page_marker, split_pages
+from .valuation_gate import govern_net_margin
 from .vector_models import BusinessValuationReport, DocumentChunk, DocumentSource, IntelligenceInsight
 
 FIXTURE = (Path(__file__).parent / 'fixtures' / 'sec_10k_income_statement_pages.txt').read_text(encoding='utf-8')
@@ -218,3 +219,118 @@ class DeferredRevenueFactTests(TestCase):
     def test_revenue_insight_still_reaches_the_valuation_prompt(self):
         prompt, _ = self.prompt_for('Total revenue was $14.8 billion and $13.7 billion, respectively. Other text.')
         self.assertIn('$14.8 billion', prompt)
+
+
+BUYBACK_LINE = next(line for line in PAGES[31].splitlines() if 'share repurchase program of up to' in line)
+SERIES_B_LINE = ('In March 2026, the Company raised $25 million in a Series B financing led by Example Ventures '
+                 'to expand its manufacturing capacity.')
+
+
+class CapitalReturnIsNotFundraisingTests(TestCase):
+    """Apple's buyback authorization was reported as "a $100 billion capital raise" (order d76ea12f)."""
+
+    # The Funding insight the extractor saved for that order, before this fix.
+    SAVED_BUYBACK_INSIGHT = '$100 billion and raised its quarterly dividend from $0.26 to $0.27 per s'
+
+    def setUp(self):
+        self.pipeline = ZeldaIntelligencePipelineV2()
+        self.keywords = self.pipeline.ANALYSIS_CATEGORIES['Funding']
+
+    def test_share_repurchase_authorization_yields_no_funding_figure(self):
+        self.assertIn('repurchase program of up to $100 billion and raised its quarterly dividend', BUYBACK_LINE)
+        self.assertIsNone(self.pipeline._extract_clean_value('Funding', BUYBACK_LINE))
+        value, _, _ = self.pipeline._smart_extract('Funding', PAGES[31], self.keywords)
+        self.assertNotIn('$100 billion', value or '')
+
+    def test_genuine_fundraising_disclosure_yields_its_figure(self):
+        self.assertIn('$25 million', self.pipeline._extract_clean_value('Funding', SERIES_B_LINE))
+        value, confidence, _ = self.pipeline._smart_extract('Funding', SERIES_B_LINE, self.keywords)
+        self.assertIn('$25 million', value)
+        self.assertGreater(confidence, 0)
+
+    def document(self, insight_text, source):
+        user = get_user_model().objects.create_user(f'capital_{abs(hash(insight_text + source))}', password='x')
+        doc = DocumentSource.objects.create(filename='f.pdf', source_entity='Subject Co', uploaded_by=user,
+                                            document_type='business_valuation', raw_text_full=FIXTURE)
+        chunk = DocumentChunk.objects.create(document=doc, chunk_index=0, page_number=31, raw_text=source,
+                                             token_count=60)
+        insight = IntelligenceInsight.objects.create(document=doc, category='Funding', confidence_score=95,
+                                                     insight_text=insight_text)
+        insight.source_chunks.set([chunk])
+        return doc
+
+    def prompt_for(self, doc):
+        with mock.patch('anthropic.Anthropic') as anthropic:
+            anthropic.return_value.messages.create.return_value = claude_reply()
+            self.pipeline._generate_valuation_report(doc, {'confidence': 0.5})
+            return anthropic.return_value.messages.create.call_args.kwargs['messages'][0]['content']
+
+    def test_saved_buyback_insight_is_not_a_raise_amount_or_prompt_funding(self):
+        doc = self.document(self.SAVED_BUYBACK_INSIGHT, PAGES[31])
+        facts = self.pipeline._build_structured_context(doc, doc.insights.all())
+        self.assertIsNone(facts['raise_amount'])
+        prompt = self.prompt_for(doc)
+        self.assertNotIn('$100 billion', prompt)
+        self.assertNotIn('raise_amount', prompt)
+
+    def test_genuine_raise_insight_keeps_raise_amount_and_reaches_the_prompt(self):
+        doc = self.document('$25 million in a Series B financing led by Example Ventures', SERIES_B_LINE)
+        facts = self.pipeline._build_structured_context(doc, doc.insights.all())
+        self.assertIn('$25 million', facts['raise_amount'])
+        prompt = self.prompt_for(doc)
+        self.assertIn('$25 million in a Series B financing', prompt)
+        self.assertIn('raise_amount', prompt)
+
+
+class NetMarginTests(TestCase):
+    """A net margin is reported only as verified same-period net income / net sales, with its source."""
+
+    def setUp(self):
+        self.statement = read_income_statement(FIXTURE)
+
+    def test_net_margin_is_computed_from_same_period_statement_figures(self):
+        latest = self.statement.net_margins()[0]
+        self.assertEqual(latest.name, 'Net margin, FY2026')
+        self.assertEqual(round(latest.value, 1), Decimal('27.6'))
+        self.assertEqual(latest.value, Decimal(132175) / Decimal(478834) * 100)
+        self.assertIn('Net margin, FY2026: 27.6% (computed as Net income $132,175 million / Total net sales '
+                      '$478,834 million, both for the fiscal year ended September 26, 2026; PDF page 35)',
+                      '\n'.join(self.statement.summary_lines()))
+
+    def test_statement_without_net_income_reports_no_net_margin(self):
+        statement = read_income_statement(statement_page(rows='Total revenues $ 12,500 $ 10,000'))
+        self.assertEqual(statement.net_margins(), [])
+        self.assertNotIn('Net margin', '\n'.join(statement.summary_lines()))
+
+    def test_model_net_margin_is_kept_only_when_verified_and_then_cited(self):
+        text = ('1. COMPETITION: Pressure could compress margins at 48.8% gross and 27.6% net. Other risk stays.\n'
+                '2. A net margin of 31% leads peers. Second point stays.\n'
+                '3. 15% net sales growth stays.')
+        governed = govern_net_margin(text, self.statement)
+        self.assertIn('27.6% net (verified: Net margin, FY2026 27.6%, computed as Net income $132,175 million / '
+                      'Total net sales $478,834 million', governed)
+        self.assertIn('PDF page 35).', governed)
+        self.assertNotIn('31%', governed)
+        for kept in ('Other risk stays.', 'Second point stays.', '15% net sales growth stays.'):
+            with self.subTest(kept=kept):
+                self.assertIn(kept, governed)
+
+    def test_no_verified_statement_means_no_net_margin(self):
+        governed = govern_net_margin('Revenue grew. Net profit margin was 27.6%. Gross margin of 48.8% held.', None)
+        self.assertEqual(governed, 'Revenue grew. Gross margin of 48.8% held.')
+
+    def test_saved_report_cites_the_net_margin_and_drops_an_unverified_one(self):
+        user = get_user_model().objects.create_user('net_margin_owner', password='x')
+        doc = DocumentSource.objects.create(filename='filing.pdf', source_entity='Apple Inc.', uploaded_by=user,
+                                            document_type='business_valuation', raw_text_full=FIXTURE)
+        reply = claude_reply(risk_report='1. Margins sit at 48.8% gross and 27.6% net. 2. Net margin was 25.0% before.',
+                             business_overview='A large company with a 30% net margin. It sells devices.')
+        with mock.patch('anthropic.Anthropic') as anthropic:
+            anthropic.return_value.messages.create.return_value = reply
+            ZeldaIntelligencePipelineV2()._generate_valuation_report(doc, {'confidence': 0.5})
+        report = BusinessValuationReport.objects.get(document=doc)
+        self.assertIn('27.6% net (verified: Net margin, FY2026 27.6%', report.risk_report)
+        self.assertNotIn('25.0%', report.risk_report)
+        self.assertEqual(report.business_overview, 'It sells devices.')
+        self.assertIn('Net margin, FY2026: 27.6%', report.financial_summary)
+        self.assertIsNone(report.valuation_low)
