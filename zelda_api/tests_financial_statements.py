@@ -102,6 +102,9 @@ class IncomeStatementParsingTests(SimpleTestCase):
         self.assertIsNone(statement.latest('net_income'))
 
 
+MISSING_MULTIPLE = 'An enterprise-value-to-revenue multiple stated in the submitted documents'
+
+
 def claude_reply(**fields):
     body = {'business_overview': 'Overview.', 'financial_summary': 'Model summary.', 'risk_report': '1. Risk.',
             'valuation_summary': 'Model valuation text.', 'valuation_low': 88800000000,
@@ -139,29 +142,113 @@ class ValuationReportGateTests(TestCase):
                 self.assertIn(text, report.financial_summary)
         self.assertNotIn('14.8', report.financial_summary)
         for text in ('No numeric valuation is given', 'Method:', 'Assumptions: none applied', 'Missing inputs:',
-                     'A basis for the valuation multiple', '$478.834 billion'):
+                     MISSING_MULTIPLE, '$478.834 billion'):
             with self.subTest(text=text):
                 self.assertIn(text, report.valuation_summary)
         self.assertIn('$478.834 billion', prompt)
         self.assertNotIn('"revenue": "$14.8', prompt)
 
     def test_fabricated_multiple_basis_is_not_a_basis(self):
-        reply = claude_reply(multiple_basis={'quote': 'Large technology companies trade at 6x to 10x revenue.'})
+        reply = claude_reply(multiple_basis={
+            'quote': 'Large technology companies trade at 6x to 10x enterprise value to revenue.'})
         report, _ = self.generate(FIXTURE, reply)
         self.assertIsNone(report.valuation_low)
-        self.assertIn('A basis for the valuation multiple', report.valuation_summary)
+        self.assertIn(MISSING_MULTIPLE, report.valuation_summary)
 
-    def test_quoted_multiple_from_the_evidence_keeps_the_range(self):
-        quote = 'Comparable hardware companies trade at 7.5x trailing revenue.'
-        raw = FIXTURE + page_marker('page', 90) + '\n' + quote + '\n'
-        report, _ = self.generate(raw, claude_reply(valuation_low=3_000_000_000_000, valuation_high=3_600_000_000_000,
-                                                    multiple_basis={'quote': quote}))
-        self.assertEqual(report.valuation_low, Decimal('3000000000000'))
-        self.assertIn(f'quoted from the submitted documents: "{quote}"', report.valuation_summary)
+    def evidence(self, *sentences):
+        return FIXTURE + page_marker('page', 90) + '\n' + '\n'.join(sentences) + '\n'
+
+    def assert_withheld(self, report):
+        self.assertIsNone(report.valuation_low)
+        self.assertIsNone(report.valuation_high)
+        self.assertIn('No numeric valuation is given', report.valuation_summary)
+        self.assertIn(MISSING_MULTIPLE, report.valuation_summary)
+        self.assertNotIn('Estimated enterprise value', report.valuation_summary)
+        self.assertEqual(report.range_basis_label, '')
         self.assertIn('$478.834 billion', report.financial_summary)
 
+    def test_supported_ev_revenue_multiple_gives_a_computed_enterprise_value_range(self):
+        quote = 'Comparable hardware companies trade at EV/Revenue multiples of 6.0x to 7.5x trailing revenue.'
+        report, _ = self.generate(self.evidence(quote), claude_reply(multiple_basis={'quote': quote}))
+        self.assertEqual(report.valuation_low, Decimal('2873004000000'))   # 478,834 million x 6.0
+        self.assertEqual(report.valuation_high, Decimal('3591255000000'))  # 478,834 million x 7.5
+        summary = report.valuation_summary
+        for text in ('Estimated enterprise value (EV/Revenue) for Subject Co: $2.873004 trillion to $3.591255 trillion.',
+                     'This is enterprise value, not equity value',
+                     'Formula: enterprise value = Total net sales, FY2026 (fiscal year ended September 26, 2026) '
+                     '× EV/Revenue multiple.',
+                     '• Low: $478,834 million × 6.0x = $2,873,004 million',
+                     '• High: $478,834 million × 7.5x = $3,591,255 million',
+                     '• Total net sales: Consolidated Statements of Operations of Apple Inc. (USD; reported in millions; '
+                     'PDF page 35).',
+                     f'• EV/Revenue multiple of 6.0x to 7.5x, quoted from the submitted documents (PDF page 90): "{quote}"'):
+            with self.subTest(text=text):
+                self.assertIn(text, summary)
+        self.assertEqual(report.range_basis_label, 'Estimated enterprise value (EV/Revenue)')
+
+    def test_supported_multiple_is_found_in_the_evidence_without_a_model_quote(self):
+        report, _ = self.generate(self.evidence('Precedent transactions closed at 7x EV/Sales on annual net sales.'),
+                                  claude_reply(multiple_basis=None))
+        self.assertEqual(report.valuation_low, Decimal('3351838000000'))
+        self.assertEqual(report.valuation_low, report.valuation_high)
+        self.assertIn('(PDF page 90): "Precedent transactions closed at 7x EV/Sales', report.valuation_summary)
+
+    def test_irrelevant_8x_quote_is_not_a_basis(self):
+        quote = 'Unit shipments of the new product line grew 8x over five years.'
+        report, _ = self.generate(self.evidence(quote), claude_reply(multiple_basis={'quote': quote}))
+        self.assert_withheld(report)
+
+    def test_ebitda_multiple_paired_with_revenue_is_not_a_revenue_basis(self):
+        for quote in ('Comparable companies trade at 12x EV/EBITDA and grew revenue 15% last year.',
+                      'Peers trade at an enterprise value of 12x EBITDA on trailing revenue of similar scale.'):
+            with self.subTest(quote=quote):
+                report, _ = self.generate(self.evidence(quote), claude_reply(multiple_basis={'quote': quote}))
+                self.assert_withheld(report)
+
+    def test_ambiguous_bases_are_withheld(self):
+        cases = {
+            'no enterprise value': 'Comparable hardware companies trade at 7.5x trailing revenue.',
+            'forward multiple': 'Comparable companies trade at 6x to 7x forward EV/Revenue.',
+            'equity basis': 'Peers trade at 5x price-to-sales, or 6x EV/Revenue.',
+            'two separate multiples': 'Peers trade at 6x EV/Revenue while leaders trade at 9x EV/Revenue.',
+            'range plus another multiple': 'Peers trade at 6x to 7x EV/Revenue and the sector leader at 11x.',
+        }
+        for name, quote in cases.items():
+            with self.subTest(case=name):
+                report, _ = self.generate(self.evidence(quote), claude_reply(multiple_basis={'quote': quote}))
+                self.assert_withheld(report)
+
+    def test_conflicting_evidence_is_withheld(self):
+        raw = self.evidence('Comparable companies trade at 6x EV/Revenue on trailing net sales.',
+                            'Precedent transactions closed at 9x EV/Revenue on trailing net sales.')
+        report, _ = self.generate(raw, claude_reply(multiple_basis=None))
+        self.assert_withheld(report)
+
+    def test_model_bounds_that_disagree_with_the_inputs_are_never_used(self):
+        quote = 'Comparable hardware companies trade at EV/Revenue multiples of 6.0x to 7.5x trailing revenue.'
+        reply = claude_reply(valuation_low=88_800_000_000, valuation_high=148_000_000_000,
+                             valuation_summary='Applying 6-10x to revenue of $14.8 billion gives $88.8B to $148B.',
+                             multiple_basis={'quote': quote})
+        report, _ = self.generate(self.evidence(quote), reply)
+        self.assertEqual((report.valuation_low, report.valuation_high),
+                         (Decimal('2873004000000'), Decimal('3591255000000')))
+        for model_text in ('88.8', '148', '14.8', '6-10x'):
+            with self.subTest(model_text=model_text):
+                self.assertNotIn(model_text, report.valuation_summary)
+
+    def test_model_bounds_without_a_basis_are_dropped(self):
+        report, _ = self.generate(FIXTURE, claude_reply(valuation_low=2_873_004_000_000,
+                                                        valuation_high=3_591_255_000_000))
+        self.assert_withheld(report)
+
+    def test_value_too_large_to_store_is_withheld(self):
+        quote = 'Comparable companies trade at 25x EV/Revenue on trailing net sales.'
+        report, _ = self.generate(self.evidence(quote), claude_reply(multiple_basis={'quote': quote}))
+        self.assertIsNone(report.valuation_low)
+        self.assertIn('below $10 trillion', report.valuation_summary)
+
     def test_no_verified_annual_revenue_means_no_range_even_with_a_quoted_multiple(self):
-        quote = 'Comparable companies trade at 4x revenue.'
+        quote = 'Comparable companies trade at 4x EV/Revenue on trailing revenue.'
         raw = page_marker('page', 1) + '\nCurrent Revenue: $4.5M\n' + quote + '\n'
         report, _ = self.generate(raw, claude_reply(valuation_low=1, valuation_high=2, multiple_basis={'quote': quote}))
         self.assertIsNone(report.valuation_high)

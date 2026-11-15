@@ -387,7 +387,7 @@ function renderFull(data) {
         ${trustStatsHtml(data)}
         <div class="card border-0 shadow-sm rounded-4 mb-4 bg-success-subtle">
             <div class="card-body p-4 text-center">
-                <h6 class="text-uppercase fw-bold text-muted small mb-2">Estimated Valuation Range</h6>
+                <h6 class="text-uppercase fw-bold text-muted small mb-2">${escapeHtml(data.valuation_basis_label || 'Estimated Valuation Range')}</h6>
                 <h2 class="fw-bold text-success mb-0">${valuationRange}</h2>
                 ${rangeBar}
                 ${trendBadge}

@@ -110,6 +110,33 @@ class PaidUnlockPreviewTests(TestCase):
         self.assertNotIn('valuation_low', data)
         self.assertNotIn('1000000', str(data))
 
+    def full_report(self, summary):
+        from matchmaking.models import InvestorApplication
+        user = User.objects.create_user(f'range_full_{abs(hash(summary))}', password='x')
+        InvestorApplication.objects.create(user=user, is_premium=True)
+        doc = DocumentSource.objects.create(
+            filename='filing.pdf', source_entity='Test Co', document_type='business_valuation',
+            uploaded_by=user, status='analyzed', total_pages=12, valuation_tier='full')
+        BusinessValuationReport.objects.create(
+            document=doc, confidence_score=0.7, business_overview='We build tools.', financial_summary='Verified.',
+            risk_report='Risk one.', valuation_summary=summary, valuation_low=1_000_000, valuation_high=2_000_000)
+        self.client.force_login(user)
+        return self.client.get(reverse('zelda_api:document_valuation', args=[doc.id])).json()
+
+    def test_computed_range_is_labelled_enterprise_value(self):
+        from .valuation_gate import EV_SUMMARY_PREFIX
+        data = self.full_report(f'{EV_SUMMARY_PREFIX} for Test Co: $1 million to $2 million.')
+        self.assertEqual(data['valuation_basis_label'], 'Estimated enterprise value (EV/Revenue)')
+        older = self.full_report('Applied a revenue multiple.')  # a range saved before the gate
+        self.assertEqual(older['valuation_basis_label'], '')
+
+    def test_pages_showing_a_stored_range_use_its_label(self):
+        report_page = (TEMPLATES / 'zelda_valuation_report.html').read_text(encoding='utf-8')
+        self.assertIn("data.valuation_basis_label || 'Estimated Valuation Range'", report_page)
+        dashboard = (TEMPLATES / 'matchmaking' / 'seller_dashboard.html').read_text(encoding='utf-8')
+        self.assertIn('suggested_valuation.range_basis_label', dashboard)
+        self.assertIn('enterprise value, not an asking price for equity', dashboard)
+
     def test_preview_page_renders_the_branch_and_the_disclosure_beside_the_unlock(self):
         source = (TEMPLATES / 'zelda_valuation_report.html').read_text(encoding='utf-8')
         preview = source[source.index('function renderPreview'):]

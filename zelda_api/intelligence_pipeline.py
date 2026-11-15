@@ -1430,9 +1430,12 @@ class ZeldaIntelligencePipelineV2:
     7. valuation_low and valuation_high MUST be plain numbers (no currency symbols, no commas)
     derived from standard valuation methods (revenue multiple, EBITDA multiple, etc.) applied
     to the disclosed financials — never guess a number with no basis in the source data.
-    8. A multiple needs a basis stated in the submitted documents. Quote that sentence verbatim in
-    multiple_basis. If the documents state no multiple, set valuation_low, valuation_high and
-    multiple_basis to null; do not use a "typical" or assumed multiple.
+    8. A multiple needs a basis stated in the submitted documents. Zelda computes any range itself,
+    only from an enterprise-value-to-revenue (EV/Revenue or EV/Sales) multiple the documents state;
+    your valuation_low and valuation_high are not used. If the insights quote such a sentence, copy
+    it verbatim into multiple_basis; otherwise set multiple_basis to null. Never use a "typical" or
+    assumed multiple, and never apply a multiple of another metric (EBITDA, earnings, ARR) to revenue.
+    Do not state valuation figures in valuation_summary; Zelda writes them from its computation.
     9. When verified_financials are present, use those figures exactly as given, with their periods.
     Deferred revenue is never revenue, and a figure with no stated period is never annual revenue.
     verified_financials list only what Zelda verified; never say the documents omit a figure
@@ -1462,8 +1465,8 @@ class ZeldaIntelligencePipelineV2:
     business_overview, financial_summary, risk_report, valuation_summary, valuation_low,
     valuation_high, multiple_basis, confidence
 
-    multiple_basis: {{"quote": "<sentence copied verbatim from the documents that states the multiple>"}},
-    or null when the documents state no multiple.
+    multiple_basis: {{"quote": "<sentence copied verbatim from the documents that states an EV/Revenue multiple>"}},
+    or null when the documents state none.
 
     ### Instructions per section:
 

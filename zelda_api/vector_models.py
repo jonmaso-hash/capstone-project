@@ -448,6 +448,12 @@ class BusinessValuationReport(FoundryStandardMixin, models.Model):
         verbose_name = "Business Valuation Report"
         verbose_name_plural = "Business Valuation Reports"
 
+    @property
+    def range_basis_label(self):
+        """'Estimated enterprise value (EV/Revenue)' for a range the gate computed, else ''."""
+        from .valuation_gate import range_basis_label
+        return range_basis_label(self.valuation_summary)
+
     def get_serialized_data(self):
         return {
             "id": self.id,

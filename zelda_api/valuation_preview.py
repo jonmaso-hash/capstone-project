@@ -119,6 +119,7 @@ def build_valuation_response(doc, report, insights, confidence_breakdown, overal
     if tier == 'full':
         response['valuation_low'] = str(report.valuation_low) if report.valuation_low is not None else None
         response['valuation_high'] = str(report.valuation_high) if report.valuation_high is not None else None
+        response['valuation_basis_label'] = report.range_basis_label
         response['confidence_breakdown'] = confidence_breakdown
         response['sections']['financial_summary'] = report.financial_summary
         response['sections']['risk_report'] = report.risk_report
