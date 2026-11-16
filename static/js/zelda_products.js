@@ -49,6 +49,10 @@
         box.scrollIntoView({block: 'nearest', behavior: 'smooth'});
     }
 
+    function sentencePunctuation(text) {
+        return /[.!?]$/.test(text) ? '' : '.';
+    }
+
     function selectedReports(panel) {
         return Array.from(panel.querySelectorAll('[name="pack-report"]:checked')).map(input => input.value);
     }
@@ -188,7 +192,7 @@
                             });
                             statusBox.className = 'small text-success';
                             select.textContent = 'Company selected';
-                            statusBox.textContent = `Found: ${evidence.company}. Review the evidence and any upload requirements below.`;
+                            statusBox.textContent = `Found: ${evidence.company}${sentencePunctuation(evidence.company)} Review the evidence and any upload requirements below.`;
                         } catch (error) {
                             statusBox.className = 'small text-danger';
                             statusBox.textContent = error.message;
@@ -231,7 +235,7 @@
                         body.set('subject_token', selectedSubject.token);
                     }
                     evidence = await post(config.dataset.intakeUrl, body);
-                    status(panel, `Document selected for ${evidence.company}. Choose payment or use a credit.`, 'success', 'upload');
+                    status(panel, `Document selected for ${evidence.company}${sentencePunctuation(evidence.company)} Choose payment or use a credit.`, 'success', 'upload');
                 } catch (error) {
                     status(panel, error.message, 'error', 'upload');
                 } finally {
@@ -289,7 +293,7 @@
                                     if (companyInput) companyInput.value = evidence.company;
                                 });
                                 select.textContent = 'Company selected';
-                                status(panel, `Found: ${evidence.company}. Review the evidence and any upload requirements below.`, 'success', 'search');
+                                status(panel, `Found: ${evidence.company}${sentencePunctuation(evidence.company)} Review the evidence and any upload requirements below.`, 'success', 'search');
                             } catch (error) {
                                 status(panel, error.message, 'error', 'search');
                             } finally {
