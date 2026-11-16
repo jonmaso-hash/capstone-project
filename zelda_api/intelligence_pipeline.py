@@ -1345,13 +1345,16 @@ class ZeldaIntelligencePipelineV2:
             from .financial_statements import read_income_statement
             from .valuation_gate import apply_statement_facts, gate_valuation
 
-            structured_context = self._build_structured_context(document_source, insights)
+            # A background job: acts as the document's owner. Refuses (and the
+            # report errors) if the owner can no longer be a principal.
+            principal = self.owner_task_principal(document_source)
+            structured_context = self._build_structured_context(document_source, insights, principal)
             # A filing's own consolidated statement outranks any sentence-level
             # revenue: it carries the line item, period, currency, scale and page.
             statement = read_income_statement(document_source.raw_text_full or '')
             if statement:
                 apply_statement_facts(structured_context, statement, document_source.id)
-            sections = self._call_claude_for_valuation(document_source, structured_context, insights)
+            sections = self._call_claude_for_valuation(document_source, structured_context, insights, principal)
 
             if 'error' in sections:
                 # Same reasoning as _generate_memo's identical check — without
@@ -1384,8 +1387,12 @@ class ZeldaIntelligencePipelineV2:
             logger.error(f"Valuation report generation error: {str(e)}")
             return {'error': f'Valuation report error: {str(e)}'}
 
-    def _call_claude_for_valuation(self, doc: DocumentSource, facts: dict, insights) -> dict:
-        """Call Claude API to generate an evidence-grounded business valuation report."""
+    def _call_claude_for_valuation(self, doc: DocumentSource, facts: dict, insights, principal=None) -> dict:
+        """
+        Call Claude API to generate an evidence-grounded business valuation report.
+        `principal` reads the saved insights' source sentences; an insight whose
+        source it may not read is left out of the prompt.
+        """
         import anthropic
         import json
 
@@ -1397,7 +1404,10 @@ class ZeldaIntelligencePipelineV2:
         # Likewise a Funding insight whose source is a buyback or dividend
         # (one saved before the extractor learned the difference).
         def admissible_insight(ins):
-            source = f'{ins.insight_text} {self._insight_source_sentence(doc, ins)}'
+            sentence = self._insight_source_sentence(principal, doc, ins)
+            if sentence is None:
+                return False
+            source = f'{ins.insight_text} {sentence}'
             if names_deferred_revenue(source):
                 return False
             return not (ins.category == 'Funding' and describes_capital_return(source))
@@ -1413,7 +1423,7 @@ class ZeldaIntelligencePipelineV2:
 
         facts_display = json.dumps({
             k: v for k, v in facts.items()
-            if k not in ('missing_fields', 'traction_signals', '_provenance') and v is not None
+            if k not in ('missing_fields', 'traction_signals', '_provenance', '_unavailable_evidence') and v is not None
         }, indent=2)
 
         system_prompt = """You are a senior M&A analyst preparing an evidence-grounded business
@@ -1520,25 +1530,37 @@ class ZeldaIntelligencePipelineV2:
             return {'error': f'Valuation report generation failed: {str(e)}'}
 
     @staticmethod
-    def _insight_source_sentence(doc, insight) -> str:
+    def owner_task_principal(doc):
         """
-        The sentence of the insight's source chunk that contains its text, or ''.
-
-        The insight's link supplies chunk ids only (metadata). The text is read
-        through the principal-scoped document_chunks(), as the document's owner
-        (the worker pattern of tasks.generate_intelligence_memo), and only from
-        `doc`. An insight with no linked chunk needs no text. A linked chunk the
-        owner may not read refuses (PrincipalRequired / RetrievalRefused); it is
-        never read some other way.
+        The principal a background job acts as on `doc`: its owner (the worker
+        pattern of tasks.generate_intelligence_memo). For jobs only -- a web
+        request passes Principal.from_request() for the viewer instead.
         """
         from .principal import ORIGIN_TASK, Principal
+        return Principal.for_user(doc.uploaded_by, ORIGIN_TASK, label='intelligence_pipeline.valuation_report')
+
+    @staticmethod
+    def _insight_source_sentence(principal, doc, insight) -> Optional[str]:
+        """
+        The sentence of the insight's source chunk that contains its text; ''
+        when the insight has no linked chunk or the text is not found there;
+        None when the source exists but `principal` may not read its text.
+
+        The insight's link supplies chunk ids only (metadata). The text is read
+        through the principal-scoped document_chunks(), for `principal`, and
+        only from `doc`. Whether `principal` may read it is the existing
+        text-access policy (authorize().text_permitted); without a principal
+        nothing is read. None means "unavailable", never "checked and clean":
+        callers must not count a figure whose guard could not run.
+        """
+        from .authorization import authorize
         from .retrieval import document_chunks
 
         chunk_ids = list(insight.source_chunks.values_list('id', flat=True)) if insight.pk else []
         if not chunk_ids:
             return ''
-        principal = Principal.for_user(doc.uploaded_by, ORIGIN_TASK,
-                                       label='intelligence_pipeline.insight_source_sentence')
+        if principal is None or not authorize(principal).text_permitted(doc):
+            return None
         chunk = document_chunks(principal, doc).filter(id__in=chunk_ids).first()
         text, needle = (chunk.raw_text if chunk else ''), (insight.insight_text or '').strip()[:40]
         at = text.find(needle) if needle else -1
@@ -1570,9 +1592,16 @@ class ZeldaIntelligencePipelineV2:
             return document_num == 0
         return abs(document_num - profile_num) / abs(profile_num) <= 0.01
 
-    def _build_structured_context(self, doc: DocumentSource, insights) -> dict:
+    def _build_structured_context(self, doc: DocumentSource, insights, principal=None) -> dict:
         """
         Extract structured facts from insights for Claude context.
+
+        `principal` is who is asking: owner_task_principal(doc) in a background
+        job, Principal.from_request() for the viewer in a web request. It reads
+        saved insights' source sentences for the deferred-revenue and
+        capital-return guards. Where it may not read that source (or is None),
+        the guard cannot run, so the figure is not counted: it is listed in
+        facts['_unavailable_evidence'] as {'field', 'label', 'insight_id'}.
 
         Provenance precedence: when both the uploader's own (company-
         matched) founder profile AND the document itself state a value for
@@ -1604,7 +1633,18 @@ class ZeldaIntelligencePipelineV2:
             'traction_signals': [],
             'missing_fields': [],
             '_provenance': {},
+            '_unavailable_evidence': [],
         }
+
+        def guarded(insight, field, label, rejects):
+            """Whether the insight's source confirms the figure; unreadable is marked, not counted."""
+            sentence = self._insight_source_sentence(principal, doc, insight)
+            if sentence is None:
+                if all(e['field'] != field for e in facts['_unavailable_evidence']):
+                    facts['_unavailable_evidence'].append(
+                        {'field': field, 'label': label, 'insight_id': insight.pk})
+                return False
+            return not rejects(f'{insight.insight_text or ""} {sentence}')
 
         # Try to pull from the uploader's own Application model — but ONLY
         # if it's actually about the company this document is analyzing.
@@ -1726,7 +1766,7 @@ class ZeldaIntelligencePipelineV2:
                 m = pattern.search(text) if not states_other_metric(text) else None
                 # The extractor can trim "total deferred revenue of $14.8 billion"
                 # down to "$14.8 billion"; the source sentence still says what it is.
-                if m and names_deferred_revenue(f'{text} {self._insight_source_sentence(doc, insight)}'):
+                if m and not guarded(insight, 'revenue', 'Revenue / ARR / MRR', names_deferred_revenue):
                     m = None
                 if m:
                     facts[revenue_field_for(text)] = m.group(0).strip()
@@ -1736,7 +1776,7 @@ class ZeldaIntelligencePipelineV2:
                 m = raise_amount_pattern.search(text)
                 # "$100 billion and raise[d its quarterly dividend]" satisfies the
                 # pattern; the insight's source sentence says it is a buyback.
-                if m and describes_capital_return(f'{text} {self._insight_source_sentence(doc, insight)}'):
+                if m and not guarded(insight, 'raise_amount', 'Raise amount', describes_capital_return):
                     m = None
                 if m:
                     facts['raise_amount'] = m.group(0).strip()
@@ -1851,6 +1891,10 @@ class ZeldaIntelligencePipelineV2:
                        if field == 'revenue' else facts[field])
             if not present:
                 facts['missing_fields'].append(label)
+        # A field another source filled is not unavailable; one left empty is.
+        filled = {'revenue': facts['revenue'] or facts['arr'] or facts['mrr'],
+                  'raise_amount': facts['raise_amount']}
+        facts['_unavailable_evidence'] = [e for e in facts['_unavailable_evidence'] if not filled[e['field']]]
 
         return facts
     

@@ -347,7 +347,8 @@ function renderFull(data) {
                 <p class="text-muted mb-0" style="font-size: 0.75rem;">Share of key financial fields (revenue, burn rate, growth, retention, etc.) actually disclosed in the submitted documents.</p>
             </div>
             <strong class="text-nowrap ms-3">${data.financial_completeness.disclosed} of ${data.financial_completeness.total} fields</strong>
-        </div>` : '';
+        </div>
+        ${(data.unavailable_evidence || []).length ? `<p class="text-muted mb-0 mt-1 unavailable-evidence" style="font-size: 0.75rem;">Source unavailable to you, not counted: ${escapeHtml(data.unavailable_evidence.join(', '))}</p>` : ''}` : '';
 
     // Only shown when a PRIOR full-tier valuation exists for the same
     // company (see zelda_api/valuation_trend.py) — never computed from a

@@ -130,6 +130,38 @@ class PaidUnlockPreviewTests(TestCase):
         older = self.full_report('Applied a revenue multiple.')  # a range saved before the gate
         self.assertEqual(older['valuation_basis_label'], '')
 
+    def test_viewer_without_source_text_access_gets_evidence_marked_unavailable_not_403(self):
+        from matchmaking.models import InvestorApplication
+        from unittest import mock
+        from .authorization import Authorization
+        from .vector_models import DocumentChunk, IntelligenceInsight
+        user = User.objects.create_user('range_unavailable_viewer', password='x')
+        InvestorApplication.objects.create(user=user, is_premium=True)
+        doc = DocumentSource.objects.create(
+            filename='filing.pdf', source_entity='Test Co', document_type='business_valuation',
+            uploaded_by=user, status='analyzed', total_pages=12, valuation_tier='full')
+        BusinessValuationReport.objects.create(
+            document=doc, confidence_score=0.7, business_overview='We build tools.', financial_summary='Verified.',
+            risk_report='Risk one.', valuation_summary='Summary.')
+        chunk = DocumentChunk.objects.create(document=doc, chunk_index=0, page_number=3,
+                                             raw_text='In 2026 the Company raised $25 million in a Series B.',
+                                             token_count=12)
+        insight = IntelligenceInsight.objects.create(document=doc, category='Funding', confidence_score=90,
+                                                     insight_text='raised $25 million in a Series B')
+        insight.source_chunks.set([chunk])
+        self.client.force_login(user)
+        url = reverse('zelda_api:document_valuation', args=[doc.id])
+        readable = self.client.get(url).json()  # positive control
+        self.assertEqual((readable['unavailable_evidence'], readable['financial_completeness']['disclosed']), ([], 1))
+        with mock.patch.object(Authorization, 'text_permitted', return_value=False):
+            response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['unavailable_evidence'], ['Raise amount'])
+        self.assertEqual(data['financial_completeness']['disclosed'], 0)
+        report_page = (TEMPLATES / 'zelda_valuation_report.html').read_text(encoding='utf-8')
+        self.assertIn('Source unavailable to you, not counted: ${escapeHtml(data.unavailable_evidence', report_page)
+
     def test_pages_showing_a_stored_range_use_its_label(self):
         report_page = (TEMPLATES / 'zelda_valuation_report.html').read_text(encoding='utf-8')
         self.assertIn("data.valuation_basis_label || 'Estimated Valuation Range'", report_page)

@@ -268,7 +268,8 @@ class DeferredRevenueFactTests(TestCase):
         insight = IntelligenceInsight.objects.create(document=doc, category='Revenue', confidence_score=95,
                                                      insight_text='$14.8 billion and $13.7 billion, respectively')
         insight.source_chunks.set([chunk])
-        return ZeldaIntelligencePipelineV2()._build_structured_context(doc, doc.insights.all())
+        return ZeldaIntelligencePipelineV2()._build_structured_context(
+            doc, doc.insights.all(), ZeldaIntelligencePipelineV2.owner_task_principal(doc))
 
     def test_trimmed_deferred_revenue_sentence_is_not_revenue(self):
         facts = self.facts_for('As of September 26, 2026 and September 27, 2025, the Company had total deferred '
@@ -354,7 +355,7 @@ class CapitalReturnIsNotFundraisingTests(TestCase):
 
     def test_saved_buyback_insight_is_not_a_raise_amount_or_prompt_funding(self):
         doc = self.document(self.SAVED_BUYBACK_INSIGHT, PAGES[31])
-        facts = self.pipeline._build_structured_context(doc, doc.insights.all())
+        facts = self.pipeline._build_structured_context(doc, doc.insights.all(), self.pipeline.owner_task_principal(doc))
         self.assertIsNone(facts['raise_amount'])
         prompt = self.prompt_for(doc)
         self.assertNotIn('$100 billion', prompt)
@@ -362,68 +363,145 @@ class CapitalReturnIsNotFundraisingTests(TestCase):
 
     def test_genuine_raise_insight_keeps_raise_amount_and_reaches_the_prompt(self):
         doc = self.document('$25 million in a Series B financing led by Example Ventures', SERIES_B_LINE)
-        facts = self.pipeline._build_structured_context(doc, doc.insights.all())
+        facts = self.pipeline._build_structured_context(doc, doc.insights.all(), self.pipeline.owner_task_principal(doc))
         self.assertIn('$25 million', facts['raise_amount'])
         prompt = self.prompt_for(doc)
         self.assertIn('$25 million in a Series B financing', prompt)
         self.assertIn('raise_amount', prompt)
 
 
+def viewer_principal(user):
+    from django.test import RequestFactory
+    from .principal import Principal
+    request = RequestFactory().get('/')
+    request.user, request.session = user, {}
+    return Principal.from_request(request, label='test viewer')
+
+
 class InsightSourceSentenceScopeTests(TestCase):
-    """The guards read an insight's source text only through the principal-scoped document_chunks()."""
+    """
+    The guards read an insight's source text only through document_chunks(),
+    for the principal actually asking: the owner in a background job, the
+    viewer in a web request. A viewer without text access gets the figure
+    marked unavailable -- not counted, not confirmed, and no refusal.
+    """
 
     def setUp(self):
         self.owner = get_user_model().objects.create_user('source_scope_owner', password='x')
+        self.viewer = get_user_model().objects.create_user('source_scope_viewer', password='x')
 
-    @staticmethod
-    def sentence(doc, insight):
-        return ZeldaIntelligencePipelineV2._insight_source_sentence(doc, insight)
-
-    def doc(self, owner):
-        return DocumentSource.objects.create(filename='f.pdf', source_entity='Subject Co', uploaded_by=owner,
+    def doc(self, owner=None):
+        return DocumentSource.objects.create(filename='f.pdf', source_entity='Subject Co',
+                                             uploaded_by=owner or self.owner,
                                              document_type='business_valuation', raw_text_full='')
 
-    def saved(self, doc, source):
-        chunk = DocumentChunk.objects.create(document=doc, chunk_index=0, page_number=31, raw_text=source,
-                                             token_count=60)
-        insight = IntelligenceInsight.objects.create(document=doc, category='Funding', confidence_score=95,
-                                                     insight_text='$25 million in a Series B')
+    def saved(self, doc, source, category='Funding', text='$25 million in a Series B'):
+        chunk = DocumentChunk.objects.create(document=doc, chunk_index=doc.insights.count(), page_number=31,
+                                             raw_text=source, token_count=60)
+        insight = IntelligenceInsight.objects.create(document=doc, category=category, confidence_score=95,
+                                                     insight_text=text)
         insight.source_chunks.set([chunk])
         return insight
 
-    def test_reads_through_document_chunks_as_the_owner_of_this_document(self):
+    def facts(self, doc, principal):
+        return ZeldaIntelligencePipelineV2()._build_structured_context(doc, doc.insights.all(), principal)
+
+    # -- authorized worker ----------------------------------------------------
+
+    def test_worker_reads_through_document_chunks_as_the_owner_of_this_document(self):
         from . import retrieval
-        doc = self.doc(self.owner)
-        insight = self.saved(doc, SERIES_B_LINE)
+        doc = self.doc()
+        self.saved(doc, SERIES_B_LINE)
         with mock.patch.object(retrieval, 'document_chunks', wraps=retrieval.document_chunks) as scoped:
-            self.assertIn('$25 million in a Series B financing', self.sentence(doc, insight))
+            facts = self.facts(doc, ZeldaIntelligencePipelineV2.owner_task_principal(doc))
+        self.assertIn('$25 million', facts['raise_amount'])
+        self.assertEqual(facts['_unavailable_evidence'], [])
         principal, scoped_doc = scoped.call_args.args
         self.assertEqual((principal.user, principal.origin, scoped_doc), (self.owner, 'task', doc))
 
-    def deactivated_owners_doc(self):
-        gone = get_user_model().objects.create_user('source_scope_gone', password='x', is_active=False)
-        return self.doc(gone)
+    def test_valuation_job_acts_as_the_owner_and_keeps_its_guards(self):
+        from . import retrieval
+        doc = self.doc()
+        self.saved(doc, SERIES_B_LINE)
+        self.saved(doc, PAGES[31], text=CapitalReturnIsNotFundraisingTests.SAVED_BUYBACK_INSIGHT)
+        with mock.patch.object(retrieval, 'document_chunks', wraps=retrieval.document_chunks) as scoped, \
+                mock.patch('anthropic.Anthropic') as anthropic:
+            anthropic.return_value.messages.create.return_value = claude_reply()
+            result = ZeldaIntelligencePipelineV2()._generate_valuation_report(doc, {'confidence': 0.5})
+            prompt = anthropic.return_value.messages.create.call_args.kwargs['messages'][0]['content']
+        self.assertNotIn('error', result)
+        self.assertIn('$25 million in a Series B', prompt)
+        self.assertNotIn('$100 billion', prompt)
+        self.assertTrue(scoped.call_args_list)
+        for call in scoped.call_args_list:
+            self.assertEqual((call.args[0].user, call.args[0].origin), (self.owner, 'task'))
 
-    def test_an_insight_with_no_linked_chunk_needs_no_text_or_principal(self):
-        doc = self.deactivated_owners_doc()
-        insight = IntelligenceInsight.objects.create(document=doc, category='Funding', confidence_score=95,
-                                                     insight_text='$25 million')
-        self.assertEqual(self.sentence(doc, insight), '')
+    def test_valuation_job_whose_owner_cannot_be_a_principal_writes_no_report(self):
+        gone = get_user_model().objects.create_user('source_scope_gone', password='x', is_active=False)
+        doc = self.doc(gone)
+        self.saved(doc, SERIES_B_LINE)
+        with mock.patch('anthropic.Anthropic') as anthropic:
+            result = ZeldaIntelligencePipelineV2()._generate_valuation_report(doc, {'confidence': 0.5})
+        self.assertIn('error', result)
+        anthropic.return_value.messages.create.assert_not_called()
+        self.assertFalse(BusinessValuationReport.objects.filter(document=doc).exists())
+
+    # -- web viewer -----------------------------------------------------------
+
+    def test_non_owner_viewer_without_text_access_gets_figures_marked_unavailable(self):
+        from . import retrieval
+        doc = self.doc()
+        self.saved(doc, 'Total revenue was $14.8 billion and $13.7 billion, respectively. Other text.',
+                   category='Revenue', text='$14.8 billion and $13.7 billion, respectively')
+        self.saved(doc, SERIES_B_LINE)
+        with mock.patch.object(retrieval, 'document_chunks', wraps=retrieval.document_chunks) as scoped:
+            facts = self.facts(doc, viewer_principal(self.viewer))
+        scoped.assert_not_called()
+        self.assertIsNone(facts['revenue'])
+        self.assertIsNone(facts['raise_amount'])
+        self.assertEqual([e['field'] for e in facts['_unavailable_evidence']], ['revenue', 'raise_amount'])
+        # positive control: the owner, viewing, has the same figures confirmed
+        owner_facts = self.facts(doc, viewer_principal(self.owner))
+        self.assertEqual(owner_facts['revenue'], '$14.8')
+        self.assertIn('$25 million', owner_facts['raise_amount'])
+        self.assertEqual(owner_facts['_unavailable_evidence'], [])
+
+    def test_prompt_leaves_out_an_insight_whose_source_the_principal_may_not_read(self):
+        doc = self.doc()
+        self.saved(doc, SERIES_B_LINE)
+        facts = self.facts(doc, ZeldaIntelligencePipelineV2.owner_task_principal(doc))
+        prompts = {}
+        for who, principal in (('owner', ZeldaIntelligencePipelineV2.owner_task_principal(doc)),
+                               ('viewer', viewer_principal(self.viewer))):
+            with mock.patch('anthropic.Anthropic') as anthropic:
+                anthropic.return_value.messages.create.return_value = claude_reply()
+                ZeldaIntelligencePipelineV2()._call_claude_for_valuation(doc, facts, doc.insights.all(), principal)
+                prompts[who] = anthropic.return_value.messages.create.call_args.kwargs['messages'][0]['content']
+        self.assertIn('1. [Funding | 95% confidence] $25 million in a Series B', prompts['owner'])  # control
+        self.assertNotIn('[Funding | 95% confidence]', prompts['viewer'])
+
+    def test_no_principal_reads_nothing_and_confirms_nothing(self):
+        doc = self.doc()
+        self.saved(doc, SERIES_B_LINE)
+        facts = self.facts(doc, None)
+        self.assertIsNone(facts['raise_amount'])
+        self.assertEqual(facts['_unavailable_evidence'][0]['label'], 'Raise amount')
+
+    def test_unlinked_insight_needs_no_source_text(self):
+        doc = self.doc()
+        IntelligenceInsight.objects.create(document=doc, category='Funding', confidence_score=95,
+                                           insight_text='Raised $25 million in a Series B')
+        facts = self.facts(doc, viewer_principal(self.viewer))
+        self.assertIn('$25 million', facts['raise_amount'])
+        self.assertEqual(facts['_unavailable_evidence'], [])
 
     def test_a_chunk_of_another_document_is_not_read(self):
-        doc, other = self.doc(self.owner), self.doc(self.owner)
+        doc, other = self.doc(), self.doc()
         insight = self.saved(other, SERIES_B_LINE)
-        self.assertEqual(self.sentence(doc, insight), '')
-        self.assertIn('Series B financing', self.sentence(other, insight))  # positive control
-
-    def test_a_linked_chunk_whose_owner_may_not_be_a_principal_refuses(self):
-        from .principal import PrincipalRequired
-        doc = self.deactivated_owners_doc()
-        self.saved(doc, SERIES_B_LINE)
-        with self.assertRaises(PrincipalRequired):
-            self.sentence(doc, doc.insights.get())
-        with self.assertRaises(PrincipalRequired):
-            ZeldaIntelligencePipelineV2()._build_structured_context(doc, doc.insights.all())
+        owner = ZeldaIntelligencePipelineV2.owner_task_principal(doc)
+        self.assertEqual(ZeldaIntelligencePipelineV2._insight_source_sentence(owner, doc, insight), '')
+        self.assertIn('Series B financing',  # positive control
+                      ZeldaIntelligencePipelineV2._insight_source_sentence(owner, other, insight))
 
 
 class NetMarginTests(TestCase):

@@ -409,13 +409,17 @@ class DocumentValuationView(APIView):
             insights = list(doc.insights.all())
             confidence_breakdown = compute_confidence_breakdown(insights)
             overall_confidence = compute_overall_confidence(insights) if insights else report.confidence_score
-            facts = ZeldaIntelligencePipelineV2()._build_structured_context(doc, insights)
+            # The viewer's own principal and text access, never the owner's: a
+            # figure whose source the viewer may not read is marked unavailable.
+            principal = Principal.from_request(request, label='zelda_api:document_valuation')
+            facts = ZeldaIntelligencePipelineV2()._build_structured_context(doc, insights, principal)
             financial_completeness = compute_financial_completeness(facts)
 
             response = build_valuation_response(
                 doc, report, insights, confidence_breakdown, overall_confidence,
                 financial_completeness, doc.valuation_tier,
             )
+            response['unavailable_evidence'] = [e['label'] for e in facts.get('_unavailable_evidence', [])]
             if doc.valuation_tier == 'preview':
                 from .quotas import valuation_unlock_price
                 purchase_type, price = valuation_unlock_price(request.user)
@@ -429,7 +433,7 @@ class DocumentValuationView(APIView):
                     if trend:
                         response['trend'] = trend
                         previous_facts = ZeldaIntelligencePipelineV2()._build_structured_context(
-                            previous_doc, list(previous_doc.insights.all()),
+                            previous_doc, list(previous_doc.insights.all()), principal,
                         )
                         drivers = compute_valuation_drivers(facts, previous_facts)
                         if drivers:
