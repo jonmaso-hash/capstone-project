@@ -1397,7 +1397,7 @@ class ZeldaIntelligencePipelineV2:
         # Likewise a Funding insight whose source is a buyback or dividend
         # (one saved before the extractor learned the difference).
         def admissible_insight(ins):
-            source = f'{ins.insight_text} {self._insight_source_sentence(ins)}'
+            source = f'{ins.insight_text} {self._insight_source_sentence(doc, ins)}'
             if names_deferred_revenue(source):
                 return False
             return not (ins.category == 'Funding' and describes_capital_return(source))
@@ -1520,9 +1520,26 @@ class ZeldaIntelligencePipelineV2:
             return {'error': f'Valuation report generation failed: {str(e)}'}
 
     @staticmethod
-    def _insight_source_sentence(insight) -> str:
-        """The sentence of the insight's source chunk that contains its text, or ''."""
-        chunk = insight.source_chunks.first() if insight.pk else None
+    def _insight_source_sentence(doc, insight) -> str:
+        """
+        The sentence of the insight's source chunk that contains its text, or ''.
+
+        The insight's link supplies chunk ids only (metadata). The text is read
+        through the principal-scoped document_chunks(), as the document's owner
+        (the worker pattern of tasks.generate_intelligence_memo), and only from
+        `doc`. An insight with no linked chunk needs no text. A linked chunk the
+        owner may not read refuses (PrincipalRequired / RetrievalRefused); it is
+        never read some other way.
+        """
+        from .principal import ORIGIN_TASK, Principal
+        from .retrieval import document_chunks
+
+        chunk_ids = list(insight.source_chunks.values_list('id', flat=True)) if insight.pk else []
+        if not chunk_ids:
+            return ''
+        principal = Principal.for_user(doc.uploaded_by, ORIGIN_TASK,
+                                       label='intelligence_pipeline.insight_source_sentence')
+        chunk = document_chunks(principal, doc).filter(id__in=chunk_ids).first()
         text, needle = (chunk.raw_text if chunk else ''), (insight.insight_text or '').strip()[:40]
         at = text.find(needle) if needle else -1
         if at < 0:
@@ -1709,7 +1726,7 @@ class ZeldaIntelligencePipelineV2:
                 m = pattern.search(text) if not states_other_metric(text) else None
                 # The extractor can trim "total deferred revenue of $14.8 billion"
                 # down to "$14.8 billion"; the source sentence still says what it is.
-                if m and names_deferred_revenue(f'{text} {self._insight_source_sentence(insight)}'):
+                if m and names_deferred_revenue(f'{text} {self._insight_source_sentence(doc, insight)}'):
                     m = None
                 if m:
                     facts[revenue_field_for(text)] = m.group(0).strip()
@@ -1719,7 +1736,7 @@ class ZeldaIntelligencePipelineV2:
                 m = raise_amount_pattern.search(text)
                 # "$100 billion and raise[d its quarterly dividend]" satisfies the
                 # pattern; the insight's source sentence says it is a buyback.
-                if m and describes_capital_return(f'{text} {self._insight_source_sentence(insight)}'):
+                if m and describes_capital_return(f'{text} {self._insight_source_sentence(doc, insight)}'):
                     m = None
                 if m:
                     facts['raise_amount'] = m.group(0).strip()

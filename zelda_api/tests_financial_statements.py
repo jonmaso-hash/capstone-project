@@ -369,6 +369,63 @@ class CapitalReturnIsNotFundraisingTests(TestCase):
         self.assertIn('raise_amount', prompt)
 
 
+class InsightSourceSentenceScopeTests(TestCase):
+    """The guards read an insight's source text only through the principal-scoped document_chunks()."""
+
+    def setUp(self):
+        self.owner = get_user_model().objects.create_user('source_scope_owner', password='x')
+
+    @staticmethod
+    def sentence(doc, insight):
+        return ZeldaIntelligencePipelineV2._insight_source_sentence(doc, insight)
+
+    def doc(self, owner):
+        return DocumentSource.objects.create(filename='f.pdf', source_entity='Subject Co', uploaded_by=owner,
+                                             document_type='business_valuation', raw_text_full='')
+
+    def saved(self, doc, source):
+        chunk = DocumentChunk.objects.create(document=doc, chunk_index=0, page_number=31, raw_text=source,
+                                             token_count=60)
+        insight = IntelligenceInsight.objects.create(document=doc, category='Funding', confidence_score=95,
+                                                     insight_text='$25 million in a Series B')
+        insight.source_chunks.set([chunk])
+        return insight
+
+    def test_reads_through_document_chunks_as_the_owner_of_this_document(self):
+        from . import retrieval
+        doc = self.doc(self.owner)
+        insight = self.saved(doc, SERIES_B_LINE)
+        with mock.patch.object(retrieval, 'document_chunks', wraps=retrieval.document_chunks) as scoped:
+            self.assertIn('$25 million in a Series B financing', self.sentence(doc, insight))
+        principal, scoped_doc = scoped.call_args.args
+        self.assertEqual((principal.user, principal.origin, scoped_doc), (self.owner, 'task', doc))
+
+    def deactivated_owners_doc(self):
+        gone = get_user_model().objects.create_user('source_scope_gone', password='x', is_active=False)
+        return self.doc(gone)
+
+    def test_an_insight_with_no_linked_chunk_needs_no_text_or_principal(self):
+        doc = self.deactivated_owners_doc()
+        insight = IntelligenceInsight.objects.create(document=doc, category='Funding', confidence_score=95,
+                                                     insight_text='$25 million')
+        self.assertEqual(self.sentence(doc, insight), '')
+
+    def test_a_chunk_of_another_document_is_not_read(self):
+        doc, other = self.doc(self.owner), self.doc(self.owner)
+        insight = self.saved(other, SERIES_B_LINE)
+        self.assertEqual(self.sentence(doc, insight), '')
+        self.assertIn('Series B financing', self.sentence(other, insight))  # positive control
+
+    def test_a_linked_chunk_whose_owner_may_not_be_a_principal_refuses(self):
+        from .principal import PrincipalRequired
+        doc = self.deactivated_owners_doc()
+        self.saved(doc, SERIES_B_LINE)
+        with self.assertRaises(PrincipalRequired):
+            self.sentence(doc, doc.insights.get())
+        with self.assertRaises(PrincipalRequired):
+            ZeldaIntelligencePipelineV2()._build_structured_context(doc, doc.insights.all())
+
+
 class NetMarginTests(TestCase):
     """A net margin is reported only as verified same-period net income / net sales, with its source."""
 
