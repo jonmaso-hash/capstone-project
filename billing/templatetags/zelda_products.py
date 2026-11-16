@@ -14,6 +14,12 @@ def zelda_individual_reports():
     return [{'key': key, 'name': value[0]} for key, value in REPORTS.items()]
 
 
+@register.simple_tag
+def valuation_range_disclosure():
+    from zelda_api.disclaimers import VALUATION_RANGE_DISCLOSURE
+    return VALUATION_RANGE_DISCLOSURE
+
+
 @register.simple_tag(takes_context=True)
 def zelda_role_products(context):
     return role_catalog(context.get('user'))

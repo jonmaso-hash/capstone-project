@@ -29,6 +29,23 @@ NO_CLAIMS_SUMMARY = (
     "this document, so no claim was compared against public sources."
 )
 
+# Shown before every payment that buys a business valuation (alone, in the
+# Complete Bundle, or in a 3-Report Pack) and on the paid unlock. The report
+# withholds a numeric range unless the evidence supports one (see
+# zelda_api/valuation_gate.py); the buyer must know that before paying.
+VALUATION_RANGE_DISCLOSURE = (
+    "A numeric valuation range is given only when your documents support one: annual revenue from "
+    "a financial statement that states its period, currency and scale, and a basis for the valuation "
+    "multiple stated in the documents themselves. Otherwise the report gives the verified financials "
+    "and lists the missing inputs, with no numeric range. The price is the same either way."
+)
+
+# The preview of a finished report that has no range says so before the unlock.
+NO_RANGE_PREVIEW = (
+    "This report has no numeric range: your documents did not support one. The full report gives "
+    "the verified financials and lists the inputs a range would need."
+)
+
 
 def verifying_source_names():
     """

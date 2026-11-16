@@ -303,8 +303,13 @@ class RateLimitedPasswordResetView(PasswordResetView):
 # USER PROFILE DISPATCH LAYER
 # =====================================================================
 
-def _get_investor_readiness(application):
+def _get_investor_readiness(application, principal):
     """
+    `principal` is the viewer (Principal.from_request). Saved insights' source
+    text is read only as far as the viewer's text access allows; a figure whose
+    source the viewer may not read is not counted toward Financial Disclosure
+    and is listed in financial_disclosure_unavailable instead (never a 403).
+
     Founder-side "Investor Readiness Center" (backlog #4's remaining
     concrete piece — the rest was already satisfied by existing
     infrastructure: the floating widget's Search/Notifications tabs, the
@@ -344,6 +349,7 @@ def _get_investor_readiness(application):
 
     market_evidence_pct = None
     financial_disclosure_pct = None
+    financial_disclosure_unavailable = []
     has_intelligence_report = False
     if latest_doc:
         insights = list(latest_doc.insights.all())
@@ -352,8 +358,9 @@ def _get_investor_readiness(application):
             market_row = next((row for row in breakdown if row['category'] == 'Market'), None)
             if market_row:
                 market_evidence_pct = round(market_row['confidence'] * 10)
-            facts = ZeldaIntelligencePipelineV2()._build_structured_context(latest_doc, insights)
+            facts = ZeldaIntelligencePipelineV2()._build_structured_context(latest_doc, insights, principal)
             financial_disclosure_pct = round(compute_financial_completeness(facts)['ratio'] * 100)
+            financial_disclosure_unavailable = [e['label'] for e in facts.get('_unavailable_evidence', [])]
         has_intelligence_report = IntelligenceMemo.objects.filter(document=latest_doc).exists()
 
     latest_truth_delta = TruthDeltaReport.objects.filter(
@@ -389,6 +396,7 @@ def _get_investor_readiness(application):
     return {
         'market_evidence_pct': market_evidence_pct,
         'financial_disclosure_pct': financial_disclosure_pct,
+        'financial_disclosure_unavailable': financial_disclosure_unavailable,
         'company_credibility_score': company_credibility_score,
         'company_credibility_status': company_credibility_status,
         'founder_verification_pct': 100 if application.is_verified else 0,
@@ -894,7 +902,11 @@ def profile_analysis(request, username):
 
     # Founder-only private diagnostics now live inside Premium Founder
     # Insights rather than on the public/profile surface.
-    investor_readiness = _get_investor_readiness(application) if application else None
+    investor_readiness = None
+    if application:
+        from zelda_api.principal import Principal
+        investor_readiness = _get_investor_readiness(
+            application, Principal.from_request(request, label='accounts:profile_analysis investor readiness'))
     founder_activity = None
     if application:
         from matchmaking.models import FounderMilestone

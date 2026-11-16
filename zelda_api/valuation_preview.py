@@ -33,6 +33,13 @@ UNLOCK_INCLUDES = [
     'Evidence citations',
     'Historical valuation tracking',
 ]
+# The first item when the finished report withholds a range: the unlock must
+# not sell a number the report does not contain.
+NO_RANGE_UNLOCK_ITEM = 'Verified financial summary and the missing inputs (no numeric range)'
+
+
+def unlock_includes(range_available):
+    return UNLOCK_INCLUDES if range_available else [NO_RANGE_UNLOCK_ITEM, *UNLOCK_INCLUDES[1:]]
 
 
 def _split_risk_lines(risk_report_text):
@@ -112,6 +119,7 @@ def build_valuation_response(doc, report, insights, confidence_breakdown, overal
     if tier == 'full':
         response['valuation_low'] = str(report.valuation_low) if report.valuation_low is not None else None
         response['valuation_high'] = str(report.valuation_high) if report.valuation_high is not None else None
+        response['valuation_basis_label'] = report.range_basis_label
         response['confidence_breakdown'] = confidence_breakdown
         response['sections']['financial_summary'] = report.financial_summary
         response['sections']['risk_report'] = report.risk_report
@@ -121,5 +129,11 @@ def build_valuation_response(doc, report, insights, confidence_breakdown, overal
     risk_lines = _split_risk_lines(report.risk_report)
     response['risk_count'] = len(risk_lines)
     response['scorecard'] = build_valuation_scorecard(confidence_breakdown)
-    response['unlock_includes'] = UNLOCK_INCLUDES
+    # Whether the range exists is told before the unlock; the range itself is not.
+    from .disclaimers import NO_RANGE_PREVIEW, VALUATION_RANGE_DISCLOSURE
+    range_available = report.valuation_low is not None and report.valuation_high is not None
+    response['range_available'] = range_available
+    response['no_range_note'] = '' if range_available else NO_RANGE_PREVIEW
+    response['range_disclosure'] = VALUATION_RANGE_DISCLOSURE
+    response['unlock_includes'] = unlock_includes(range_available)
     return response

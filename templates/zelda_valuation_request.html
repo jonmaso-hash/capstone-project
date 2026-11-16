@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load zelda_products %}
 
 {% block title %}Get a Business Valuation | Interlink Foundry{% endblock title %}
 
@@ -16,8 +17,9 @@
                     </div>
                     <p class="text-muted mb-4">
                         Upload your financial documents and Zelda will generate a business overview,
-                        risk report, and an estimated valuation range grounded entirely in what you submit.
+                        verified financials, a risk report, and an estimated valuation range when what you submit supports one.
                     </p>
+                    <p class="small mb-4 zelda-valuation-range-disclosure">{% valuation_range_disclosure %}</p>
 
                     <div id="valuation-error" class="alert alert-danger d-none"></div>
 
@@ -37,7 +39,7 @@
                         <div class="alert alert-secondary py-2 small mb-4">
                             <i class="bi bi-eye me-1"></i>
                             Every upload gets a free preview — business overview, financial completeness, and a sample finding.
-                            Unlock the full valuation number, methodology, and risk report afterward, or
+                            Unlock the full report afterward (methodology, risk report, and the valuation range when your documents support one), or
                             <a href="{% url 'billing:billing_page' %}">upgrade to Premium</a> for full reports included every month.
                         </div>
                     {% endif %}

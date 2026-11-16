@@ -10,7 +10,7 @@
             <h2 class="fw-bold mb-1"><i class="bi bi-graph-up-arrow me-2"></i>Business Valuation Report
                 <i class="bi bi-info-circle field-info-icon" role="button" tabindex="0"
                    data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="bottom"
-                   data-bs-content="A ballpark valuation range without hiring a firm. Zelda reads the financials, stage and market position in your documents and produces a low–high range, a read on how fully those documents cover the dimensions it values against, and the factors moving the number. It is a model estimate for planning and negotiation — not an appraisal, an audit, or a price."></i>
+                   data-bs-content="A ballpark valuation range without hiring a firm. Zelda reads the financials, stage and market position in your documents and produces a low–high range when they support one (otherwise the verified financials and the missing inputs), a read on how fully those documents cover the dimensions it values against, and the factors moving the number. It is a model estimate for planning and negotiation — not an appraisal, an audit, or a price."></i>
             </h2>
             <p class="text-muted mb-1">{{ document.source_entity }}</p>
             {% comment %}
@@ -249,8 +249,11 @@ function renderPreview(data) {
         <div class="card border-0 shadow-sm rounded-4 mb-4 text-center">
             <div class="card-body p-4">
                 <h6 class="text-uppercase fw-bold text-muted small mb-2">Estimated Valuation</h6>
-                <p class="text-success small fw-semibold mb-1"><i class="bi bi-check-circle-fill me-1"></i>Calculated successfully</p>
-                <p class="text-muted mb-0">The exact range is included in the full Zelda AI report.</p>
+                ${data.range_available
+                    ? `<p class="text-success small fw-semibold mb-1"><i class="bi bi-check-circle-fill me-1"></i>Calculated successfully</p>
+                       <p class="text-muted mb-0">The exact range is included in the full Zelda AI report.</p>`
+                    : `<p class="fw-semibold small mb-1 zelda-no-range-note">No numeric range</p>
+                       <p class="text-muted mb-0">${escapeHtml(data.no_range_note || '')}</p>`}
             </div>
         </div>
         <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: linear-gradient(135deg, #fff8e1, #ffffff);">
@@ -260,6 +263,7 @@ function renderPreview(data) {
                 <p class="text-muted mb-3">Upgrade to Zelda AI for the complete report:</p>
                 <ul class="list-unstyled mb-4 d-inline-block text-start">${includes}</ul>
                 <p class="text-muted small mb-3">Your report has been securely saved — upgrade anytime.</p>
+                <p class="small mb-3 text-start zelda-valuation-range-disclosure"><strong>Before you pay:</strong> ${escapeHtml(data.range_disclosure || '')}</p>
                 <form method="post" action="{% url 'billing:create_valuation_purchase_checkout_session' %}">
                     {% csrf_token %}
                     <input type="hidden" name="document_id" value="{{ document.id }}">
@@ -343,7 +347,8 @@ function renderFull(data) {
                 <p class="text-muted mb-0" style="font-size: 0.75rem;">Share of key financial fields (revenue, burn rate, growth, retention, etc.) actually disclosed in the submitted documents.</p>
             </div>
             <strong class="text-nowrap ms-3">${data.financial_completeness.disclosed} of ${data.financial_completeness.total} fields</strong>
-        </div>` : '';
+        </div>
+        ${(data.unavailable_evidence || []).length ? `<p class="text-muted mb-0 mt-1 unavailable-evidence" style="font-size: 0.75rem;">Source unavailable to you, not counted: ${escapeHtml(data.unavailable_evidence.join(', '))}</p>` : ''}` : '';
 
     // Only shown when a PRIOR full-tier valuation exists for the same
     // company (see zelda_api/valuation_trend.py) — never computed from a
@@ -383,7 +388,7 @@ function renderFull(data) {
         ${trustStatsHtml(data)}
         <div class="card border-0 shadow-sm rounded-4 mb-4 bg-success-subtle">
             <div class="card-body p-4 text-center">
-                <h6 class="text-uppercase fw-bold text-muted small mb-2">Estimated Valuation Range</h6>
+                <h6 class="text-uppercase fw-bold text-muted small mb-2">${escapeHtml(data.valuation_basis_label || 'Estimated Valuation Range')}</h6>
                 <h2 class="fw-bold text-success mb-0">${valuationRange}</h2>
                 ${rangeBar}
                 ${trendBadge}

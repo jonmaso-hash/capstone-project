@@ -992,6 +992,31 @@ class InvestorReadinessCenterTests(TestCase):
             response = self._owner_insights()
         self.assertEqual(response.context['investor_readiness']['financial_disclosure_pct'], 43)
 
+    def test_viewer_without_source_text_access_sees_the_figure_marked_unavailable(self):
+        """The page renders; a figure whose source the viewer may not read is not counted."""
+        from zelda_api.authorization import Authorization
+        from zelda_api.vector_models import DocumentChunk, DocumentSource, IntelligenceInsight
+        doc = DocumentSource.objects.create(
+            uploaded_by=self.founder_user, filename='deck.pdf', source_entity='ReadyCo',
+            document_type='pitch_deck', status='analyzed',
+        )
+        chunk = DocumentChunk.objects.create(document=doc, chunk_index=0, page_number=3,
+                                             raw_text='ARR is $1M as of June.', token_count=8)
+        insight = IntelligenceInsight.objects.create(
+            document=doc, category='Revenue', insight_text='ARR is $1M', confidence_score=70,
+        )
+        insight.source_chunks.set([chunk])
+        readable = self._owner_insights()  # positive control: text access confirms the figure
+        self.assertEqual(readable.context['investor_readiness']['financial_disclosure_pct'], 14)
+        self.assertEqual(readable.context['investor_readiness']['financial_disclosure_unavailable'], [])
+        with mock.patch.object(Authorization, 'text_permitted', return_value=False):
+            response = self._owner_insights()
+        self.assertEqual(response.status_code, 200)
+        readiness = response.context['investor_readiness']
+        self.assertEqual(readiness['financial_disclosure_pct'], 0)
+        self.assertEqual(readiness['financial_disclosure_unavailable'], ['Revenue / ARR / MRR'])
+        self.assertContains(response, 'Source unavailable to you, not counted: Revenue / ARR / MRR')
+
     def test_materials_checklist_only_lists_genuinely_existing_artifacts(self):
         from zelda_api.vector_models import DocumentSource, IntelligenceMemo
         from zelda_api.truth_delta_models import TruthDeltaReport

@@ -89,6 +89,12 @@
     {% endif %}
 
     <div class="zelda-card p-3">
+        {% if product.key == 'valuation' or product.key == 'complete_bundle' or product.key == 'three_pack' %}
+        <p class="small mb-2 zelda-valuation-range-disclosure">
+            <strong>{% if product.key == 'three_pack' %}If you include Business valuation:{% elif product.key == 'complete_bundle' %}Business valuation, included in this bundle:{% else %}Before you pay:{% endif %}</strong>
+            {% valuation_range_disclosure %}
+        </p>
+        {% endif %}
         <p class="small text-muted zelda-valuation-evidence-status" role="status"></p>
         <button type="button" class="btn btn-warning w-100 fw-semibold zelda-product-checkout" disabled>
             Purchase {{ product.name }} · ${{ product.price }}
