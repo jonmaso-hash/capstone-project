@@ -138,7 +138,10 @@ INSTALLED_APPS = [
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
     "allauth.socialaccount.providers.facebook",
-    "allauth.socialaccount.providers.linkedin_oauth2",
+    # LinkedIn sign-in is OpenID Connect (provider_id "linkedin" below). The
+    # legacy linkedin_oauth2 provider asks for r_liteprofile/r_emailaddress,
+    # which LinkedIn retired for new apps in 2023.
+    "allauth.socialaccount.providers.openid_connect",
 
     # Internal Interlink Foundry Apps
     "blog",
@@ -474,6 +477,8 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "username*"]
 # this app doesn't currently override.
 SOCIALACCOUNT_ADAPTER = 'accounts.adapters.SocialAccountAdapter'
 
+LINKEDIN_OIDC_SERVER_URL = 'https://www.linkedin.com/oauth'
+
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
@@ -491,12 +496,25 @@ SOCIALACCOUNT_PROVIDERS = {
         },
         'FIELDS': ['id', 'first_name', 'last_name', 'name', 'email'],
     },
-    'linkedin_oauth2': {
-        'APP': {
-            'client_id': env('LINKEDIN_OAUTH_CLIENT_ID'),
-            'secret': env('LINKEDIN_OAUTH_SECRET'),
-            'key': '',
-        },
+    # "Sign In with LinkedIn using OpenID Connect": scopes openid/profile/email
+    # (allauth's OIDC default), endpoints from LinkedIn's discovery document at
+    # https://www.linkedin.com/oauth/.well-known/openid-configuration. LinkedIn's
+    # token endpoint takes the secret in the POST body only. Callback:
+    # /accounts/oidc/linkedin/login/callback/. The account's uid is the OIDC
+    # "sub"; accounts saved under the legacy provider are not linked to it.
+    'openid_connect': {
+        'APPS': [
+            {
+                'provider_id': 'linkedin',
+                'name': 'LinkedIn',
+                'client_id': env('LINKEDIN_OAUTH_CLIENT_ID'),
+                'secret': env('LINKEDIN_OAUTH_SECRET'),
+                'settings': {
+                    'server_url': LINKEDIN_OIDC_SERVER_URL,
+                    'token_auth_method': 'client_secret_post',
+                },
+            },
+        ],
     },
 }
 

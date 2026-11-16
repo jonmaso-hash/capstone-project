@@ -211,7 +211,7 @@ class DeepLinkSurvivesLoginTests(TestCase):
         # allauth percent-encodes it into the provider URL.
         encoded = quote(self.destination, safe='')
         self.assertContains(page, '/accounts/google/login/?next=%s' % encoded)
-        self.assertContains(page, '/accounts/linkedin_oauth2/login/?next=%s' % encoded)
+        self.assertContains(page, '/accounts/oidc/linkedin/login/?next=%s' % encoded)
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
