@@ -200,6 +200,9 @@ MIDDLEWARE = [
     # Staff can impersonate and override deal states, so their sessions end
     # when idle (accounts/staff_sessions.py). Needs auth + messages above it.
     'accounts.staff_sessions.StaffSessionTimeoutMiddleware',
+    # Outside StaffMFAMiddleware so it sees every response; it writes the
+    # "Last used" cookie only once sign-in, MFA included, has finished.
+    'accounts.last_signin.LastSigninMiddleware',
     'accounts.staff_mfa.StaffMFAMiddleware',
 
     # Staff viewing as a user can't change anything as them (ops/impersonation.py).
