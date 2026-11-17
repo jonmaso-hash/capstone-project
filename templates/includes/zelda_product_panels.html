@@ -77,7 +77,7 @@
             <label class="small fw-semibold" for="product-file-{{ product.key }}">{% if user.match_buyer_profile %}Upload CIM or acquisition document{% elif user.match_investor_profile %}Upload pitch deck or diligence document{% else %}Upload company document{% endif %}</label>
             <input id="product-file-{{ product.key }}" name="file" type="file" accept=".pdf,.pptx,.txt" required class="form-control form-control-sm">
             <span class="small text-muted">PDF, PPTX or TXT · up to 25 MB · use only evidence you are authorized to provide</span>
-            <button type="submit" class="btn btn-outline-dark btn-sm">Use this document</button>
+            <button type="submit" class="btn btn-outline-dark btn-sm" disabled>Use this document</button>
             <div class="zelda-upload-status small" role="status" aria-live="polite" hidden></div>
         </form>
     </div>
