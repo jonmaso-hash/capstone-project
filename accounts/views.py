@@ -19,7 +19,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from . import rate_limits
+from . import last_signin, rate_limits
 from .forms import SignupForm
 from .redirects import remember_destination, requested_destination, safe_destination
 
@@ -130,6 +130,7 @@ def signup_view(request):
         else:
             user = form.save()
             auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            last_signin.remember(request, last_signin.PASSWORD)
             Notification.objects.create(
                 recipient=user, notification_type='SYSTEM', message=PLATFORM_DISCLAIMER_MESSAGE,
             )
@@ -260,6 +261,7 @@ def login_view(request):
             return render(request, "accounts/login.html", {
                 "form": AuthenticationForm(initial={'username': username}),
                 "next_destination": requested_destination(request),
+                "last_used": last_signin.last_used(request),
             }, status=429)
         if form.is_valid():
             for token in tokens:
@@ -267,6 +269,7 @@ def login_view(request):
             rate_limits.clear('login_username', username)
             user = form.get_user()
             auth_login(request, user)
+            last_signin.remember(request, last_signin.PASSWORD)
             # A validated destination wins; otherwise defer to the shared
             # router rather than this view's old hardcoded "your own profile",
             # so password and social login converge on one routing contract.
@@ -277,6 +280,7 @@ def login_view(request):
     return render(request, "accounts/login.html", {
         "form": form,
         "next_destination": requested_destination(request),
+        "last_used": last_signin.last_used(request),
     })
 
 
