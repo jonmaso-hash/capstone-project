@@ -18,6 +18,7 @@
 
     let evidence = null;
     let selectedSubject = null;
+    let submittedUpload = null;
     let pendingEvidence = 0;
 
     function csrf() {
@@ -66,8 +67,30 @@
         return '';
     }
 
+    function unsubmittedUpload(form) {
+        if (!form) return null;
+        const company = form.elements.company.value.trim();
+        const file = form.elements.file.files[0];
+        if (!company || !file) return null;
+        if (submittedUpload?.evidence === evidence && submittedUpload.form === form
+            && submittedUpload.company === company && submittedUpload.file === file) {
+            return null;
+        }
+        return {form, company, file};
+    }
+
     function sync() {
         panels.forEach(panel => {
+            const uploadForm = panel.querySelector('.zelda-product-upload');
+            const upload = unsubmittedUpload(uploadForm);
+            if (uploadForm) {
+                const button = uploadForm.querySelector('button[type="submit"]');
+                const ready = Boolean(upload) && pendingEvidence === 0;
+                button.disabled = !ready;
+                button.classList.toggle('btn-primary', ready);
+                button.classList.toggle('btn-outline-dark', !ready);
+            }
+
             const selected = panel.querySelector('.zelda-selected-evidence');
             if (selected) {
                 selected.textContent = evidence
@@ -75,18 +98,19 @@
                     : 'Upload a document or select a company. Nothing is purchased by searching or uploading.';
             }
 
+            const awaitingEvidence = !evidence || Boolean(upload) || pendingEvidence > 0;
             const checkout = panel.querySelector('.zelda-product-checkout');
             if (checkout) {
                 const reports = selectedReports(panel);
                 const packValid = panel.dataset.product !== 'three_pack' || reports.length === 3;
                 const blockReason = valuationBlockReason(panel, reports);
-                checkout.disabled = !evidence || !packValid || Boolean(blockReason) || pendingEvidence > 0;
+                checkout.disabled = awaitingEvidence || !packValid || Boolean(blockReason);
                 const evidenceStatus = panel.querySelector('.zelda-valuation-evidence-status');
                 if (evidenceStatus) evidenceStatus.textContent = blockReason;
             }
 
             const redeem = panel.querySelector('.zelda-credit-redeem');
-            if (redeem) redeem.disabled = !evidence || pendingEvidence > 0;
+            if (redeem) redeem.disabled = awaitingEvidence;
 
             const creditPack = panel.querySelector('.zelda-credit-pack-checkout');
             if (creditPack) creditPack.disabled = pendingEvidence > 0;
@@ -219,12 +243,13 @@
 
         const uploadForm = panel.querySelector('.zelda-product-upload');
         if (uploadForm) {
+            uploadForm.elements.company.addEventListener('input', sync);
+            uploadForm.elements.file.addEventListener('change', sync);
             uploadForm.addEventListener('submit', async event => {
                 event.preventDefault();
-                if (pendingEvidence) return;
                 const form = event.currentTarget;
-                const button = form.querySelector('button');
-                button.disabled = true;
+                const upload = unsubmittedUpload(form);
+                if (!upload || pendingEvidence) return;
                 evidence = null;
                 pendingEvidence++;
                 sync();
@@ -235,12 +260,12 @@
                         body.set('subject_token', selectedSubject.token);
                     }
                     evidence = await post(config.dataset.intakeUrl, body);
+                    submittedUpload = {...upload, evidence};
                     status(panel, `Document selected for ${evidence.company}${sentencePunctuation(evidence.company)} Choose payment or use a credit.`, 'success', 'upload');
                 } catch (error) {
                     status(panel, error.message, 'error', 'upload');
                 } finally {
                     pendingEvidence--;
-                    button.disabled = false;
                     sync();
                 }
             });
@@ -318,7 +343,7 @@
             checkout.addEventListener('click', async event => {
                 const button = event.currentTarget;
                 const reports = selectedReports(panel);
-                if (!evidence || pendingEvidence || valuationBlockReason(panel, reports)) return;
+                if (button.disabled || !evidence || pendingEvidence || valuationBlockReason(panel, reports)) return;
                 button.disabled = true;
                 status(panel, 'Opening Stripe Checkout…');
                 try {
@@ -360,7 +385,7 @@
         if (redeem) {
             redeem.addEventListener('click', async event => {
                 const button = event.currentTarget;
-                if (!evidence || pendingEvidence) return;
+                if (button.disabled || !evidence || pendingEvidence) return;
                 button.disabled = true;
                 status(panel, 'Applying one Truth Delta credit…');
                 try {
