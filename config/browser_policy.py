@@ -4,6 +4,9 @@ from django.utils.csp import CSP
 # allauth's Google confirmation page POSTs to its own URL, which answers with a
 # redirect to this origin. Browsers apply form-action to that redirect too.
 GOOGLE_SIGNIN_ORIGIN = 'https://accounts.google.com'
+# Same for LinkedIn's OpenID Connect sign-in, whose authorization endpoint is
+# https://www.linkedin.com/oauth/v2/authorization.
+LINKEDIN_SIGNIN_ORIGIN = 'https://www.linkedin.com'
 
 
 def policies(bucket='', region='us-east-1'):

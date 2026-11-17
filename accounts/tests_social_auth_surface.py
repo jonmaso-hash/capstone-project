@@ -7,7 +7,7 @@ class SocialAuthSurfaceTests(TestCase):
     PROVIDER_PATHS = (
         '/accounts/google/login/',
         '/accounts/facebook/login/',
-        '/accounts/linkedin_oauth2/login/',
+        '/accounts/oidc/linkedin/login/',
     )
 
     def test_login_page_exposes_all_social_sign_in_providers(self):
@@ -78,7 +78,7 @@ class GoogleSignInFormPolicyTests(TestCase):
                 self.assertNotIn('google.com', response[header])
 
     def test_other_providers_keep_form_action_self(self):
-        for path in ('/accounts/facebook/login/', '/accounts/linkedin_oauth2/login/'):
+        for path in ('/accounts/facebook/login/',):
             response = self.client.get(path)
             for header in self.HEADERS:
                 with self.subTest(path=path, header=header):

@@ -9,7 +9,8 @@ from django.views.generic import TemplateView
 from django.shortcuts import render
 from django.views.decorators.csp import csp_override, csp_report_only_override
 from allauth.socialaccount.providers.google.views import oauth2_login as google_oauth2_login
-from config.browser_policy import GOOGLE_SIGNIN_ORIGIN, with_form_action
+from allauth.socialaccount.providers.openid_connect.views import login as openid_connect_login
+from config.browser_policy import GOOGLE_SIGNIN_ORIGIN, LINKEDIN_SIGNIN_ORIGIN, with_form_action
 from accounts.views import RateLimitedPasswordResetView, admin_login_redirect
 from growth.views import robots_txt
 from growth.sitemaps import InvestorDirectorySitemap, FounderDirectorySitemap, InsightReportSitemap
@@ -28,6 +29,12 @@ google_login = csp_override(with_form_action(settings.SECURE_CSP, GOOGLE_SIGNIN_
     csp_report_only_override(with_form_action(settings.SECURE_CSP_REPORT_ONLY, GOOGLE_SIGNIN_ORIGIN))(
         google_oauth2_login))
 
+# The same, for the LinkedIn (OpenID Connect) confirmation form only. Other
+# OIDC provider ids, if any are ever added, keep form-action 'self'.
+linkedin_login = csp_override(with_form_action(settings.SECURE_CSP, LINKEDIN_SIGNIN_ORIGIN))(
+    csp_report_only_override(with_form_action(settings.SECURE_CSP_REPORT_ONLY, LINKEDIN_SIGNIN_ORIGIN))(
+        openid_connect_login))
+
 
 def memo_dashboard_view(request, startup_name):
     # This ensures startup_name is available in the template context
@@ -45,12 +52,13 @@ urlpatterns = [
     path('accounts/password_reset/', RateLimitedPasswordResetView.as_view(), name='password_reset'),
     path('accounts/', include('django.contrib.auth.urls')),
     # Only the provider-specific routes here matter (accounts/google/login/,
-    # accounts/facebook/login/, accounts/linkedin_oauth2/login/, + callbacks) —
+    # accounts/facebook/login/, accounts/oidc/linkedin/login/, + callbacks) —
     # allauth's own generic login/signup/logout paths are shadowed by the two
     # includes above (first match wins), same as contrib.auth's already were.
     # Ahead of allauth.urls so this wrapper serves the URL; allauth's own
     # google_login name still reverses to the same path.
     path('accounts/google/login/', google_login),
+    path('accounts/oidc/linkedin/login/', linkedin_login, {'provider_id': 'linkedin'}),
     path('accounts/', include('allauth.urls')),
     path('matchmaking/', include('matchmaking.urls')),
     # Public front door — the anonymous Elevator Pitches feed. Kept top-level
