@@ -65,11 +65,17 @@
                 <input id="product-search-{{ product.key }}" name="q" class="form-control form-control-sm" style="min-width: 0;" required maxlength="255" placeholder="Company name or stock ticker">
                 <button type="submit" class="btn btn-outline-dark btn-sm flex-shrink-0">Search</button>
             </div>
-            <p class="small text-muted mb-0">Searches SEC public registration records. For substantive diligence, upload company materials.</p>
+            <p class="small text-muted mb-0">Searches SEC public registration records.</p>
             <div class="zelda-search-status small" role="status" aria-live="polite" hidden></div>
             <div class="zelda-company-results d-grid gap-2"></div>
         </form>
         <hr>
+        <details class="small mb-3">
+            <summary class="d-inline-block fw-semibold text-primary">
+                <i class="bi bi-info-circle me-1" aria-hidden="true"></i>Why upload a document?
+            </summary>
+            <p class="text-muted mt-2 mb-0">Company search provides basic SEC registration details. Upload a document so Zelda can base your report on evidence such as financial statements, a pitch deck, or diligence materials.</p>
+        </details>
         <form class="zelda-product-upload d-grid gap-2" enctype="multipart/form-data">
             {% csrf_token %}
             <label class="small fw-semibold" for="product-company-{{ product.key }}">Company name</label>
