@@ -2,6 +2,7 @@ import csv
 import json
 import logging
 from datetime import timedelta
+from functools import wraps
 from urllib.parse import quote
 from django.conf import settings
 from django.contrib import messages
@@ -377,6 +378,29 @@ def _founder_application(user):
     """Resolve the marketplace founder record used by dashboard features."""
     return (getattr(user, 'match_founder_profile', None)
             or Application.objects.filter(user=user).first())
+
+
+def guide_to_founder_setup(message):
+    """
+    Send a member with no role profile at all to founder profile setup.
+
+    The founder dashboard is the workspace for members still onboarding, so
+    its buttons are reachable before any profile exists. Place this outside
+    founder_required: it only redirects members with no profile of any kind,
+    and everyone else still meets founder_required's access check unchanged.
+    """
+    def decorator(view_func):
+        @wraps(view_func)
+        def _wrapped_view(request, *args, **kwargs):
+            user = request.user
+            if (user.is_authenticated and not _founder_application(user)
+                    and not any(getattr(user, f'match_{role}_profile', None)
+                                for role in ('investor', 'seller', 'buyer'))):
+                messages.info(request, message)
+                return redirect('usersettings:edit_founder_profile')
+            return view_func(request, *args, **kwargs)
+        return _wrapped_view
+    return decorator
 
 
 # ==========================================
@@ -1189,6 +1213,7 @@ FREE_CRM_LEAD_LIMIT = 7  # new lead additions per calendar month for Free founde
 
 
 @login_required
+@guide_to_founder_setup("Complete your founder profile to use the Fundraising CRM.")
 @founder_required
 def fundraising_crm(request):
     """Personal outreach Kanban board — see FundraisingLead docstring for why

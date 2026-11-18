@@ -407,12 +407,17 @@
             {% else %}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
-                    <p class="text-muted mb-0">Complete your founder, investor, seller, or buyer profile to see premium options.</p>
+                    <h3 class="h5 fw-bold mb-2">Complete your profile to see your membership plan</h3>
+                    <p class="text-muted mb-3">Your plan depends on your role. Finish your founder, investor, seller, or buyer profile and your plan and its options appear here.</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'accounts:create_profile' %}" class="btn btn-primary">Complete your profile</a>
+                        <a href="{% url 'billing:pricing' %}" class="btn btn-outline-secondary">Compare all plans</a>
+                    </div>
                 </div>
             </div>
             {% endif %}
 
-            {% if not stripe_configured %}
+            {% if payments_unconfigured %}
             <p class="text-muted small">Payments aren't fully configured yet — an admin needs to add Stripe API keys.</p>
             {% endif %}
         </div>

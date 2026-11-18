@@ -10,7 +10,7 @@ from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_safe
 
 from accounts import rate_limits
 
@@ -59,6 +59,28 @@ def _apply_premium_flag(user, is_premium):
         buyer_profile.save(update_fields=['is_premium'])
 
 
+@require_safe
+def pricing_page(request):
+    """
+    Public, read-only prices for every plan and Zelda report.
+
+    Every amount comes from the definitions checkout uses: billing.pricing for
+    subscriptions and billing.zelda_catalog for one-time reports. Nothing here
+    starts a payment; checkout stays on the signed-in pages.
+    """
+    from matchmaking.models import Firm
+    from .disclosures import CANCEL_INSTRUCTIONS
+    from .zelda_catalog import catalog, diligence_catalog
+
+    return render(request, 'billing/pricing.html', {
+        **subscription_prices(),
+        'firm_max_seats': Firm.MAX_SEATS,
+        'cancel_instructions': CANCEL_INSTRUCTIONS,
+        'founder_seller_reports': catalog(),
+        'investor_buyer_reports': diligence_catalog(),
+    })
+
+
 @login_required
 def billing_page(request):
     from zelda_api.quotas import (
@@ -74,6 +96,7 @@ def billing_page(request):
     plan, price_id = _get_role_and_price(request.user)
 
     firm_membership = getattr(request.user, 'firm_membership', None)
+    stripe_configured = bool(settings.STRIPE_SECRET_KEY and price_id)
     return render(request, 'billing/billing.html', {
         **subscription_prices(),
         'subscription': subscription,
@@ -82,7 +105,10 @@ def billing_page(request):
         # one beside the checkbox, and the one stored with the consent match.
         'renewal_terms': renewal_terms(plan) if plan else '',
         'current_plan_price': plan_price_usd(subscription.plan) if subscription else 0,
-        'stripe_configured': bool(settings.STRIPE_SECRET_KEY and price_id),
+        'stripe_configured': stripe_configured,
+        # Without a role profile there is no plan, so no price id to look for:
+        # that is unfinished onboarding, not a Stripe problem.
+        'payments_unconfigured': plan is not None and not stripe_configured,
         'free_ai_credits': FREE_CREDITS,
         'premium_ai_credits': PREMIUM_CREDITS,
         'daily_intro_limit': DAILY_INTRO_REQUEST_LIMIT,
