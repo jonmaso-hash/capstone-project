@@ -71,11 +71,15 @@
                     </div>
                 </div>
                 <div class="col">
-                    <div class="card h-100 border-0 shadow-sm rounded-4" data-plan="firm">
+                    <div class="card h-100 border-0 shadow-sm rounded-4" data-plan="firm" data-firm-status="{% if firm_open %}open{% else %}closed{% endif %}">
                         <div class="card-body p-4">
                             <h3 class="h6 fw-bold mb-1">Investor Firm</h3>
+                            {% if firm_open and firm_price %}
                             <p class="h4 fw-bold mb-2">${{ firm_price|intcomma }}/mo</p>
-                            <p class="small text-muted mb-0">One flat subscription for up to {{ firm_max_seats }} verified teammates at your firm's email domain, each with Investor Premium's access.</p>
+                            {% else %}
+                            <p class="h6 fw-semibold text-secondary mb-2">Unavailable for new subscriptions</p>
+                            {% endif %}
+                            <p class="small text-muted mb-0">One flat subscription for up to {{ firm_max_seats }} verified teammates at your firm's email domain, each with Investor Premium's access.{% if not firm_open %} Teammates can still join a firm that already has a plan.{% endif %}</p>
                         </div>
                     </div>
                 </div>
@@ -103,6 +107,10 @@
                     </tbody>
                 </table>
             </div>
+            <p class="small text-muted mb-4" data-note="valuation-unlock">
+                The business valuation above is a one-time Zelda report. Unlocking the full version of a free valuation
+                preview is a separate purchase; its price is shown at Stripe Checkout before you pay.
+            </p>
 
             <h3 class="h6 fw-bold mb-2">For investors and buyers</h3>
             <div class="table-responsive mb-4">

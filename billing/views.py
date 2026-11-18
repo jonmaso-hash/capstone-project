@@ -21,7 +21,7 @@ from .models import Subscription, SubscriptionConsent
 
 logger = logging.getLogger(__name__)
 
-from .pricing import subscription_prices
+from .pricing import advertised_plan_price, firm_open_for_new_subscriptions, subscription_prices
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -85,12 +85,11 @@ def pricing_page(request):
 def billing_page(request):
     from zelda_api.quotas import (
         FREE_CREDITS, PREMIUM_CREDITS,
-        VALUATION_INVESTOR_BUYER_MONTHLY_LIMIT, VALUATION_OVERAGE_PRICE_USD,
-        VALUATION_FIRM_MONTHLY_LIMIT, VALUATION_FIRM_OVERAGE_PRICE_USD,
-        VALUATION_REPORT_PRICE_USD,
+        VALUATION_INVESTOR_BUYER_MONTHLY_LIMIT, VALUATION_FIRM_MONTHLY_LIMIT,
     )
     from matchmaking.views import DAILY_INTRO_REQUEST_LIMIT, FREE_CRM_LEAD_LIMIT
     from matchmaking.models import Firm
+    from .zelda_catalog import PRODUCTS
 
     subscription = Subscription.objects.filter(user=request.user).order_by('-created_at').first()
     plan, price_id = _get_role_and_price(request.user)
@@ -104,7 +103,8 @@ def billing_page(request):
         # Stated once in billing/disclosures.py so the sentence on the card, the
         # one beside the checkbox, and the one stored with the consent match.
         'renewal_terms': renewal_terms(plan) if plan else '',
-        'current_plan_price': plan_price_usd(subscription.plan) if subscription else 0,
+        # None for a plan whose price must not be quoted (Firm while closed).
+        'current_plan_price': advertised_plan_price(subscription.plan) if subscription else None,
         'stripe_configured': stripe_configured,
         # Without a role profile there is no plan, so no price id to look for:
         # that is unfinished onboarding, not a Stripe problem.
@@ -117,10 +117,14 @@ def billing_page(request):
         'firm_max_seats': Firm.MAX_SEATS,
         'stripe_firm_configured': bool(settings.STRIPE_SECRET_KEY and settings.STRIPE_FIRM_PRICE_ID),
         'valuation_investor_buyer_monthly_limit': VALUATION_INVESTOR_BUYER_MONTHLY_LIMIT,
-        'valuation_overage_price': VALUATION_OVERAGE_PRICE_USD,
         'valuation_firm_monthly_limit': VALUATION_FIRM_MONTHLY_LIMIT,
-        'valuation_firm_overage_price': VALUATION_FIRM_OVERAGE_PRICE_USD,
-        'valuation_report_price': VALUATION_REPORT_PRICE_USD,
+        # Only the Zelda catalog valuation is quoted: product_checkout charges it
+        # through zelda_views.stripe_price, which refuses unless the live Stripe
+        # price is active, USD, one-time and exactly this amount. The separate
+        # preview unlock (create_valuation_purchase_checkout_session) uses
+        # STRIPE_VALUATION_*_PRICE_ID with no such check, so its amount is not
+        # quoted here; Stripe Checkout shows it before payment.
+        'zelda_valuation_price': f"{PRODUCTS['valuation'][1] / 100:.2f}",
     })
 
 
@@ -215,13 +219,19 @@ def cancel_subscription(request):
 @require_POST
 def create_firm_checkout_session(request):
     """
-    Starts a new $5,000/mo Firm subscription for an investor with a
+    Starts a new Firm subscription for an investor with a
     verified business email — the domain becomes the join key teammates
     use (see join_firm). One firm per domain; the founding member becomes
     its owner once the checkout webhook actually creates the Firm row
     (_handle_firm_checkout_completed) — nothing is created here yet.
     """
     from matchmaking.models import BusinessEmailVerification, Firm
+
+    # Closed to new firms until the live price and interval are confirmed
+    # (billing/pricing.py). Existing firms and join_firm are unaffected.
+    if not firm_open_for_new_subscriptions():
+        messages.info(request, "Investor Firm isn't open to new subscriptions right now. Existing firms are unaffected.")
+        return redirect('billing:billing_page')
 
     investor_profile = getattr(request.user, 'match_investor_profile', None)
     if not investor_profile:

@@ -264,19 +264,14 @@ class BillingPageCopyTests(TestCase):
         self.assertContains(response, "Buyer Premium — $250/mo")
 
     def test_founder_premium_shows_pay_per_use_valuation_price(self):
-        from zelda_api.quotas import VALUATION_REPORT_PRICE_USD
-
         self.client.force_login(self.founder_user)
         response = self.client.get(reverse('billing:billing_page'))
 
-        self.assertContains(
-            response,
-            f"${VALUATION_REPORT_PRICE_USD:.2f}/report, pay-per-use (not included in your subscription)",
-        )
+        self.assertContains(response, "Business valuation report from Zelda — $0.99, one-time purchase")
+        self.assertContains(response, "a separate purchase; the price is shown at Stripe Checkout before you pay")
+        self.assertNotContains(response, "$9.99/report")
 
     def test_seller_premium_shows_pay_per_use_valuation_price(self):
-        from zelda_api.quotas import VALUATION_REPORT_PRICE_USD
-
         seller_user = User.objects.create_user('copy_seller_val', password='x')
         SellerApplication.objects.create(
             user=seller_user, seller_name='S', email='sv@t.com', company_name='SVCo', description='test business',
@@ -284,10 +279,9 @@ class BillingPageCopyTests(TestCase):
         self.client.force_login(seller_user)
         response = self.client.get(reverse('billing:billing_page'))
 
-        self.assertContains(
-            response,
-            f"${VALUATION_REPORT_PRICE_USD:.2f}/report, pay-per-use (not included in your subscription)",
-        )
+        self.assertContains(response, "Business valuation report from Zelda — $0.99, one-time purchase")
+        self.assertContains(response, "a separate purchase; the price is shown at Stripe Checkout before you pay")
+        self.assertNotContains(response, "$9.99/report")
 
     def test_investor_premium_shows_included_valuation_allowance(self):
 
@@ -326,12 +320,17 @@ class BillingPageCopyTests(TestCase):
         response = self.client.get(reverse('billing:billing_page'))
 
         self.assertContains(response, f"plus {VALUATION_FIRM_MONTHLY_LIMIT} business")
-        self.assertContains(response, f"valuations per seat per month (${VALUATION_FIRM_OVERAGE_PRICE_USD:.2f}/report after that)")
+        self.assertContains(response, "valuations per seat per month.")
+        self.assertNotContains(response, f"${VALUATION_FIRM_OVERAGE_PRICE_USD:.2f}")
 
 
+@mock.patch('billing.pricing.FIRM_OPEN_FOR_NEW_SUBSCRIPTIONS', True)
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'], **FAKE_STRIPE_SETTINGS)
 class FirmTierTests(TestCase):
     """
+    Runs with Firm open to new subscriptions (closed in production until its
+    live Stripe price is confirmed; see billing/pricing.py).
+
     The $5,000/mo Firm plan (matchmaking.models.Firm/FirmMembership) — one
     subscription covering up to 100 verified-domain investor seats, gated
     on the same self-serve business-email verification individual users

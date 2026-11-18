@@ -14,7 +14,8 @@ import logging
 from django.conf import settings
 from django.core.mail import send_mail
 
-from .disclosures import CANCEL_INSTRUCTIONS, plan_price_usd
+from .disclosures import CANCEL_INSTRUCTIONS
+from .pricing import advertised_plan_price
 
 logger = logging.getLogger(__name__)
 
@@ -42,14 +43,23 @@ def _send(subscription, subject, lines):
 def send_subscription_started_email(subscription):
     """What they bought, what it costs each month, when it renews, how to stop."""
     renews = _date(subscription.current_period_end)
+    price = advertised_plan_price(subscription.plan)
     lines = [
         f"Hi {subscription.user.username},",
         "",
         f"Your {subscription.get_plan_display()} subscription is active.",
         "",
-        f"Amount: ${plan_price_usd(subscription.plan)} per month.",
-        "This subscription renews automatically each month until you cancel.",
     ]
+    if price is not None:
+        lines += [
+            f"Amount: ${price} per month.",
+            "This subscription renews automatically each month until you cancel.",
+        ]
+    else:
+        # Firm while its interval is unconfirmed (billing/pricing.py): the
+        # Stripe receipt carries the amount and period, so don't restate them.
+        lines.append("This subscription renews automatically until you cancel. "
+                     "Your Stripe receipt shows the amount and billing period.")
     if renews:
         lines.append(f"Next renewal: {renews}.")
     lines += [

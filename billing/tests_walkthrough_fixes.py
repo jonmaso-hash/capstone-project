@@ -69,7 +69,10 @@ class PublicPricingTests(TestCase):
             with self.subTest(plan=name):
                 self.assertIn(name, html)
                 self.assertIn(f'${price}/mo', html)
-        self.assertIn(f'${FIRM_PRICE_USD:,}/mo', html)
+        # Firm is closed to new subscriptions, so it is listed without a price
+        # (billing/tests_verified_prices.py covers both states).
+        self.assertIn('data-plan="firm"', html)
+        self.assertNotIn(f'{FIRM_PRICE_USD:,}', html)
 
     def test_a_signed_out_visitor_sees_every_report_price_checkout_charges(self):
         html = self.client.get(self.url).content.decode()

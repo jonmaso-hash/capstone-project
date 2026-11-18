@@ -1686,7 +1686,6 @@ def valuation_history_view(request):
     a silent overwrite — nothing in the pipeline dedupes uploads).
     """
     from .models import ValuationPurchase
-    from .quotas import VALUATION_PURCHASE_TYPE_PRICES
     from matchmaking.models import _normalize_company_string
     from billing.models import Subscription
     from billing.views import _get_role_and_price
@@ -1723,8 +1722,9 @@ def valuation_history_view(request):
         version_counts[company_key] = version_counts.get(company_key, 0) + 1
         purchase = purchases_by_document_id.get(document.id)
         if purchase:
-            price = VALUATION_PURCHASE_TYPE_PRICES.get(purchase.purchase_type)
-            provenance_label = f"Purchased — ${price:.2f}" if price is not None else "Purchased"
+            # The amount is on the Stripe receipt. quotas' unlock prices are not
+            # verified against the live price ids, so none is restated here.
+            provenance_label = "Purchased"
         elif document.valuation_tier == 'preview':
             provenance_label = "Free preview — not yet unlocked"
         else:

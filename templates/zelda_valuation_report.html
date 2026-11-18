@@ -268,8 +268,9 @@ function renderPreview(data) {
                     {% csrf_token %}
                     <input type="hidden" name="document_id" value="{{ document.id }}">
                     <button type="submit" class="btn btn-warning btn-lg rounded-pill px-5 fw-semibold d-block mx-auto">
-                        <i class="bi bi-stars me-1"></i> Upgrade to Zelda AI — $${Number(data.unlock_price).toFixed(2)}
+                        <i class="bi bi-stars me-1"></i> Upgrade to Zelda AI
                     </button>
+                    <p class="text-muted small mt-2 mb-0 zelda-unlock-price-note">Unlocking this report is a separate one-time purchase. Stripe Checkout shows the price before you pay.</p>
                 </form>
             </div>
         </div>

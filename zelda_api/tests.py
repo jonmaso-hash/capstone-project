@@ -2365,8 +2365,10 @@ class ValuationHistoryViewTests(TestCase):
         reports = response.context['reports']
         self.assertEqual(len(reports), 1)
         self.assertEqual(reports[0]['purchase'], purchase)
-        self.assertEqual(reports[0]['provenance_label'], 'Purchased — $9.99')
-        self.assertContains(response, 'Purchased — $9.99')
+        # No amount: the unlock prices are not verified against live Stripe.
+        self.assertEqual(reports[0]['provenance_label'], 'Purchased')
+        self.assertContains(response, 'Purchased')
+        self.assertNotContains(response, 'Purchased — $')
         self.assertContains(response, purchase.paid_at.strftime('%b'))
 
     def test_shows_included_with_plan_label_when_no_purchase_record(self):
@@ -5709,7 +5711,7 @@ class DocumentValuationViewTierRedactionTests(TestCase):
         self.assertNotIn('preview_risks', data)
         self.assertEqual(data['risk_count'], 3)
 
-    def test_preview_tier_includes_unlock_price_for_founder(self):
+    def test_preview_tier_names_the_unlock_but_quotes_no_price_for_founder(self):
         from matchmaking.models import Application
         user = User.objects.create_user('redact_preview_unlock', password='x')
         Application.objects.create(user=user, company_name='Test Co')
@@ -5720,7 +5722,7 @@ class DocumentValuationViewTierRedactionTests(TestCase):
         data = response.json()
 
         self.assertEqual(data['unlock_purchase_type'], 'report')
-        self.assertEqual(data['unlock_price'], 9.99)
+        self.assertNotIn('unlock_price', data)
 
     def test_preview_tier_includes_unlock_includes_checklist(self):
         from matchmaking.models import Application
