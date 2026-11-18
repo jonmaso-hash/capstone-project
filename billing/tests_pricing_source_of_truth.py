@@ -17,6 +17,8 @@ visitors to the public pricing page rather than quoting prices.
 """
 import re
 
+from unittest import mock
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -45,8 +47,15 @@ class PricingConstantsTests(TestCase):
             'investor_price': INVESTOR_PRICE_USD,
             'seller_price': SELLER_PRICE_USD,
             'buyer_price': BUYER_PRICE_USD,
-            'firm_price': FIRM_PRICE_USD,
+            'firm_open': False,
+            'firm_price': None,
         })
+
+    @mock.patch('billing.pricing.FIRM_OPEN_FOR_NEW_SUBSCRIPTIONS', True)
+    def test_context_helper_quotes_firm_only_once_open(self):
+        prices = subscription_prices()
+        self.assertTrue(prices['firm_open'])
+        self.assertEqual(prices['firm_price'], FIRM_PRICE_USD)
 
     def test_the_prices_match_what_the_product_promises(self):
         """
@@ -116,12 +125,20 @@ class RenderedPagesQuoteTheConstantsTests(TestCase):
         self.assertIn('Founder Premium', html, 'positive control: the card must render')
         self.assertIn('$%d/mo' % FOUNDER_PRICE_USD, html)
 
-    def test_investor_sees_the_investor_and_firm_prices(self):
+    def test_investor_sees_the_investor_price_and_no_firm_price_while_firm_is_closed(self):
         html = self._billing_html_for('pr_investor', lambda u: InvestorApplication.objects.create(
             user=u, full_name='I', company_name='PriceCap', email='pi@t.com',
             investment_focus='SaaS', investment_stage='Seed'))
         self.assertIn('Investor Premium', html, 'positive control')
         self.assertIn('$%d/mo' % INVESTOR_PRICE_USD, html)
+        self.assertIn('Investing as a firm?', html, 'positive control: the firm card must render')
+        self.assertNotIn('5,000', html)
+
+    @mock.patch('billing.pricing.FIRM_OPEN_FOR_NEW_SUBSCRIPTIONS', True)
+    def test_investor_sees_the_firm_price_once_firm_is_open(self):
+        html = self._billing_html_for('pr_investor_open', lambda u: InvestorApplication.objects.create(
+            user=u, full_name='I', company_name='PriceCapOpen', email='pio@t.com',
+            investment_focus='SaaS', investment_stage='Seed'))
         self.assertIn('$5,000/mo', html)
 
     def test_seller_sees_the_seller_price(self):

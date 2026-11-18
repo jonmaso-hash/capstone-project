@@ -36,18 +36,49 @@ BUYER_PRICE_USD = 250
 # than it is worth offering, and cannibalises the individual investor tier.
 FIRM_PRICE_USD = 5000
 
+# Investor Firm is closed to new subscriptions until its live Stripe price is
+# confirmed. The deployed STRIPE_FIRM_PRICE_ID has not been checked against the
+# live catalog, and the code disagreed with itself about the interval: pages
+# said "$5,000/mo" while disclosures.renewal_terms said "per year". While this
+# is False no page advertises a Firm price and firm checkout refuses to start.
+# Existing firms are untouched: their seats, joining a firm, renewals and the
+# webhook handling all work as before. Set it to True only after the Stripe
+# price behind STRIPE_FIRM_PRICE_ID is confirmed to match FIRM_PRICE_USD and
+# its interval, and the copy says that interval.
+FIRM_OPEN_FOR_NEW_SUBSCRIPTIONS = False
+
+
+def firm_open_for_new_subscriptions():
+    """Read at call time, so tests and a later change flip it in one place."""
+    return FIRM_OPEN_FOR_NEW_SUBSCRIPTIONS
+
+
+def advertised_plan_price(plan):
+    """
+    The amount a customer may be told for `plan`, or None when it must not be
+    quoted. Firm is not quoted while it is closed (see above), including to an
+    existing firm owner, since the interval is the unconfirmed part.
+    """
+    from .disclosures import plan_price_usd
+    if plan == 'INVESTOR_FIRM' and not firm_open_for_new_subscriptions():
+        return None
+    return plan_price_usd(plan) or None
+
 
 def subscription_prices():
     """
     Template context for every page that quotes a subscription price.
 
     One call site per view, so a new pricing surface inherits the values instead
-    of restating them.
+    of restating them. `firm_price` is None while Firm is closed, so a template
+    that forgets the `firm_open` check still cannot print the amount.
     """
+    firm_open = firm_open_for_new_subscriptions()
     return {
         'founder_price': FOUNDER_PRICE_USD,
         'investor_price': INVESTOR_PRICE_USD,
         'seller_price': SELLER_PRICE_USD,
         'buyer_price': BUYER_PRICE_USD,
-        'firm_price': FIRM_PRICE_USD,
+        'firm_open': firm_open,
+        'firm_price': FIRM_PRICE_USD if firm_open else None,
     }

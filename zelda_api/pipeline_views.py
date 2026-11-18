@@ -422,9 +422,11 @@ class DocumentValuationView(APIView):
             response['unavailable_evidence'] = [e['label'] for e in facts.get('_unavailable_evidence', [])]
             if doc.valuation_tier == 'preview':
                 from .quotas import valuation_unlock_price
-                purchase_type, price = valuation_unlock_price(request.user)
+                purchase_type, _price = valuation_unlock_price(request.user)
                 response['unlock_purchase_type'] = purchase_type
-                response['unlock_price'] = price
+                # No amount: the unlock's STRIPE_VALUATION_*_PRICE_ID has not been
+                # verified against the live catalog, so the page must not quote one.
+                # Stripe Checkout shows the real price before payment.
             else:
                 from .valuation_trend import get_previous_full_valuation, compute_valuation_trend, compute_valuation_drivers
                 previous_doc, previous_report = get_previous_full_valuation(doc)

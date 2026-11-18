@@ -30,7 +30,7 @@
                         {% if subscription.current_period_end %}Your access ends {{ subscription.current_period_end|date:"F j, Y" }}.{% endif %}
                     </p>
                     {% elif subscription.current_period_end %}
-                    <p class="text-muted small mb-1">Renews automatically {{ subscription.current_period_end|date:"F j, Y" }} at ${{ current_plan_price }} per month until you cancel.</p>
+                    <p class="text-muted small mb-1">Renews automatically {{ subscription.current_period_end|date:"F j, Y" }}{% if current_plan_price %} at ${{ current_plan_price }} per month{% endif %} until you cancel.</p>
                     <p class="text-muted small mb-3">Cancel any time — you keep access until the period you have paid for ends.</p>
                     {% endif %}
                     <div class="d-flex flex-wrap gap-2">
@@ -111,7 +111,8 @@
                         <ul class="small text-secondary mb-0">
                             <li>Full Intelligence Memo — purchased separately</li>
                             <li>Truth Delta verification — purchased separately</li>
-                            <li>Zelda business valuation — ${{ valuation_report_price|floatformat:2 }}/report, pay-per-use (not included in your subscription)</li>
+                            <li>Business valuation report from Zelda — ${{ zelda_valuation_price }}, one-time purchase (not included in your subscription)</li>
+                            <li>Unlocking the full version of a free valuation preview — a separate purchase; the price is shown at Stripe Checkout before you pay</li>
                         </ul>
                     </div>
 
@@ -234,7 +235,7 @@
 
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
-                    <h6 class="fw-bold mb-1">Investing as a firm? — ${{ firm_price|floatformat:0|intcomma }}/mo</h6>
+                    <h6 class="fw-bold mb-1">Investing as a firm?{% if firm_open and firm_price %} — ${{ firm_price|floatformat:0|intcomma }}/mo{% endif %}</h6>
                     {% if firm_membership %}
                         <p class="text-muted small mb-0">
                             You're part of <strong>{{ firm_membership.firm.name }}</strong>
@@ -246,10 +247,17 @@
                             One flat subscription covers up to {{ firm_max_seats }} verified teammates at your firm's
                             email domain, each with Investor Premium's access and a higher weekly AI-analysis allowance
                             for burstier team diligence work — plus {{ valuation_firm_monthly_limit }} business
-                            valuations per seat per month (${{ valuation_firm_overage_price|floatformat:2 }}/report after that).
+                            valuations per seat per month.
                             Requires a <a href="{% url 'accounts:business_verification' %}">verified business email</a> first.
                         </p>
+                        {% if not firm_open %}
+                        <p class="small mb-3" data-firm-status="closed">
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis me-1">Unavailable</span>
+                            Investor Firm isn't open to new subscriptions right now. If your firm already has a plan, you can still join it.
+                        </p>
+                        {% endif %}
                         <div class="row g-3">
+                            {% if firm_open %}
                             <div class="col-md-7">
                                 <form method="post" action="{% url 'billing:create_firm_checkout_session' %}" class="d-flex gap-2">
                                     {% csrf_token %}
@@ -259,6 +267,7 @@
                                     </button>
                                 </form>
                             </div>
+                            {% endif %}
                             <div class="col-md-5">
                                 <form method="post" action="{% url 'billing:join_firm' %}">
                                     {% csrf_token %}
@@ -289,7 +298,8 @@
                     <ul class="text-secondary small mb-0">
                         <li>Zelda Lite previews are available without buying a full report. Full reports require a separate purchase unless explicitly included in your plan or covered by a valid promotion.</li>
                         <li>Truth Delta verification — purchased separately</li>
-                        <li>Zelda business valuation — ${{ valuation_report_price|floatformat:2 }}/report, pay-per-use (not included in your subscription)</li>
+                        <li>Business valuation report from Zelda — ${{ zelda_valuation_price }}, one-time purchase (not included in your subscription)</li>
+                        <li>Unlocking the full version of a free valuation preview — a separate purchase; the price is shown at Stripe Checkout before you pay</li>
                     </ul>
 
                     <h6 class="text-uppercase small fw-bold mb-2 mt-4" style="color:#997404;">Track buyer interest</h6>

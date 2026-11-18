@@ -18,9 +18,7 @@ def home_view(request):
     from matchmaking.views import DAILY_INTRO_REQUEST_LIMIT, FREE_CRM_LEAD_LIMIT
     from zelda_api.quotas import (
         FREE_CREDITS, PREMIUM_CREDITS,
-        VALUATION_INVESTOR_BUYER_MONTHLY_LIMIT, VALUATION_OVERAGE_PRICE_USD,
-        VALUATION_FIRM_MONTHLY_LIMIT, VALUATION_FIRM_OVERAGE_PRICE_USD,
-        VALUATION_REPORT_PRICE_USD,
+        VALUATION_INVESTOR_BUYER_MONTHLY_LIMIT, VALUATION_FIRM_MONTHLY_LIMIT,
     )
     log_page_event(request, 'landing_view')
 
@@ -37,10 +35,7 @@ def home_view(request):
         'free_ai_credits': FREE_CREDITS,
         'premium_ai_credits': PREMIUM_CREDITS,
         'valuation_investor_buyer_monthly_limit': VALUATION_INVESTOR_BUYER_MONTHLY_LIMIT,
-        'valuation_overage_price': VALUATION_OVERAGE_PRICE_USD,
         'valuation_firm_monthly_limit': VALUATION_FIRM_MONTHLY_LIMIT,
-        'valuation_firm_overage_price': VALUATION_FIRM_OVERAGE_PRICE_USD,
-        'valuation_report_price': VALUATION_REPORT_PRICE_USD,
     })
 
 def waitlist_join(request):
