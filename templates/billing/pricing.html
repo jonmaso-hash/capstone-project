@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Plans and Pricing | Interlink Foundry{% endblock title %}
+
+{% block content %}
+{# Read-only. Every amount is rendered from billing.pricing or billing.zelda_catalog, and nothing here starts a payment. #}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h1 class="fw-bold mb-2">Plans and pricing</h1>
+            <p class="text-muted mb-4">
+                Discover businesses and build connections with Free membership. Premium plans are optional and priced by marketplace role.
+                Zelda reports are one-time purchases. All prices are in US dollars.
+            </p>
+
+            <div class="d-flex flex-wrap gap-2 mb-5">
+                {% if user.is_authenticated %}
+                <a href="{% url 'billing:billing_page' %}" class="btn btn-dark rounded-pill px-4">Go to your membership</a>
+                {% else %}
+                <a href="{% url 'accounts:signup' %}" class="btn btn-primary rounded-pill px-4">Create a Free Account</a>
+                <a href="{% url 'accounts:login' %}?next={% url 'billing:billing_page' %}" class="btn btn-outline-dark rounded-pill px-4">Log in to subscribe</a>
+                {% endif %}
+            </div>
+
+            <h2 class="h4 fw-bold mb-3" id="membership">Membership</h2>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3 mb-3">
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm rounded-4" data-plan="free">
+                        <div class="card-body p-4">
+                            <h3 class="h6 fw-bold mb-1">Free</h3>
+                            <p class="h4 fw-bold mb-2">$0</p>
+                            <p class="small text-muted mb-0">Create your profile, discover businesses, and build connections.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm rounded-4" data-plan="founder">
+                        <div class="card-body p-4">
+                            <h3 class="h6 fw-bold mb-1">Founder Premium</h3>
+                            <p class="h4 fw-bold mb-2">${{ founder_price }}/mo</p>
+                            <p class="small text-muted mb-0">Greater marketplace visibility, Founder Insights, Premium Match Alerts, and unlimited new Fundraising CRM leads.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm rounded-4" data-plan="investor">
+                        <div class="card-body p-4">
+                            <h3 class="h6 fw-bold mb-1">Investor Premium</h3>
+                            <p class="h4 fw-bold mb-2">${{ investor_price }}/mo</p>
+                            <p class="small text-muted mb-0">Expand introduction workflows, export your deal flow, and receive Premium compatibility alerts based on saved criteria.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm rounded-4" data-plan="seller">
+                        <div class="card-body p-4">
+                            <h3 class="h6 fw-bold mb-1">Seller Premium</h3>
+                            <p class="h4 fw-bold mb-2">${{ seller_price }}/mo</p>
+                            <p class="small text-muted mb-0">Gain Premium marketplace visibility, buyer-interest tools, and compatibility alerts.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm rounded-4" data-plan="buyer">
+                        <div class="card-body p-4">
+                            <h3 class="h6 fw-bold mb-1">Buyer Premium</h3>
+                            <p class="h4 fw-bold mb-2">${{ buyer_price }}/mo</p>
+                            <p class="small text-muted mb-0">Expand introduction workflows, export tools, and Premium compatibility alerts for saved acquisition criteria.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm rounded-4" data-plan="firm">
+                        <div class="card-body p-4">
+                            <h3 class="h6 fw-bold mb-1">Investor Firm</h3>
+                            <p class="h4 fw-bold mb-2">${{ firm_price|intcomma }}/mo</p>
+                            <p class="small text-muted mb-0">One flat subscription for up to {{ firm_max_seats }} verified teammates at your firm's email domain, each with Investor Premium's access.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="small text-muted mb-5">
+                Premium plans renew automatically until you cancel. {{ cancel_instructions }}
+                Zelda reports are purchased separately unless a plan says otherwise.
+            </p>
+
+            <h2 class="h4 fw-bold mb-1" id="zelda-reports">Zelda reports</h2>
+            <p class="text-muted small mb-3">One-time purchases. Payment is through Stripe Checkout after you sign in; a report is created only after payment is confirmed.</p>
+
+            <h3 class="h6 fw-bold mb-2">For founders and sellers</h3>
+            <div class="table-responsive mb-4">
+                <table class="table table-sm align-middle" data-catalog="founder-seller">
+                    <thead><tr><th scope="col">Report</th><th scope="col">What it covers</th><th scope="col" class="text-end">Price</th></tr></thead>
+                    <tbody class="small">
+                        {% for product in founder_seller_reports %}
+                        <tr data-product="{{ product.key }}">
+                            <td class="fw-semibold">{{ product.name }}</td>
+                            <td class="text-muted">{{ product.description }}</td>
+                            <td class="text-end text-nowrap">${{ product.price }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="h6 fw-bold mb-2">For investors and buyers</h3>
+            <div class="table-responsive mb-4">
+                <table class="table table-sm align-middle" data-catalog="investor-buyer">
+                    <thead><tr><th scope="col">Report</th><th scope="col">What it covers</th><th scope="col" class="text-end">Price</th></tr></thead>
+                    <tbody class="small">
+                        {% for product in investor_buyer_reports %}
+                        <tr data-product="{{ product.key }}">
+                            <td class="fw-semibold">{{ product.name }}</td>
+                            <td class="text-muted">{{ product.description }}</td>
+                            <td class="text-end text-nowrap">${{ product.price }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

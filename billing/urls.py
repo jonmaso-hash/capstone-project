@@ -16,6 +16,7 @@ urlpatterns = [
     path('zelda/orders/<uuid:order_id>/retry/', zelda_views.retry_order, name='zelda_order_retry'),
     path('zelda/orders/<uuid:order_id>/reports/<str:report_key>/', zelda_views.purchased_report, name='zelda_report'),
     path('', views.billing_page, name='billing_page'),
+    path('pricing/', views.pricing_page, name='pricing'),
     path('checkout/', views.create_checkout_session, name='create_checkout_session'),
     path('checkout/firm/', views.create_firm_checkout_session, name='create_firm_checkout_session'),
     path('checkout/valuation/', views.create_valuation_purchase_checkout_session, name='create_valuation_purchase_checkout_session'),

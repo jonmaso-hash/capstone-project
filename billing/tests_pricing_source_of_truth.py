@@ -12,8 +12,8 @@ been created against pages still advertising $250 and $5,000, so a customer
 would have read one number and been charged another.
 
 These tests hold the line two ways: billing must show the constants, and
-neither template may reintroduce a bare price literal. The homepage directs
-visitors to billing rather than quoting prices.
+no template may reintroduce a bare price literal. The homepage directs
+visitors to the public pricing page rather than quoting prices.
 """
 import re
 
@@ -66,6 +66,7 @@ class TemplatesHaveNoBarePricesTests(TestCase):
     TEMPLATES = [
         'templates/billing/billing.html',
         'templates/pages/home.html',
+        'templates/billing/pricing.html',
     ]
 
     def test_no_template_hardcodes_a_monthly_price(self):
@@ -88,11 +89,11 @@ class RenderedPagesQuoteTheConstantsTests(TestCase):
     def setUp(self):
         _mock_embedding_generation(self)
 
-    def test_home_page_directs_visitors_to_billing_without_prices(self):
+    def test_home_page_directs_visitors_to_pricing_without_prices(self):
         response = self.client.get(reverse('pages:home'))
         self.assertEqual(response.status_code, 200)
         html = response.content.decode(errors='ignore')
-        self.assertIn(reverse('billing:billing_page'), html)
+        self.assertIn('href="%s"' % reverse('billing:pricing'), html)
         self.assertNotRegex(html, BARE_MONTHLY_PRICE)
 
     def _billing_html_for(self, username, make_profile):
