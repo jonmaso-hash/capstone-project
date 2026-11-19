@@ -9,6 +9,7 @@ from django.views.decorators.http import require_POST
 from usersettings.models import UserSettings
 from .history import visible_notifications, apply_retention
 from django.utils import timezone
+from django.utils.text import Truncator
 
 from .models import Notification
 
@@ -39,6 +40,8 @@ def notification_list_api(request):
             raise ValueError
     except (ValueError, TypeError):
         return JsonResponse({'error': 'Invalid history limit'}, status=400)
+    if request.GET.get('unread_first') == '1':
+        notifications = notifications.order_by('is_read', '-id')
     data = [{
         'id': item.id,
         'message': item.message,
@@ -51,9 +54,16 @@ def notification_list_api(request):
 
 
 def unread_count_api(request):
-    count = (_visible_notifications(request.user).filter(is_read=False).count()
-             if request.user.is_authenticated else 0)
-    return JsonResponse({'count': count})
+    unread = (_visible_notifications(request.user).filter(is_read=False)
+              if request.user.is_authenticated else Notification.objects.none())
+    data = {'count': unread.count()}
+    if request.GET.get('preview') == '1':
+        latest = unread.order_by('-id').first()
+        data['preview'] = {
+            'id': latest.id,
+            'message': Truncator(latest.message).chars(180),
+        } if latest else None
+    return JsonResponse(data)
 
 
 def notification_mark_read_api(request):

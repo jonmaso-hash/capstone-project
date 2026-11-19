@@ -231,3 +231,50 @@ class NotificationHistoryTests(TestCase):
         self.assertContains(response, '&lt;script&gt;unsafe&lt;/script&gt;')
         self.assertContains(response, reverse('notification-close', args=[notice.id]))
         self.assertContains(response, 'name="csrfmiddlewaretoken"')
+
+    def test_badge_preview_is_latest_unread_owned_and_does_not_acknowledge(self):
+        from django.utils import timezone
+
+        unread = Notification.objects.create(
+            recipient=self.user, message='<b>Your report is ready.</b>')
+        self._notice(is_read=True)
+        self._notice(dismissed_at=timezone.now())
+        Notification.objects.create(recipient=self.other, message='Private other update.')
+        response = self.client.get(reverse('api-unread-count'), {'preview': '1'})
+        self.assertEqual(response.json(), {
+            'count': 1, 'preview': {'id': unread.id, 'message': unread.message},
+        })
+        unread.refresh_from_db()
+        self.assertFalse(unread.is_read)
+        self.assertEqual(self.client.get(reverse('api-unread-count')).json(), {'count': 1})
+        self._read([unread.id])
+        self.assertEqual(self.client.get(reverse('api-unread-count'), {'preview': '1'}).json(), {
+            'count': 0, 'preview': None,
+        })
+
+    def test_badge_preview_is_short_and_anonymous_users_get_no_message(self):
+        notice = Notification.objects.create(recipient=self.user, message='Long update ' * 20)
+        data = self.client.get(reverse('api-unread-count'), {'preview': '1'}).json()
+        self.assertEqual(data['preview']['id'], notice.id)
+        self.assertLessEqual(len(data['preview']['message']), 180)
+        self.assertNotEqual(data['preview']['message'], notice.message)
+        self.client.logout()
+        self.assertEqual(self.client.get(reverse('api-unread-count'), {'preview': '1'}).json(), {
+            'count': 0, 'preview': None,
+        })
+
+    def test_unread_first_list_displays_and_acknowledges_an_older_preview(self):
+        previewed = self._notice()
+        newer_read = [self._notice(is_read=True) for _ in range(6)]
+        shown = self.client.get(reverse('api-list'), {'limit': 5, 'unread_first': '1'}).json()
+        self.assertEqual([item['id'] for item in shown], [
+            previewed.id, *[item.id for item in reversed(newer_read[-4:])],
+        ])
+        previewed.refresh_from_db()
+        self.assertFalse(previewed.is_read)
+        self.assertEqual(self.client.get(reverse('api-list'), {'limit': 5}).json()[0]['id'],
+                         newer_read[-1].id)
+        later = self._notice()
+        self.assertEqual(self._read([item['id'] for item in shown]).json()['count'], 1)
+        later.refresh_from_db()
+        self.assertFalse(later.is_read)
