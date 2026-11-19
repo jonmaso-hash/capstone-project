@@ -134,6 +134,42 @@
         z-index: 4;
     }
 
+    #zelda-notification-preview {
+        position: absolute;
+        bottom: calc(100% + 12px);
+        right: 0;
+        width: min(280px, calc(100vw - 72px));
+        padding: 12px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        background: #fff;
+        color: #1e293b;
+        text-align: left;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        font-size: 0.85rem;
+        line-height: 1.45;
+        font-weight: 400;
+        box-shadow: 0 6px 24px rgba(15, 23, 42, 0.2);
+        z-index: 6;
+    }
+    #zelda-notification-preview[hidden] { display: none; }
+    #zelda-notification-preview::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        right: 0;
+        width: 100%;
+        height: 16px;
+    }
+    #zelda-notification-preview-message { display: block; }
+    #zelda-notification-preview-hint {
+        display: block;
+        margin-top: 6px;
+        color: #475569;
+        font-size: 0.75rem;
+    }
+
     /* Explains *why* the Zelda icon just changed color — see
        showStageChangeToast(). Positioned just above the icon (which sits
        bottom-0 end-0 m-4, ~70px tall), fades in/out over ~1s. */
@@ -474,12 +510,18 @@
     id="ai-agent-toggle"
     class="btn btn-primary rounded-circle position-fixed bottom-0 end-0 m-4 d-flex align-items-center justify-content-center shadow-lg"
     style="width: 70px; height: 70px; z-index: 1050;"
-    title="Open Zelda Intelligence Panel">
+    type="button"
+    aria-label="Open Zelda Intelligence Panel"
+    aria-controls="aiAgentSidebar">
     <div class="zelda-icon-shell" style="position: relative; width: 40px; height: 40px;">
         <div class="position-absolute w-100 h-100 rounded-circle bg-warning dynamic-pulse zelda-stage-pulse-dot"></div>
         <i class="bi bi-robot text-warning fs-2 dynamic-glow position-relative z-3"></i>
     </div>
     <span id="zelda-unread-badge">0</span>
+    <span id="zelda-notification-preview" role="tooltip" hidden>
+        <span id="zelda-notification-preview-message"></span>
+        <span id="zelda-notification-preview-hint">Open Notifications to read more</span>
+    </span>
 </button>
 
 <!-- ZELDA GENERATE-ANALYSIS CONFIRMATION -->
@@ -647,7 +689,7 @@
                     <i class="bi bi-bell-slash fs-4 d-block mb-2"></i>
                     No notifications to show.
                 </div>
-                <p class="small text-muted">Your five latest notifications. Manage automatic history removal in Settings. Close updates with X or view your full history. Automatic cleanup keeps important notices.</p>
+                <p class="small text-muted">Unread notifications appear first. Manage automatic history removal in Settings. Close updates with X or view your full history. Automatic cleanup keeps important notices.</p>
                 <div id="notifications-error" class="small text-danger" role="status" style="display:none;"></div>
                 <div id="notifications-list" class="d-flex flex-column gap-2"></div>
                 <a href="{% url 'notification-history' %}" class="btn btn-outline-secondary btn-sm mt-3">View all notifications</a>
@@ -954,8 +996,58 @@
     // ──────────────────────────────────────────────────────────────────────────
 
     let notificationBadgeRevision = 0;
-    function updateUnreadBadge(count) {
+    let unreadNotificationCount = 0;
+    let notificationPreview = null;
+    const notificationToggle = document.getElementById('ai-agent-toggle');
+    const notificationTooltip = document.getElementById('zelda-notification-preview');
+    let notificationPreviewHovered = false;
+    let notificationPreviewFocused = false;
+
+    function hideNotificationPreview() {
+        notificationTooltip.hidden = true;
+        notificationToggle.removeAttribute('aria-describedby');
+    }
+
+    function showNotificationPreview() {
+        if (!notificationPreview || unreadNotificationCount === 0
+            || !(notificationPreviewHovered || notificationPreviewFocused)) return;
+        document.getElementById('zelda-notification-preview-message').textContent = notificationPreview.message;
+        notificationTooltip.hidden = false;
+        notificationToggle.setAttribute('aria-describedby', notificationTooltip.id);
+    }
+
+    notificationToggle.addEventListener('mouseenter', () => {
+        notificationPreviewHovered = true;
+        showNotificationPreview();
+    });
+    notificationToggle.addEventListener('mouseleave', () => {
+        notificationPreviewHovered = false;
+        if (!notificationPreviewFocused) hideNotificationPreview();
+    });
+    notificationToggle.addEventListener('focus', () => {
+        notificationPreviewFocused = true;
+        showNotificationPreview();
+    });
+    notificationToggle.addEventListener('blur', () => {
+        notificationPreviewFocused = false;
+        if (!notificationPreviewHovered) hideNotificationPreview();
+    });
+    notificationToggle.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            notificationPreviewHovered = notificationPreviewFocused = false;
+            hideNotificationPreview();
+        }
+    });
+
+    function updateUnreadBadge(count, preview = null) {
         notificationBadgeRevision += 1;
+        unreadNotificationCount = count;
+        notificationPreview = count > 0 ? preview : null;
+        hideNotificationPreview();
+        showNotificationPreview();
+        notificationToggle.setAttribute('aria-label', count > 0
+            ? `Open Zelda Notifications, ${count} unread`
+            : 'Open Zelda Intelligence Panel');
         const iconBadge = document.getElementById('zelda-unread-badge');
         const tabBadge = document.getElementById('zelda-tab-notif-badge');
         const display = count > 0 ? String(count) : '';
@@ -1000,10 +1092,10 @@
         if (document.hidden) return;
         const revision = notificationBadgeRevision;
         try {
-            const response = await fetch('/notifications/api/unread-count/', {credentials: 'same-origin'});
+            const response = await fetch('/notifications/api/unread-count/?preview=1', {credentials: 'same-origin'});
             if (response.ok) {
                 const state = await response.json();
-                if (revision === notificationBadgeRevision) updateUnreadBadge(state.count);
+                if (revision === notificationBadgeRevision) updateUnreadBadge(state.count, state.preview);
             }
         } catch (_) { /* Preserve the last known count during a connection failure. */ }
     }
@@ -1067,7 +1159,7 @@
         error.style.display = 'none';
         list.replaceChildren();
         try {
-            const response = await fetch('/notifications/api/list/?limit=5', {credentials: 'same-origin'});
+            const response = await fetch('/notifications/api/list/?limit=5&unread_first=1', {credentials: 'same-origin'});
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const items = await response.json();
             items.forEach(item => list.appendChild(notificationCard(item)));
@@ -1081,6 +1173,7 @@
                 if (!readResponse.ok) throw new Error(`Read status HTTP ${readResponse.status}`);
                 const readState = await readResponse.json();
                 updateUnreadBadge(readState.count);
+                if (readState.count > 0) refreshNotificationBadge();
             }
         } catch (err) {
             error.textContent = 'Could not refresh notifications or their read status. Please reopen this tab to try again.';
@@ -1109,6 +1202,7 @@
             const result = await response.json();
             if (!result.dismissed) throw new Error('Notification was not dismissed');
             updateUnreadBadge(result.count);
+            if (result.count > 0) refreshNotificationBadge();
             if (cardEl) cardEl.remove();
             await loadNotifications();
             const list = document.getElementById('notifications-list');
@@ -1952,7 +2046,17 @@
         if (sidebarEl && window.bootstrap) {
             const offcanvasInstance = new bootstrap.Offcanvas(sidebarEl);
             if (toggleBtn) {
-                toggleBtn.addEventListener('click', () => offcanvasInstance.show());
+                toggleBtn.addEventListener('click', () => {
+                    const openNotifications = unreadNotificationCount > 0;
+                    notificationPreviewHovered = notificationPreviewFocused = false;
+                    hideNotificationPreview();
+                    if (openNotifications) {
+                        sidebarEl.addEventListener('shown.bs.offcanvas', () => {
+                            document.querySelector('.zelda-tab[data-tab="notifications"]').click();
+                        }, {once: true});
+                    }
+                    offcanvasInstance.show();
+                });
             }
         }
 
