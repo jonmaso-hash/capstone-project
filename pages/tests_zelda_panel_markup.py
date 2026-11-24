@@ -112,6 +112,21 @@ class ZeldaCurrentSubjectHubTests(TestCase):
         self.assertIn('aria-label="Search for a company"', content)
         self.assertIn('Choose another company only when reviewing a separate opportunity.', content)
 
+    def test_current_subject_follows_selected_evidence_from_every_path(self):
+        # The card's own search, a product tab's search and an upload all end in
+        # sync(). The card used to be written only by the card's own search, so
+        # after an upload a product tab said the evidence was "selected across
+        # your product tabs" while the card still said "No company selected".
+        source = (ROOT / 'static' / 'js' / 'zelda_products.js').read_text(encoding='utf-8')
+        self.assertIn('function syncSubject()', source)
+        sync_body = source.split('function sync() {', 1)[1]
+        self.assertTrue(sync_body.lstrip().startswith('syncSubject();'), 'sync() must update the subject card first')
+        self.assertEqual(source.count("getElementById('zelda-subject-name')"), 1, 'the card is written in one place only')
+        self.assertIn('subjectName.textContent = evidence.company;', source)
+        self.assertIn('Your uploaded document is selected for this company.', source)
+        # Clearing evidence restores the template's default subject (a seller's own business).
+        self.assertIn('subjectName.textContent = defaultSubject.name;', source)
+
     def test_product_search_keeps_external_company_resolver(self):
         source = (ROOT / 'static' / 'js' / 'zelda_products.js').read_text(encoding='utf-8')
         self.assertIn('config.dataset.searchUrl', source)
