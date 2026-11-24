@@ -4,6 +4,42 @@ from django.core.cache import cache
 from django.http import HttpResponse, JsonResponse
 from django.middleware.csp import get_nonce
 
+class HeadResponseBodyMiddleware:
+    """
+    Send no body in a response to HEAD.
+
+    Django renders HEAD exactly like GET and leaves dropping the body to the
+    server; gunicorn 26 does not drop it. A HEAD response therefore went out
+    with "Connection: keep-alive" and Content-Length bytes of HTML after the
+    headers. Caddy correctly reads no body for HEAD, so those bytes stayed on
+    the reused upstream connection and the next request sent over it failed
+    as a 502: 'malformed HTTP status code "html>"' on HEAD /terms/, 2026-11-24.
+    That next request can be anyone's, so one HEAD from a link checker or
+    monitor could cost an ordinary visitor a 502.
+
+    Listed first in MIDDLEWARE so it sees the finished response. Content-Length
+    is kept: for HEAD it states the size a GET would send.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if request.method != 'HEAD':
+            return response
+        if response.streaming:
+            # FileResponse keeps its file in _resource_closers, so it is still
+            # closed when the server calls response.close().
+            response.streaming_content = []
+        else:
+            length = len(response.content)
+            response.content = b''
+            if not response.has_header('Content-Length'):
+                response['Content-Length'] = str(length)
+        return response
+
+
 class IdempotencyMiddleware:
     """
     Intercepts mutating HTTP requests, checks for a unique client-supplied 
