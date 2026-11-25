@@ -180,6 +180,8 @@ REST_FRAMEWORK = {
 
 # FIXED: Removed the duplicate 'shared_utils.middleware.IdempotencyMiddleware' entry
 MIDDLEWARE = [
+    # First, so it sees the finished response; see its docstring.
+    'shared_utils.middleware.HeadResponseBodyMiddleware',
     # Outside Security/WhiteNoise/early refusals so all response paths receive
     # policies, including HTTPS redirects, static files and denied uploads.
     "django.middleware.csp.ContentSecurityPolicyMiddleware",
