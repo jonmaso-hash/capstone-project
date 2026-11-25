@@ -21,6 +21,34 @@
     let submittedUpload = null;
     let pendingEvidence = 0;
 
+    // The panel's "Current subject" card. Every way of choosing evidence (the
+    // card's own company search, a product tab's company search, or an upload)
+    // ends in sync(), so the card is updated there and nowhere else. Before
+    // this, only the card's own search updated it: after an upload the product
+    // tab said the evidence was "selected across your product tabs" while the
+    // card still said "No company selected".
+    const subjectName = document.getElementById('zelda-subject-name');
+    const subjectHelp = document.getElementById('zelda-subject-help');
+    const defaultSubject = subjectName ? {
+        name: subjectName.textContent.trim(),
+        help: subjectHelp ? subjectHelp.textContent.trim() : '',
+    } : null;
+
+    function syncSubject() {
+        if (!subjectName) return;
+        if (evidence && evidence.company) {
+            subjectName.textContent = evidence.company;
+            if (subjectHelp) {
+                subjectHelp.textContent = submittedUpload && submittedUpload.evidence === evidence
+                    ? 'Your uploaded document is selected for this company. Nothing is purchased until you pay or use a credit.'
+                    : 'External company selected. Upload authorized materials for deeper analysis.';
+            }
+        } else if (!pendingEvidence) {
+            subjectName.textContent = defaultSubject.name;
+            if (subjectHelp) subjectHelp.textContent = defaultSubject.help;
+        }
+    }
+
     function csrf() {
         const field = document.querySelector('.zelda-product-panel [name="csrfmiddlewaretoken"]');
         const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
@@ -80,6 +108,7 @@
     }
 
     function sync() {
+        syncSubject();
         panels.forEach(panel => {
             const uploadForm = panel.querySelector('.zelda-product-upload');
             const upload = unsubmittedUpload(uploadForm);
@@ -204,11 +233,6 @@
                         try {
                             evidence = await post(config.dataset.intakeUrl, body);
                             selectedSubject = company;
-
-                            const subjectName = document.getElementById('zelda-subject-name');
-                            const subjectHelp = document.getElementById('zelda-subject-help');
-                            if (subjectName) subjectName.textContent = evidence.company;
-                            if (subjectHelp) subjectHelp.textContent = 'External company selected. Upload authorized materials for deeper analysis.';
 
                             panels.forEach(p => {
                                 const companyInput = p.querySelector('[name="company"]');
