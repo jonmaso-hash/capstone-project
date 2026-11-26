@@ -211,6 +211,9 @@ def product_intake(request):
         return JsonResponse({'error': 'The server could not save your document. Please try again shortly. Nothing was purchased.'}, status=503)
     return JsonResponse({
         'document_id': doc.id, 'company': name, 'evidence': evidence_label,
+        # The accepted file's name as stored, so every product tab can show
+        # which document it will use. Empty for an SEC registration snapshot.
+        'filename': filename if file else '',
         'valuation_block_reason': VALUATION_EVIDENCE_REQUIRED if _is_sec_registration_snapshot(doc) else '',
     }, status=201)
 

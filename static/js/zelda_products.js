@@ -16,10 +16,19 @@
         });
     });
 
+    // The one accepted selection, shared by every product tab. Switching tabs
+    // never changes it; only a new upload or company selection replaces it.
     let evidence = null;
     let selectedSubject = null;
-    let submittedUpload = null;
     let pendingEvidence = 0;
+
+    const uploadForms = panels.map(panel => panel.querySelector('.zelda-product-upload')).filter(Boolean);
+    uploadForms.forEach(form => {
+        const label = form.querySelector('label[for^="product-file-"]');
+        const button = form.querySelector('button[type="submit"]');
+        form.dataset.fileLabel = label ? label.textContent.trim() : '';
+        form.dataset.submitLabel = button.textContent.trim();
+    });
 
     // The panel's "Current subject" card. Every way of choosing evidence (the
     // card's own company search, a product tab's company search, or an upload)
@@ -39,7 +48,7 @@
         if (evidence && evidence.company) {
             subjectName.textContent = evidence.company;
             if (subjectHelp) {
-                subjectHelp.textContent = submittedUpload && submittedUpload.evidence === evidence
+                subjectHelp.textContent = evidence.filename
                     ? 'Your uploaded document is selected for this company. Nothing is purchased until you pay or use a credit.'
                     : 'External company selected. Upload authorized materials for deeper analysis.';
             }
@@ -99,12 +108,46 @@
         if (!form) return null;
         const company = form.elements.company.value.trim();
         const file = form.elements.file.files[0];
+        // File inputs are cleared once a document is accepted, so a chosen
+        // file here is always one that has not been submitted yet.
         if (!company || !file) return null;
-        if (submittedUpload?.evidence === evidence && submittedUpload.form === form
-            && submittedUpload.company === company && submittedUpload.file === file) {
-            return null;
-        }
         return {form, company, file};
+    }
+
+    // The accepted document, shown on every product tab from the shared
+    // selection. textContent only: the filename and company are user input.
+    function syncSharedDocument(panel) {
+        const box = panel.querySelector('.zelda-shared-document');
+        if (!box) return;
+        const name = box.querySelector('.zelda-shared-document-name');
+        const company = box.querySelector('.zelda-shared-document-company');
+        const replace = box.querySelector('.zelda-shared-document-replace');
+        if (!evidence || !evidence.document_id) {
+            box.hidden = true;
+            box.dataset.documentId = '';
+            name.textContent = company.textContent = replace.textContent = '';
+            return;
+        }
+        box.hidden = false;
+        box.dataset.documentId = String(evidence.document_id);
+        name.textContent = evidence.filename
+            ? `Selected document: ${evidence.filename} — used across intelligence tabs.`
+            : `Selected evidence: ${evidence.evidence} — used across intelligence tabs.`;
+        company.textContent = `Company: ${evidence.company}`;
+        replace.textContent = evidence.filename
+            ? 'To use a different file, choose it below and select Replace selected document. The new file replaces this one on every tab.'
+            : 'To use a document instead, choose it below. It replaces this evidence on every tab.';
+    }
+
+    // While a document is selected, the upload form reads as a replacement.
+    function syncUploadLabels(form) {
+        const label = form.querySelector('label[for^="product-file-"]');
+        const button = form.querySelector('button[type="submit"]');
+        const replacing = Boolean(evidence && evidence.document_id);
+        if (label) label.textContent = replacing ? 'Replace the selected document with another file' : form.dataset.fileLabel;
+        button.textContent = replacing
+            ? (evidence.filename ? 'Replace selected document' : 'Use this document instead')
+            : form.dataset.submitLabel;
     }
 
     function sync() {
@@ -118,14 +161,10 @@
                 button.disabled = !ready;
                 button.classList.toggle('btn-primary', ready);
                 button.classList.toggle('btn-outline-dark', !ready);
+                syncUploadLabels(uploadForm);
             }
 
-            const selected = panel.querySelector('.zelda-selected-evidence');
-            if (selected) {
-                selected.textContent = evidence
-                    ? `${evidence.company} · ${evidence.evidence}. This evidence is selected across your product tabs.`
-                    : 'Upload a document or select a company. Nothing is purchased by searching or uploading.';
-            }
+            syncSharedDocument(panel);
 
             const awaitingEvidence = !evidence || Boolean(upload) || pendingEvidence > 0;
             const checkout = panel.querySelector('.zelda-product-checkout');
@@ -274,6 +313,8 @@
                 const form = event.currentTarget;
                 const upload = unsubmittedUpload(form);
                 if (!upload || pendingEvidence) return;
+                // A replacement that fails leaves the previous document selected.
+                const previous = evidence;
                 evidence = null;
                 pendingEvidence++;
                 sync();
@@ -284,10 +325,20 @@
                         body.set('subject_token', selectedSubject.token);
                     }
                     evidence = await post(config.dataset.intakeUrl, body);
-                    submittedUpload = {...upload, evidence};
+                    // Every tab now uses this document. Clear the file inputs
+                    // (never fill them) so no tab holds a stale, unsubmitted
+                    // file, and carry the accepted company into each form.
+                    uploadForms.forEach(other => {
+                        other.elements.file.value = '';
+                        other.elements.company.value = evidence.company;
+                        const otherStatus = other.querySelector('.zelda-upload-status');
+                        if (other !== form && otherStatus) otherStatus.hidden = true;
+                    });
                     status(panel, `Document selected for ${evidence.company}${sentencePunctuation(evidence.company)} Choose payment or use a credit.`, 'success', 'upload');
                 } catch (error) {
-                    status(panel, error.message, 'error', 'upload');
+                    evidence = previous;
+                    status(panel, error.message + (previous && previous.document_id
+                        ? ' Your previously selected document is still selected.' : ''), 'error', 'upload');
                 } finally {
                     pendingEvidence--;
                     sync();

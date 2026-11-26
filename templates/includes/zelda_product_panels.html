@@ -58,6 +58,12 @@
             Upload a document or select a company below. Nothing is purchased by searching or uploading.
             {% endif %}
         </p>
+        {# One accepted document is shared by every intelligence tab. zelda_products.js fills this from that shared selection with textContent. #}
+        <div class="zelda-shared-document small p-2 mb-3 rounded border border-success bg-success-subtle" role="status" aria-live="polite" hidden>
+            <p class="fw-semibold mb-1 zelda-shared-document-name"></p>
+            <p class="mb-1 zelda-shared-document-company"></p>
+            <p class="text-muted mb-0 zelda-shared-document-replace"></p>
+        </div>
         <form class="zelda-product-search d-grid gap-2">
             {% csrf_token %}
             <label class="small fw-semibold" for="product-search-{{ product.key }}">Search companies outside Interlink</label>
