@@ -1,4 +1,5 @@
 from django.conf import settings
+from zelda_api.document_access import company_document_filter
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -168,11 +169,11 @@ def readiness_badge(request, role, username):
 
     score = None
     if role == 'founder':
-        doc = DocumentSource.objects.filter(uploaded_by=user, document_type='pitch_deck').order_by('-id').first()
+        doc = DocumentSource.objects.filter(**company_document_filter(user), document_type='pitch_deck').order_by('-id').first()
         if doc and hasattr(doc, 'memo'):
             score = doc.memo.readiness_score
     else:
-        doc = DocumentSource.objects.filter(uploaded_by=user, document_type='business_valuation').order_by('-id').first()
+        doc = DocumentSource.objects.filter(**company_document_filter(user), document_type='business_valuation').order_by('-id').first()
         if doc and hasattr(doc, 'valuation_report'):
             score = int(round(doc.valuation_report.confidence_score))
 

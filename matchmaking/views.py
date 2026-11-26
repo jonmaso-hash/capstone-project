@@ -3,6 +3,7 @@ import json
 import logging
 from datetime import timedelta
 from functools import wraps
+from zelda_api.document_access import company_document_filter
 from urllib.parse import quote
 from django.conf import settings
 from django.contrib import messages
@@ -2627,7 +2628,7 @@ def _company_overview(request, founder_app):
     # produced an analyzed memo yet — not a cache miss.
     analysis_pending = memo is None and (
         DocumentSource.objects
-        .filter(uploaded_by=founder_app.user, document_type='pitch_deck')
+        .filter(**company_document_filter(founder_app.user), document_type='pitch_deck')
         .exclude(status__in=['analyzed', 'error'])
         .exists()
     )
@@ -3430,10 +3431,10 @@ def _get_deal_zelda_summary(company_application):
 
     company_user = company_application.user
     latest_memo = IntelligenceMemo.objects.filter(
-        document__uploaded_by=company_user
+        **company_document_filter(company_user, 'document__')
     ).select_related('document').order_by('-updated_at').first()
     latest_truth_delta = TruthDeltaReport.objects.filter(
-        document__uploaded_by=company_user
+        **company_document_filter(company_user, 'document__')
     ).order_by('-created_at').first()
 
     return {

@@ -66,3 +66,21 @@ def document_is_visible_to(user, document):
     # Same resolution Entity Integrity uses, so "which business is this
     # document about" has one answer for a user who is both founder and seller.
     return business_is_visible_to(user, subject_for_document(document))
+
+
+def company_document_filter(user, prefix=''):
+    """
+    Filter kwargs for the documents that stand for `user`'s own business.
+
+    A document marked is_external_subject is evidence about another business:
+    every one-time Zelda product input, and the analysis and valuation
+    documents fulfilment clones from it. It is never the uploader's company.
+    Before this, "the founder's latest analyzed deck" (company overview, IC
+    memo, report links, profile cards, share card, Deal Room) could be a
+    report the founder bought about another company, shown to investors as
+    the founder's own.
+
+    `prefix` reaches the document through a relation, e.g. 'document__' for
+    TruthDeltaReport or IntelligenceMemo.
+    """
+    return {f'{prefix}uploaded_by': user, f'{prefix}is_external_subject': False}

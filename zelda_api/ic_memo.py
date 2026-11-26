@@ -11,6 +11,7 @@ way a cached/persisted snapshot would.
 import re
 
 from .vector_models import DocumentSource, IntelligenceMemo, BusinessValuationReport
+from .document_access import company_document_filter
 from .truth_delta_models import TruthDeltaReport
 from .work_done import work_done_summary
 from .memo_lists import memo_list_items, memo_text
@@ -106,7 +107,7 @@ def latest_analyzed_pitch_deck_and_memo(founder_user):
     """
     doc = (
         DocumentSource.objects.filter(
-            uploaded_by=founder_user, document_type='pitch_deck', status='analyzed'
+            **company_document_filter(founder_user), document_type='pitch_deck', status='analyzed'
         )
         .order_by('-created_at')
         .first()
@@ -402,7 +403,7 @@ def build_ic_memo_context(founder_application, tier='full', viewer=None):
     pitch_deck_doc, _ = latest_analyzed_pitch_deck_and_memo(founder_user)
     valuation_doc = (
         DocumentSource.objects.filter(
-            uploaded_by=founder_user, document_type='business_valuation', status='analyzed'
+            **company_document_filter(founder_user), document_type='business_valuation', status='analyzed'
         )
         .order_by('-created_at')
         .first()
