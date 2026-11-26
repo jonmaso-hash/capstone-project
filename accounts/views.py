@@ -4,6 +4,7 @@ from urllib.parse import quote
 from datetime import timedelta
 from django.apps import apps
 from django.conf import settings
+from zelda_api.document_access import company_document_filter
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login as auth_login
 from django.contrib.auth.decorators import login_required
@@ -348,7 +349,7 @@ def _get_investor_readiness(application, principal):
     founder_user = application.user
 
     latest_doc = DocumentSource.objects.filter(
-        uploaded_by=founder_user, status='analyzed'
+        **company_document_filter(founder_user), status='analyzed'
     ).order_by('-created_at').first()
 
     market_evidence_pct = None
@@ -368,7 +369,7 @@ def _get_investor_readiness(application, principal):
         has_intelligence_report = IntelligenceMemo.objects.filter(document=latest_doc).exists()
 
     latest_truth_delta = TruthDeltaReport.objects.filter(
-        document__uploaded_by=founder_user
+        **company_document_filter(founder_user, 'document__')
     ).order_by('-created_at').first()
     # The Truth Delta credibility score, named as what it is (R-003b). It is
     # verified / (verified + contradicted), NOT a share of claims verified, so
@@ -663,7 +664,7 @@ def profile(request, username=None, pk=None):
         if can_view_ic_memo(request.user, application):
             from zelda_api.vector_models import DocumentSource
             pitch_deck_doc = DocumentSource.objects.filter(
-                uploaded_by=viewed_user, document_type='pitch_deck', status='analyzed'
+                **company_document_filter(viewed_user), document_type='pitch_deck', status='analyzed'
             ).order_by('-created_at').first()
             if pitch_deck_doc:
                 ic_memo_document_id = pitch_deck_doc.id
@@ -698,7 +699,7 @@ def profile(request, username=None, pk=None):
             from zelda_api.truth_delta_models import TruthDeltaReport, diff_verification_reports
             from zelda_api.truth_delta_models import ClaimedDatapoint
 
-            base_reports_qs = TruthDeltaReport.objects.filter(document__uploaded_by=viewed_user)
+            base_reports_qs = TruthDeltaReport.objects.filter(**company_document_filter(viewed_user, 'document__'))
             verification_reports_count = base_reports_qs.count()
             # Truth Delta content is Premium — same founder/seller-controlled
             # asset model as the IC Memo: gated on the document owner's own

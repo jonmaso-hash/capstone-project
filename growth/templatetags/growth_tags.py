@@ -1,4 +1,5 @@
 from django import template
+from zelda_api.document_access import company_document_filter
 
 register = template.Library()
 
@@ -7,13 +8,13 @@ def _lookup_score(user):
     from zelda_api.vector_models import DocumentSource
 
     if getattr(user, 'match_founder_profile', None):
-        doc = DocumentSource.objects.filter(uploaded_by=user, document_type='pitch_deck').order_by('-id').first()
+        doc = DocumentSource.objects.filter(**company_document_filter(user), document_type='pitch_deck').order_by('-id').first()
         if doc and hasattr(doc, 'memo'):
             return 'founder', doc.memo.readiness_score
         return 'founder', None
 
     if getattr(user, 'match_seller_profile', None):
-        doc = DocumentSource.objects.filter(uploaded_by=user, document_type='business_valuation').order_by('-id').first()
+        doc = DocumentSource.objects.filter(**company_document_filter(user), document_type='business_valuation').order_by('-id').first()
         if doc and hasattr(doc, 'valuation_report'):
             return 'seller', int(round(doc.valuation_report.confidence_score))
         return 'seller', None

@@ -5,6 +5,7 @@ import urllib.parse
 from datetime import timedelta
 
 from django.conf import settings
+from .document_access import company_document_filter
 from django.urls import reverse, NoReverseMatch
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -1512,7 +1513,7 @@ def _usable_pitch_deck_document(founder_user):
 
     documents = (
         DocumentSource.objects
-        .filter(uploaded_by=founder_user, document_type='pitch_deck')
+        .filter(**company_document_filter(founder_user), document_type='pitch_deck')
         .exclude(status='error')
         .order_by('-created_at')
     )
@@ -1772,7 +1773,9 @@ def ic_memo_view(request, document_id):
     from .ic_memo import build_ic_memo_context, can_view_ic_memo, ic_memo_unlocked
     from matchmaking.models import Application
 
-    document = get_object_or_404(DocumentSource, id=document_id, document_type='pitch_deck')
+    # A purchased report's document is about another business, never this
+    # founder's deck; it answers like a missing one (its owner reads it as a purchase).
+    document = get_object_or_404(DocumentSource, id=document_id, document_type='pitch_deck', is_external_subject=False)
     application = get_object_or_404(Application, user=document.uploaded_by)
 
     if not can_view_ic_memo(request.user, application):
@@ -1795,7 +1798,9 @@ def ic_memo_download_view(request, document_id):
     from .ic_memo import build_ic_memo_context, can_view_ic_memo, ic_memo_unlocked, render_ic_memo_markdown
     from matchmaking.models import Application
 
-    document = get_object_or_404(DocumentSource, id=document_id, document_type='pitch_deck')
+    # A purchased report's document is about another business, never this
+    # founder's deck; it answers like a missing one (its owner reads it as a purchase).
+    document = get_object_or_404(DocumentSource, id=document_id, document_type='pitch_deck', is_external_subject=False)
     application = get_object_or_404(Application, user=document.uploaded_by)
 
     if not can_view_ic_memo(request.user, application):

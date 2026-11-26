@@ -52,13 +52,14 @@ def build_report_nav(viewer, founder_user, current, hidden_document_ids=()):
     """
     from matchmaking.models import Application
     from .vector_models import DocumentSource
+    from .document_access import company_document_filter
     from .ic_memo import latest_analyzed_pitch_deck_and_memo, can_view_ic_memo
 
     application = Application.objects.filter(user=founder_user).first()
     pitch_deck_doc, memo = latest_analyzed_pitch_deck_and_memo(founder_user)
     valuation_doc = (
         DocumentSource.objects
-        .filter(uploaded_by=founder_user, document_type='business_valuation', status='analyzed')
+        .filter(**company_document_filter(founder_user), document_type='business_valuation', status='analyzed')
         .order_by('-created_at')
         .first()
     )
