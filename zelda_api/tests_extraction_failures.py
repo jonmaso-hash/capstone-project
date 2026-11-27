@@ -38,7 +38,7 @@ class ExtractorTests(SimpleTestCase):
             self.assertReason('dependency_missing', upload('deck.pptx', handle.read()))
 
     def test_missing_pdf_parser_is_a_failure_not_text(self):
-        with mock.patch.dict(sys.modules, {'PyPDF2': None}):
+        with mock.patch.dict(sys.modules, {'pypdf': None}):
             self.assertReason('dependency_missing', upload('deck.pdf', b'%PDF-1.4'))
 
     def test_a_damaged_file_is_unreadable(self):
