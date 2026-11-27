@@ -278,6 +278,8 @@ class ZeldaProductTests(TestCase):
             generate.assert_called_once_with(str(order.id))
         order.refresh_from_db();self.assertEqual(order.status,'paid');self.assertIsNotNone(order.paid_at)
 
+    # construct_event is mocked; the view still refuses an empty signing secret.
+    @override_settings(STRIPE_WEBHOOK_SECRET='whsec_test_only')
     def test_signed_webhook_dispatches_product_event(self):
         order=self.order()
         event={'type':'checkout.session.completed','data':{'object':self.event(order)}}

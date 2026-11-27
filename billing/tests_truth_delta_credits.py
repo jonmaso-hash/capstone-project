@@ -2,7 +2,7 @@ import json
 from unittest import mock
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -143,6 +143,8 @@ class TruthDeltaCreditFlowTests(TestCase):
         self.assertEqual(kwargs['metadata']['purpose'], 'truth_delta_credit_pack')
         self.assertNotIn('document_id', kwargs['metadata'])
 
+    # construct_event is mocked; the view still refuses an empty signing secret.
+    @override_settings(STRIPE_WEBHOOK_SECRET='whsec_test_only')
     @mock.patch('billing.views.stripe.Webhook.construct_event')
     def test_signed_webhook_dispatch_grants_credit_pack_once(self, construct):
         purchase = TruthDeltaCreditPurchase.objects.create(
