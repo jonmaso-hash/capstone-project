@@ -190,7 +190,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             const item = document.createElement("div");
             item.className = "p-2 mb-2 border rounded channel-row";
             item.setAttribute("data-cid", ch.cid);
-            item.innerHTML = `<div class="fw-medium">${ch.data.name || 'Chat'}</div>`;
+            // The channel name is a company name the other party chose: text, never markup.
+            const label = document.createElement("div");
+            label.className = "fw-medium";
+            label.textContent = ch.data.name || 'Chat';
+            item.appendChild(label);
             
             item.onclick = async () => {
                 StreamChatController.activeChannel = ch;
