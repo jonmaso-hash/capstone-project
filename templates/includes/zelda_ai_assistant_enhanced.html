@@ -2182,13 +2182,13 @@
     function showZeldaConfirmGenerateModal(founderUsername, companyName, preferredTab, statusEl, data) {
         _zeldaPendingConfirm = { founderUsername, companyName, preferredTab, statusEl };
 
-        let matchHtml = `<p class="mb-1">Analyzing <strong>${companyName}</strong></p>`;
+        let matchHtml = `<p class="mb-1">Analyzing <strong>${zeldaEscape(companyName)}</strong></p>`;
         if (data.score !== null && data.score !== undefined) {
             matchHtml += `<p class="mb-2"><span class="badge bg-warning text-dark fs-6">${data.score}% Match</span></p>`;
         }
         if (data.reasons && data.reasons.length) {
             matchHtml += '<ul class="list-unstyled mb-0 small text-muted">' +
-                data.reasons.map(r => `<li><i class="bi bi-check2 me-1"></i>${r}</li>`).join('') +
+                data.reasons.map(r => `<li><i class="bi bi-check2 me-1"></i>${zeldaEscape(r)}</li>`).join('') +
                 '</ul>';
         }
         document.getElementById('zelda-confirm-match').innerHTML = matchHtml;
@@ -2198,12 +2198,12 @@
         // Zelda Lite section set with the rest locked.
         document.getElementById('zelda-confirm-deliverables').innerHTML = data.founder_premium
             ? `<p class="fw-semibold mb-1">You'll receive:</p>
-               <p class="small mb-0">The full Zelda intelligence report for <strong>${companyName}</strong>.</p>`
+               <p class="small mb-0">The full Zelda intelligence report for <strong>${zeldaEscape(companyName)}</strong>.</p>`
             : `<p class="fw-semibold mb-1">You'll receive:</p>
                <p class="small mb-2">Zelda's investment thesis, readiness assessment, key strengths, key concerns,
                   what would change the decision, and a Truth Delta summary.</p>
                <p class="fw-semibold mb-1">Full Intelligence Memo:</p>
-               <p class="small text-muted mb-0">Some detailed intelligence remains locked until ${companyName} unlocks
+               <p class="small text-muted mb-0">Some detailed intelligence remains locked until ${zeldaEscape(companyName)} unlocks
                   Premium. You won't need to spend another analysis to access the report when it becomes available.</p>`;
 
         const cost = data.analysis_cost || 1;

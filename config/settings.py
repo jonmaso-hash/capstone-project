@@ -391,6 +391,8 @@ STAFF_SESSION_IDLE_TIMEOUT = env.int('STAFF_SESSION_IDLE_TIMEOUT', default=3600)
 # an X-Forwarded-For entry. It stays 0 -- the header is ignored, since a client
 # can forge it -- until staging confirms how Render's proxy writes the header.
 RATE_LIMIT_TRUSTED_PROXY_COUNT = env.int('RATE_LIMIT_TRUSTED_PROXY_COUNT', default=0)
+# Clients connect straight to the app (no proxy): silences accounts.W001.
+RATE_LIMIT_NO_PROXY = env.bool('RATE_LIMIT_NO_PROXY', default=False)
 
 # Reads from .env in production; falls back to localhost Redis for dev.
 CELERY_BROKER_URL = env('CELERY_BROKER_URL')

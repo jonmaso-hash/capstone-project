@@ -4,7 +4,8 @@ Django Admin configuration for Zelda Intelligence Pipeline models.
 Provides full management interface for documents, chunks, insights, and memos.
 """
 from django.contrib import admin
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
+from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django.db.models import Count
 from .vector_models import DocumentSource, DocumentChunk, IntelligenceInsight, IntelligenceMemo
@@ -117,18 +118,13 @@ class DocumentSourceAdmin(admin.ModelAdmin):
         insights = obj.insights.count()
         has_memo = hasattr(obj, 'memo')
         
-        summary = f"""
-        <strong>Pipeline Progress:</strong><br>
-        • Chunks: {chunks}<br>
-        • Insights: {insights}<br>
-        • Memo Generated: {'✓ Yes' if has_memo else '✗ No'}<br>
-        <br>
-        <strong>Quality Metrics:</strong><br>
-        • Confidence Score: {obj.confidence_score:.1%}<br>
-        • Intelligence Rank: {obj.intelligence_rank}<br>
-        """
-        
-        return format_html(summary)
+        # Placeholders, not a pre-built string: Django 6 raises TypeError for
+        # format_html() without arguments, and older versions skip escaping.
+        return format_html(
+            '<strong>Pipeline Progress:</strong><br>• Chunks: {}<br>• Insights: {}<br>• Memo Generated: {}<br><br>'
+            '<strong>Quality Metrics:</strong><br>• Confidence Score: {}<br>• Intelligence Rank: {}<br>',
+            chunks, insights, '✓ Yes' if has_memo else '✗ No', f'{obj.confidence_score:.1%}', obj.intelligence_rank,
+        )
     intelligence_display.short_description = 'Intelligence Summary'
 
 
@@ -329,16 +325,13 @@ class IntelligenceInsightAdmin(admin.ModelAdmin):
         if not chunks:
             return "No source chunks linked"
         
-        links = []
-        for chunk in chunks[:5]:
-            url = reverse('admin:zelda_api_documentchunk_change', args=[chunk.id])
-            links.append(f'<a href="{url}">Chunk #{chunk.chunk_index}</a>')
-        
-        text = ', '.join(links)
+        links = format_html_join(
+            ', ', '<a href="{}">Chunk #{}</a>',
+            ((reverse('admin:zelda_api_documentchunk_change', args=[chunk.id]), chunk.chunk_index) for chunk in chunks[:5]),
+        )
         if chunks.count() > 5:
-            text += f" ... and {chunks.count() - 5} more"
-        
-        return format_html(text)
+            return format_html('{} ... and {} more', links, chunks.count() - 5)
+        return links
     source_chunks_display.short_description = 'Source Chunks'
 
 
@@ -435,8 +428,11 @@ class IntelligenceMemoAdmin(admin.ModelAdmin):
     def insights_used_display(self, obj):
         """Display insights used in memo."""
         insights = obj.insights_used.all()
-        items = [f"• {i.category}: {i.insight_text[:50]}" for i in insights]
-        return format_html('<br>'.join(items) if items else "No insights linked")
+        if not insights:
+            return "No insights linked"
+        # insight_text is a sentence taken from an uploaded document: escape it.
+        # format_html('<br>'.join(...)) treated the joined text as trusted markup.
+        return format_html_join(mark_safe('<br>'), '• {}: {}', ((i.category, i.insight_text[:50]) for i in insights))
     insights_used_display.short_description = 'Insights Used'
     
     def created_at_short(self, obj):

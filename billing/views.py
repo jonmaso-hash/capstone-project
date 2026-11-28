@@ -469,6 +469,14 @@ def stripe_webhook(request):
     the Stripe signature check (construct_event) is the actual authentication
     here, not Django's session/CSRF machinery.
     """
+    # An empty secret is not a secret: stripe-python accepts any signature
+    # computed with an empty key, so anyone could forge a paid checkout and
+    # grant themselves a subscription. Refuse instead (Stripe retries 503s,
+    # so nothing is lost once the secret is configured).
+    if not settings.STRIPE_WEBHOOK_SECRET:
+        logger.error('Stripe webhook refused: STRIPE_WEBHOOK_SECRET is not configured')
+        return HttpResponse('Webhook signing secret not configured', status=503)
+
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE', '')
 

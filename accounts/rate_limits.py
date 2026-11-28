@@ -73,6 +73,37 @@ def hash_key(scope, identifier):
     return hmac.new(settings.SECRET_KEY.encode(), normalized.encode(), hashlib.sha256).hexdigest()
 
 
+_proxy_warning_logged = False
+
+
+def _warn_if_behind_proxy(request, remote):
+    """
+    Say so once, loudly, when every visitor is arriving from one proxy.
+
+    With RATE_LIMIT_TRUSTED_PROXY_COUNT at 0 behind a reverse proxy,
+    REMOTE_ADDR is the proxy for every request, so each per-IP limit is one
+    limit for the whole site: five signups an hour in total, and thirty bad
+    logins in fifteen minutes lock every visitor out. Found on the EC2
+    deployment (Caddy in front, the setting unset). The default stays 0 --
+    trusting the header without a proxy would let clients choose their IP --
+    but the misconfiguration is no longer silent.
+    """
+    global _proxy_warning_logged
+    if _proxy_warning_logged or not request.META.get('HTTP_X_FORWARDED_FOR'):
+        return
+    try:
+        behind_proxy = ipaddress.ip_address(remote).is_private
+    except ValueError:
+        return
+    if behind_proxy:
+        _proxy_warning_logged = True
+        logger.warning(
+            'Rate limits are keyed to proxy address %s for every visitor: requests carry '
+            'X-Forwarded-For but RATE_LIMIT_TRUSTED_PROXY_COUNT is 0. Set it to the number of '
+            'proxies in front of the app (1 behind Caddy).', remote,
+        )
+
+
 def client_ip(request):
     """
     The address an attempt counts against.
@@ -87,6 +118,7 @@ def client_ip(request):
     remote = request.META.get('REMOTE_ADDR') or 'unknown'
     trusted = settings.RATE_LIMIT_TRUSTED_PROXY_COUNT
     if trusted <= 0:
+        _warn_if_behind_proxy(request, remote)
         return remote
     entries = [entry.strip() for entry in request.META.get('HTTP_X_FORWARDED_FOR', '').split(',') if entry.strip()]
     if len(entries) < trusted:
