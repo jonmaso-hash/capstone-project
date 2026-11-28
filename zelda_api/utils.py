@@ -155,16 +155,16 @@ def split_pages(text):
 def _extract_pdf_text(pdf_file):
     """Extract text from PDF files. Returns (text, page_count)."""
     try:
-        import PyPDF2
+        import pypdf
         pdf_file.seek(0)
-        reader = PyPDF2.PdfReader(pdf_file)
+        reader = pypdf.PdfReader(pdf_file)
         text = ""
         for number, page in enumerate(reader.pages, start=1):
             text += page_marker('page', number) + "\n" + (page.extract_text() or '') + "\n"
         return text, len(reader.pages)
     except ImportError:
-        logger.error("PyPDF2 is not installed; PDF extraction is unavailable.")
-        raise ExtractionError('dependency_missing', 'PyPDF2')
+        logger.error("pypdf is not installed; PDF extraction is unavailable.")
+        raise ExtractionError('dependency_missing', 'pypdf')
     except Exception as e:
         logger.error(f"PDF extraction failed: {e}")
         raise ExtractionError('unreadable_file', type(e).__name__) from e

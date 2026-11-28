@@ -110,7 +110,7 @@ class PdfPageTests(SimpleTestCase):
                 self.pages = [FakePage('First page about revenue and growth.'), FakePage(None),
                               FakePage('Third page about the founding team.')]
 
-        with mock.patch('PyPDF2.PdfReader', FakeReader):
+        with mock.patch('pypdf.PdfReader', FakeReader):
             text, pages = extract_text_from_file(File(open(DECK, 'rb'), name='deck.pdf'))
         chunks = chunker().chunk(text)
         self.assertEqual(pages, 3)

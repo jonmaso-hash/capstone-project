@@ -2,7 +2,6 @@ Django==6.0.9
 Jinja2==3.1.6
 MarkupSafe==3.0.3
 PyJWT==2.12.1
-PyPDF2==3.0.1
 PyYAML==6.0.3
 Pygments==2.20.0
 aiodns==4.0.3
@@ -44,7 +43,7 @@ django-environ==0.13.0
 django-extensions==4.1
 django-picklefield==3.4.0
 django-storages==1.14.6
-djangorestframework==3.17.1
+djangorestframework==3.18.3
 docstring_parser==0.18.0
 filelock==3.29.0
 frozenlist==1.8.0
@@ -71,7 +70,7 @@ packaging==26.2
 pdfminer.six==20251230
 pdfplumber==0.11.9
 pgvector==0.4.2
-pillow==12.3.0
+pillow==13.0.0
 prompt_toolkit==3.0.52
 propcache==0.5.2
 psycopg2-binary==2.9.12
@@ -80,6 +79,7 @@ pycparser==3.0
 pydantic==2.13.4
 pydantic_core==2.46.4
 pyparsing==3.3.2
+pypdf==7.2.0
 pypdfium2==5.8.0
 python-dateutil==2.9.0.post0
 python-docx==1.2.0
